@@ -17,11 +17,15 @@ def seed_users(connection: Connection) -> None:
         for user_id, username, password in DEFAULT_USERS
     ]
 
-    connection.executemany(
-        """
-        INSERT OR IGNORE INTO user (id, username, password_hash)
-        VALUES (?, ?, ?)
-        """,
-        users,
-    )
-    connection.commit()
+    try:
+        connection.executemany(
+            """
+            INSERT OR IGNORE INTO user (id, username, password_hash)
+            VALUES (?, ?, ?)
+            """,
+            users,
+        )
+        connection.commit()
+    except Exception as exception:
+        print(f"Error seeding users: {exception}")
+        raise

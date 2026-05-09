@@ -1,29 +1,24 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtCore import Qt
+from sys import argv, exit
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+from PyQt6.QtWidgets import QApplication
 
-        self.setWindowTitle("HexWorld")
-        self.setFixedSize(400, 250)
+from controllers.client_controller import ClientController
+from views.main_window import MainWindow
 
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+def main() -> None:
+    app = QApplication(argv)
 
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        central_widget.setLayout(layout)
+    window = MainWindow()
+    try:
+        controller = ClientController(window)
+    except Exception:
+        exit(1)
 
-        label = QLabel("Hello, World!")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    window.show()
 
-        layout.addWidget(label)
-
+    result = app.exec()
+    controller.stop()
+    exit(result)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    main()
