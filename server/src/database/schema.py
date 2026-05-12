@@ -9,5 +9,6 @@ def create_schema(connection: Connection) -> None:
         connection.executescript(sql)
         connection.commit()
     except Exception as exception:
+        connection.rollback()
         print(f"Error creating database schema: {exception}")
         raise

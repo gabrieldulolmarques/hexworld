@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS user (
 
 CREATE TABLE IF NOT EXISTS session (
     id TEXT PRIMARY KEY NOT NULL,
-    user_id TEXT NOT NULL REFERENCES user (id),
-    token TEXT NOT NULL,
+    user_id TEXT NOT NULL REFERENCES user (id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     expires_at INTEGER NOT NULL
 );
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS map (
 );
 
 CREATE TABLE IF NOT EXISTS user_map (
-    user_id TEXT NOT NULL REFERENCES user (id),
-    map_id TEXT NOT NULL REFERENCES map (id),
+    user_id TEXT NOT NULL REFERENCES user (id) ON DELETE CASCADE,
+    map_id TEXT NOT NULL REFERENCES map (id) ON DELETE RESTRICT,
     role TEXT NOT NULL CHECK (
         role IN ('owner', 'editor', 'viewer')
     ) DEFAULT 'viewer',
@@ -31,9 +31,15 @@ CREATE TABLE IF NOT EXISTS user_map (
     PRIMARY KEY (user_id, map_id)
 );
 
+CREATE INDEX IF NOT EXISTS user_map_map_id_idx
+    ON user_map (map_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS user_map_one_owner_idx
+    ON user_map (map_id) WHERE role = 'owner';
+
 CREATE TABLE IF NOT EXISTS tile (
     id TEXT PRIMARY KEY NOT NULL,
-    map_id TEXT NOT NULL REFERENCES map (id),
+    map_id TEXT NOT NULL REFERENCES map (id) ON DELETE CASCADE,
     q INTEGER NOT NULL,
     r INTEGER NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -41,23 +47,23 @@ CREATE TABLE IF NOT EXISTS tile (
 );
 
 CREATE TABLE IF NOT EXISTS structure (
-    tile_id TEXT PRIMARY KEY REFERENCES tile (id),
+    tile_id TEXT PRIMARY KEY REFERENCES tile (id) ON DELETE CASCADE,
     type TEXT NOT NULL,
-    author_id TEXT REFERENCES user (id),
+    author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS road (
     id TEXT PRIMARY KEY NOT NULL,
-    tile_id TEXT NOT NULL REFERENCES tile (id),
+    tile_id TEXT NOT NULL REFERENCES tile (id) ON DELETE CASCADE,
     color TEXT NOT NULL,
-    author_id TEXT REFERENCES user (id),
+    author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS description (
-    tile_id TEXT PRIMARY KEY REFERENCES tile (id),
+    tile_id TEXT PRIMARY KEY REFERENCES tile (id) ON DELETE CASCADE,
     text TEXT NOT NULL,
-    author_id TEXT REFERENCES user (id),
+    author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
