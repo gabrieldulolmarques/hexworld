@@ -1,7 +1,7 @@
 from database.connection import close_connection, get_connection, get_database_path
 from database.schema import create_schema
 from database.seed import seed_users
-from communication.server import Server
+from transport.server import Server
 
 def initialize_database() -> None:
     connection = get_connection()

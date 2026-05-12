@@ -5,6 +5,22 @@ HEADER_SIZE = 4
 HEADER_FORMAT = "!I"
 ENCODING = "utf-8"
 
+def success_response(response_type: str, data: dict | None = None) -> dict:
+    response = {
+        "type": response_type,
+        "status": "success",
+    }
+    if data is not None:
+        response["data"] = data
+    return response
+
+def error_response(response_type: str, code: str) -> dict:
+    return {
+        "type": response_type,
+        "status": "error",
+        "code": code,
+    }
+
 def send_response(sock, response: dict) -> None:
     payload = dumps(response).encode(ENCODING)
     header = pack(HEADER_FORMAT, len(payload))
