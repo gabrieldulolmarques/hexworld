@@ -10,6 +10,7 @@ from socket import (
     TCP_KEEPINTVL,
     socket,
 )
+from threading import Lock
 
 from transport.protocol import recv_response, send_request
 
@@ -22,23 +23,25 @@ class Client:
         self._client_id = getenv("CLIENT_ID")
         self._client_socket = None
         self._server_address = _resolve_server_address()
+        self._io_lock = Lock()
 
     def is_connected(self) -> bool:
         return self._client_socket is not None
 
     def send(self, request: dict) -> dict:
-        if not self.is_connected():
-            self._connect()
-        try:
-            send_request(self._client_socket, request)
-            response = recv_response(self._client_socket)
-        except Exception as exception:
-            self.stop()
-            raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
-        if response is None:
-            self.stop()
-            raise Exception(SERVER_UNREACHABLE_MESSAGE)
-        return response
+        with self._io_lock:
+            if not self.is_connected():
+                self._connect()
+            try:
+                send_request(self._client_socket, request)
+                response = recv_response(self._client_socket)
+            except Exception as exception:
+                self.stop()
+                raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
+            if response is None:
+                self.stop()
+                raise Exception(SERVER_UNREACHABLE_MESSAGE)
+            return response
 
     def stop(self) -> None:
         if self._client_socket:
