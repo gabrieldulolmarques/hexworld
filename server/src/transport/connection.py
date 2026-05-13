@@ -1,4 +1,5 @@
 from socket import socket
+from traceback import format_exc
 
 from transport.protocol import recv_request, send_response
 from controllers.request_controller import handle_request
@@ -20,6 +21,7 @@ class Connection:
                 send_response(self._client_socket, response)
         except Exception as exception:
             print(f"Error while handling client {self._client_address[0]}:{self._client_address[1]} request: {exception}")
+            print(format_exc())
         finally:
             self.stop()
     

@@ -32,7 +32,10 @@ def register(username: str, password: str) -> str | None:
         return "username_taken"
     user_id = str(uuid4())
     password_hash = hash_password(password)
-    create_user(user_id, username, password_hash)
+    try:
+        create_user(user_id, username, password_hash)
+    except Exception:
+        return "username_taken"
     return None
 
 def login(
