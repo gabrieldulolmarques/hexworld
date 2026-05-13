@@ -9,13 +9,16 @@ from views.main_view import MainView
 class ClientController:
     def __init__(self, main_view: MainView) -> None:
         self.client = Client()
+        
         self.main_view = main_view
         self.auth_view = AuthView()
         self.home_view = HomeView()
+        
         main_view.stack.addWidget(self.auth_view)
         main_view.stack.addWidget(self.home_view)
 
         self.session = Session()
+        
         self.preferences = LoginPreferences()
         self._restore_login_preferences()
 

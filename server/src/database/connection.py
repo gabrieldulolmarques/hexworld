@@ -2,6 +2,7 @@ from os import getenv
 from pathlib import Path
 from sqlite3 import Connection, Row, connect
 from threading import local
+from traceback import format_exc
 
 _local = local()
 
@@ -23,6 +24,7 @@ def get_connection() -> Connection:
             _local.connection = connection
         except Exception as exception:
             print(f"Error getting database connection: {exception}")
+            print(format_exc())
             raise
     return connection
 
@@ -33,5 +35,6 @@ def close_connection() -> None:
             connection.close()
         except Exception as exception:
             print(f"Error closing database connection: {exception}")
+            print(format_exc())
         finally:
             _local.connection = None

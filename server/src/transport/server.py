@@ -12,6 +12,7 @@ from socket import (
     socket,
 )
 from threading import Thread
+from traceback import format_exc
 
 from transport.connection import Connection
 
@@ -31,6 +32,7 @@ class Server:
             print(f"Server started on {self._server_address[0]}:{self._server_address[1]}")
         except Exception as exception:
             print(f"Error on starting server: {exception}")
+            print(format_exc())
             self.stop()
             raise
         try:
@@ -39,8 +41,8 @@ class Server:
                 _configure_keepalive(client_socket)
                 client_connection = Connection(client_socket, client_address)
                 Thread(target=client_connection.start, daemon=True).start()
-        except Exception as exception:
-            print(f"Error while accepting client connection: {exception}")
+        except KeyboardInterrupt:
+            print("Server stopped by keyboard interrupt")
         finally:
             self.stop()
     

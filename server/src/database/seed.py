@@ -1,4 +1,5 @@
 from sqlite3 import Connection
+from traceback import format_exc
 
 from services.auth_service import hash_password
 
@@ -26,4 +27,5 @@ def seed_users(connection: Connection) -> None:
     except Exception as exception:
         connection.rollback()
         print(f"Error seeding users: {exception}")
+        print(format_exc())
         raise
