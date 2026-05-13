@@ -7,12 +7,11 @@ def handle_register(request: dict) -> dict:
 
     username = str(data.get("username", "")).strip()
     password = str(data.get("password", ""))
-    confirm = str(data.get("confirm", ""))
 
-    if not username or not password or not confirm:
+    if not username or not password:
         return error_response("register", "missing_fields")
 
-    error_code = register(username, password, confirm)
+    error_code = register(username, password)
 
     if error_code is not None:
         return error_response("register", error_code)

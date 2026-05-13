@@ -15,7 +15,7 @@ make build
 make up         
 ```
 ```bash
-make up scale=4       
+make up clients=4
 ```
 ```bash
 make clean

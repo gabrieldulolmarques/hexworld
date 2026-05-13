@@ -23,13 +23,11 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def hash_password(password: str) -> str:
     return sha256(password.encode("utf-8")).hexdigest()
 
-def register(username: str, password: str, confirm: str) -> str | None:
+def register(username: str, password: str) -> str | None:
     if len(password) < MIN_PASSWORD_LENGTH:
         return "password_too_short"
     if len(password) > MAX_PASSWORD_LENGTH:
         return "password_too_long"
-    if password != confirm:
-        return "passwords_do_not_match"
     if get_user_by_username(username):
         return "username_taken"
     user_id = str(uuid4())
@@ -83,7 +81,7 @@ def validate_session(token: str) -> tuple[dict | None, str | None]:
     expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at <= datetime.now(timezone.utc):
         delete_session_by_token(token)
-        return None, "expired_token"
+        return None, "invalid_token"
     return {
         "user_id": session["user_id"],
     }, None

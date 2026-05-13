@@ -3,17 +3,15 @@ from sys import argv, exit
 from PyQt6.QtWidgets import QApplication
 
 from controllers.client_controller import ClientController
-from views.main_window import MainWindow
+from styles.theme import STYLESHEET
+from views.main_view import MainView
 
 def main() -> None:
     app = QApplication(argv)
+    app.setStyleSheet(STYLESHEET)
 
-    window = MainWindow()
-    try:
-        controller = ClientController(window)
-    except Exception:
-        exit(1)
-
+    window = MainView()
+    controller = ClientController(window)
     window.show()
 
     result = app.exec()

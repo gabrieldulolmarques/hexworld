@@ -15,14 +15,8 @@ REQUEST_HANDLERS = {
 }
 
 def handle_request(request: dict) -> dict:
-    request_type = request.get("type")
-
-    if request_type is None:
-        return error_response("unknown", "missing_request_type")
-
+    request_type = request.get("type") or "unknown"
     handler = REQUEST_HANDLERS.get(request_type)
-
     if handler is None:
-        return error_response(request_type, "invalid_request_type")
-
+        return error_response(request_type, "unknown_type")
     return handler(request)
