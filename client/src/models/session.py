@@ -2,30 +2,11 @@ from json import dump, load
 from os import getenv
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
-
-
-def _safe_filename(value: str) -> str:
-    return "".join(char if char.isalnum() or char in ("-", "_") else "_" for char in value)
-
-
-def _session_path() -> Path:
-    custom_path = getenv("HEXWORLD_SESSION_PATH")
-    if custom_path:
-        return Path(custom_path).expanduser()
-
-    client_id = getenv("CLIENT_ID")
-    if client_id:
-        return DATA_DIR / f"session-{_safe_filename(client_id)}.json"
-
-    return DATA_DIR / "session.json"
-
-
 class Session:
-    def __init__(self):
-        self.path = _session_path()
+    def __init__(self) -> None:
+        self.path: Path = _get_session_path()
         self.token: str | None = None
-        self.user_id: str | None = None  # memory only
+        self.user_id: str | None = None
         self._load()
 
     def save(self, token: str) -> None:
@@ -54,3 +35,10 @@ class Session:
                 self.token = load(f).get("token")
         except Exception:
             self.clear()
+
+def _get_session_path() -> Path:
+    configured = getenv("SESSION_PATH")
+    if configured:
+        return Path(configured)
+    client_id = getenv("CLIENT_ID", "1")
+    return Path(__file__).resolve().parents[2] / "data" / f"session_{client_id}.json"

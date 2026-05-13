@@ -1,0 +1,73 @@
+from os import getenv
+from socket import (
+    AF_INET,
+    IPPROTO_TCP,
+    SOCK_STREAM,
+    SOL_SOCKET,
+    SO_KEEPALIVE,
+    TCP_KEEPCNT,
+    TCP_KEEPIDLE,
+    TCP_KEEPINTVL,
+    socket,
+)
+
+from transport.protocol import recv_response, send_request
+
+DEFAULT_SERVER_ADDRESS = "127.0.0.1:5000"
+CONNECT_TIMEOUT_SECONDS = 5.0
+SERVER_UNREACHABLE_MESSAGE = "Could not reach the server."
+
+class Client:
+    def __init__(self) -> None:
+        self._client_id = getenv("CLIENT_ID")
+        self._client_socket = None
+        self._server_address = _resolve_server_address()
+
+    def is_connected(self) -> bool:
+        return self._client_socket is not None
+
+    def send(self, request: dict) -> dict:
+        if not self.is_connected():
+            self._connect()
+        try:
+            send_request(self._client_socket, request)
+            response = recv_response(self._client_socket)
+        except Exception as exception:
+            self.stop()
+            raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
+        if response is None:
+            self.stop()
+            raise Exception(SERVER_UNREACHABLE_MESSAGE)
+        return response
+
+    def stop(self) -> None:
+        if self._client_socket:
+            self._client_socket.close()
+            self._client_socket = None
+        print(f"Client {self._client_id} stopped")
+
+    def _connect(self) -> None:
+        try:
+            sock = socket(AF_INET, SOCK_STREAM)
+            sock.settimeout(CONNECT_TIMEOUT_SECONDS)
+            sock.connect(self._server_address)
+            sock.settimeout(None)
+            _configure_keepalive(sock)
+            self._client_socket = sock
+            print(f"Client {self._client_id} connected to {self._server_address[0]}:{self._server_address[1]}")
+        except Exception as exception:
+            self._client_socket = None
+            raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
+
+def _configure_keepalive(sock: socket) -> None:
+    sock.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+    sock.setsockopt(IPPROTO_TCP, TCP_KEEPIDLE, 30)
+    sock.setsockopt(IPPROTO_TCP, TCP_KEEPINTVL, 10)
+    sock.setsockopt(IPPROTO_TCP, TCP_KEEPCNT, 3)
+
+def _resolve_server_address() -> tuple[str, int]:
+    raw = getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS)
+    host, _, port = raw.rpartition(":")
+    if not host or not port:
+        raise Exception(f"Invalid SERVER_ADDRESS '{raw}', expected 'host:port'")
+    return host, int(port)

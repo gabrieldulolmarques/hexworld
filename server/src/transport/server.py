@@ -1,5 +1,16 @@
 from os import getenv
-from socket import AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR, socket
+from socket import (
+    AF_INET,
+    IPPROTO_TCP,
+    SOCK_STREAM,
+    SOL_SOCKET,
+    SO_KEEPALIVE,
+    SO_REUSEADDR,
+    TCP_KEEPCNT,
+    TCP_KEEPIDLE,
+    TCP_KEEPINTVL,
+    socket,
+)
 from threading import Thread
 
 from transport.connection import Connection
@@ -25,6 +36,7 @@ class Server:
         try:
             while True:
                 client_socket, client_address = self._server_socket.accept()
+                _configure_keepalive(client_socket)
                 client_connection = Connection(client_socket, client_address)
                 Thread(target=client_connection.start, daemon=True).start()
         except Exception as exception:
@@ -38,9 +50,15 @@ class Server:
             self._server_socket = None
         print("Server stopped")
 
+def _configure_keepalive(sock: socket) -> None:
+    sock.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
+    sock.setsockopt(IPPROTO_TCP, TCP_KEEPIDLE, 30)
+    sock.setsockopt(IPPROTO_TCP, TCP_KEEPINTVL, 10)
+    sock.setsockopt(IPPROTO_TCP, TCP_KEEPCNT, 3)
+
 def _resolve_server_address() -> tuple[str, int]:
     raw = getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS)
     host, _, port = raw.rpartition(":")
     if not host or not port:
-        raise ValueError(f"Invalid SERVER_ADDRESS '{raw}', expected 'host:port'")
+        raise Exception(f"Invalid SERVER_ADDRESS '{raw}', expected 'host:port'")
     return host, int(port)
