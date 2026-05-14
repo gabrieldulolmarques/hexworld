@@ -47,7 +47,7 @@ class Client:
         if self._client_socket:
             self._client_socket.close()
             self._client_socket = None
-        print(f"Client {self._client_id} stopped")
+        print(f"Client {self._client_id} disconnected from {self._server_address[0]}:{self._server_address[1]}")
 
     def _connect(self) -> None:
         try:
