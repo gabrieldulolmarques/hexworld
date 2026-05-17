@@ -5,7 +5,7 @@ _SETTINGS_APP = "HexWorld"
 _USERNAME_KEY = "login/username"
 _REMEMBER_KEY = "login/remember"
 
-class LoginPreferences:
+class Preferences:
     def __init__(self) -> None:
         self._settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
 

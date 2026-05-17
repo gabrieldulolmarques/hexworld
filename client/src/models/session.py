@@ -7,6 +7,7 @@ class Session:
         self.path: Path = _get_session_path()
         self.token: str | None = None
         self.user_id: str | None = None
+        self.username: str | None = None
         self._load()
 
     def save(self, token: str) -> None:
@@ -15,12 +16,14 @@ class Session:
         with open(self.path, "w") as f:
             dump({"token": token}, f)
 
-    def set_user_id(self, user_id: str) -> None:
+    def set_user(self, user_id: str, username: str) -> None:
         self.user_id = user_id
+        self.username = username
 
     def clear(self) -> None:
         self.token = None
         self.user_id = None
+        self.username = None
         if self.path.exists():
             self.path.unlink()
 
