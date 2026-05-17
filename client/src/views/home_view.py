@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from views.widgets import HexLogo, StatusMixin, horizontal_divider, make_card_shadow
+from views.widgets import HexLogo, StatusMixin, make_card_shadow
 
 class HomeView(StatusMixin, QWidget):
     request_logout = pyqtSignal()
@@ -46,18 +46,10 @@ class HomeView(StatusMixin, QWidget):
 
         card_logo = HexLogo(size=80)
 
-        self.welcome_label = QLabel("Welcome!")
+        self.welcome_label = QLabel("Welcome back!")
         self.welcome_label.setObjectName("welcome")
         self.welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.welcome_label.setWordWrap(True)
-
-        tagline = QLabel(
-            "You're signed in. Soon you'll be able to create maps, "
-            "collaborate in real time, and edit the hex grid."
-        )
-        tagline.setObjectName("subtitle")
-        tagline.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        tagline.setWordWrap(True)
 
         self.status_label = QLabel("")
         self.status_label.setObjectName("status")
@@ -65,31 +57,13 @@ class HomeView(StatusMixin, QWidget):
         self.status_label.setWordWrap(True)
         self._set_status_level("info")
 
-        coming_soon_title = QLabel("Coming soon")
-        coming_soon_title.setObjectName("fieldLabel")
-        coming_soon_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        coming_soon = QLabel(
-            "⬢  Create and share maps\n"
-            "⬢  Real-time collaborative editing\n"
-            "⬢  Structures, roads, and per-cell descriptions"
-        )
-        coming_soon.setObjectName("subtitle")
-        coming_soon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(36, 24, 36, 32)
         card_layout.setSpacing(12)
         card_layout.addWidget(card_logo, alignment=Qt.AlignmentFlag.AlignCenter)
         card_layout.addSpacing(14)
         card_layout.addWidget(self.welcome_label)
-        card_layout.addWidget(tagline)
         card_layout.addWidget(self.status_label)
-        card_layout.addSpacing(8)
-        card_layout.addWidget(horizontal_divider())
-        card_layout.addSpacing(8)
-        card_layout.addWidget(coming_soon_title)
-        card_layout.addWidget(coming_soon)
 
         body = QVBoxLayout()
         body.setContentsMargins(16, 12, 16, 16)
@@ -104,10 +78,8 @@ class HomeView(StatusMixin, QWidget):
         root.addWidget(top_bar)
         root.addLayout(body, 1)
 
-    def set_user(self, user_id: str) -> None:
-        short = user_id.split("-")[0] if "-" in user_id else user_id
-        self.welcome_label.setText("Welcome back!")
-        self.user_badge.setText(f"⬢  {short}")
+    def set_user(self, username: str) -> None:
+        self.user_badge.setText(f"⬢  {username}")
         self.user_badge.show()
 
     def set_loading(self, loading: bool) -> None:

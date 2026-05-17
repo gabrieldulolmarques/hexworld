@@ -9,6 +9,7 @@ from repositories.session_repository import (
 )
 from repositories.user_repository import (
     create_user,
+    get_user_by_id,
     get_user_by_username,
 )
 
@@ -67,6 +68,7 @@ def login(
     return {
         "token": token,
         "user_id": user["id"],
+        "username": user["username"],
     }, None
 
 def logout(token: str) -> str | None:
@@ -85,6 +87,11 @@ def validate_session(token: str) -> tuple[dict | None, str | None]:
     if expires_at <= datetime.now(timezone.utc):
         delete_session_by_token(token)
         return None, "invalid_token"
+    user = get_user_by_id(session["user_id"])
+    if user is None:
+        delete_session_by_token(token)
+        return None, "invalid_token"
     return {
-        "user_id": session["user_id"],
+        "user_id": user["id"],
+        "username": user["username"],
     }, None

@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from controllers.request_worker import RequestWorker
-from models.login_preferences import LoginPreferences
+from models.preferences import Preferences
 from models.session import Session
 from transport.client import Client
 
@@ -31,7 +31,7 @@ class AuthController(QObject):
         self,
         client: Client,
         session: Session,
-        preferences: LoginPreferences,
+        preferences: Preferences,
     ) -> None:
         super().__init__()
         self.client = client
@@ -102,15 +102,15 @@ class AuthController(QObject):
         match response.get("type"):
             case "login":
                 self.session.save(data["token"])
-                self.session.set_user_id(data["user_id"])
+                self.session.set_user(data["user_id"], data["username"])
                 self.preferences.save(
                     self._pending_login_username,
                     self._pending_remember,
                 )
-                self.login_success.emit(data["user_id"])
+                self.login_success.emit(data["username"])
             case "validate_session":
-                self.session.set_user_id(data["user_id"])
-                self.session_restored.emit(data["user_id"])
+                self.session.set_user(data["user_id"], data["username"])
+                self.session_restored.emit(data["username"])
             case "register":
                 self.register_success.emit()
             case "logout":

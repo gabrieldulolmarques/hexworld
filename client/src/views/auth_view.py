@@ -61,10 +61,9 @@ class AuthView(StatusMixin, QWidget):
         password_label = QLabel("Password")
         password_label.setObjectName("fieldLabel")
         self.password_input = PasswordEdit()
-        self.password_input.setPlaceholderText("••••••••")
 
         self.confirm_password_input = PasswordEdit(show_visibility_toggle=False)
-        self.confirm_password_input.setPlaceholderText("••••••••")
+        self.confirm_password_input.setPlaceholderText("repeat password")
 
         self.show_password_checkbox = QCheckBox("Show password")
         self.show_password_checkbox.setObjectName("showPasswordCheckbox")
@@ -137,6 +136,7 @@ class AuthView(StatusMixin, QWidget):
             self.subtitle.setText("Welcome back. Sign in to continue.")
             self.primary_button.setText("Sign in")
             self.username_input.setPlaceholderText("your_username")
+            self.password_input.setPlaceholderText("••••••••")
             self.confirm_password_input.hide()
             self.show_password_checkbox.hide()
             self.password_input.set_visibility_toggle_visible(True)
@@ -152,6 +152,7 @@ class AuthView(StatusMixin, QWidget):
             self.subtitle.setText("Start building collaborative hex maps.")
             self.primary_button.setText("Sign up")
             self.username_input.setPlaceholderText("pick a username")
+            self.password_input.setPlaceholderText("at least 8 characters")
             self.confirm_password_input.show()
             self.show_password_checkbox.show()
             self.password_input.set_visibility_toggle_visible(False)

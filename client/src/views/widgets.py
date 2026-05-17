@@ -4,7 +4,6 @@ from PyQt6.QtCore import QPointF, QSize, Qt
 from PyQt6.QtGui import QColor, QPainter, QPaintEvent, QPolygonF
 from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QWidget
 
-
 class StatusMixin:
     status_label: QLabel
 
