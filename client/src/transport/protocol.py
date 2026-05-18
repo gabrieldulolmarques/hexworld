@@ -18,7 +18,10 @@ def recv_response(sock) -> dict | None:
     payload = _recv_exact(sock, size)
     if not payload:
         return None
-    return loads(payload.decode(ENCODING))
+    try:
+        return loads(payload.decode(ENCODING))
+    except Exception:
+        return None
 
 def _recv_exact(sock, size: int) -> bytes | None:
     data = b""

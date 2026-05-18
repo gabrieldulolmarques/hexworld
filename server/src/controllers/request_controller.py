@@ -1,3 +1,5 @@
+from traceback import format_exc
+
 from transport.protocol import error_response
 
 from controllers.auth_controller import (
@@ -19,4 +21,9 @@ def handle_request(request: dict) -> dict:
     handler = REQUEST_HANDLERS.get(request_type)
     if handler is None:
         return error_response(request_type, "unknown_type")
-    return handler(request)
+    try:
+        return handler(request)
+    except Exception as exception:
+        print(f"Error handling request {request}: {exception}")
+        print(format_exc())
+        return error_response(request_type, "unexpected_error")
