@@ -9,14 +9,14 @@ def handle_register(request: dict) -> dict:
     password = str(data.get("password", ""))
 
     if not username or not password:
-        return error_response("register", "missing_fields")
+        return error_response(request, "missing_fields")
 
     error_code = register(username, password)
 
     if error_code is not None:
-        return error_response("register", error_code)
+        return error_response(request, error_code)
 
-    return success_response("register")
+    return success_response(request)
 
 def handle_login(request: dict) -> dict:
     data = request.get("data", {})
@@ -26,28 +26,28 @@ def handle_login(request: dict) -> dict:
     remember_me = bool(data.get("remember_me", False))
 
     if not username or not password:
-        return error_response("login", "missing_fields")
+        return error_response(request, "missing_fields")
 
     response_data, error_code = login(username, password, remember_me)
 
     if error_code is not None:
-        return error_response("login", error_code)
+        return error_response(request, error_code)
 
-    return success_response("login", response_data)
+    return success_response(request, response_data)
 
 @authenticated
 def handle_logout(request: dict, auth: dict) -> dict:
     error_code = logout(auth["token"])
 
     if error_code is not None:
-        return error_response("logout", error_code)
+        return error_response(request, error_code)
 
-    return success_response("logout")
+    return success_response(request)
 
 @authenticated
 def handle_validate_session(request: dict, auth: dict) -> dict:
     return success_response(
-        "validate_session",
+        request,
         {
             "user_id": auth["user_id"],
             "username": auth["username"],

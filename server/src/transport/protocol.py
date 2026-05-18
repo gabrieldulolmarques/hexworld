@@ -5,20 +5,37 @@ HEADER_SIZE = 4
 HEADER_FORMAT = "!I"
 ENCODING = "utf-8"
 
-def success_response(response_type: str, data: dict | None = None) -> dict:
-    response = {
-        "type": response_type,
-        "status": "success",
-    }
-    if data is not None:
-        response["data"] = data
-    return response
+KIND_REQUEST = "request"
+KIND_RESPONSE = "response"
+KIND_EVENT = "event"
 
-def error_response(response_type: str, code: str) -> dict:
+STATUS_SUCCESS = "success"
+STATUS_ERROR = "error"
+
+def success_response(request: dict, data: dict | None = None) -> dict:
     return {
-        "type": response_type,
-        "status": "error",
+        "kind": KIND_RESPONSE,
+        "request_id": request.get("request_id", ""),
+        "type": request.get("type", ""),
+        "status": STATUS_SUCCESS,
+        "data": data or {},
+    }
+
+def error_response(request: dict, code: str, data: dict | None = None) -> dict:
+    return {
+        "kind": KIND_RESPONSE,
+        "request_id": request.get("request_id", ""),
+        "type": request.get("type", ""),
+        "status": STATUS_ERROR,
         "code": code,
+        "data": data or {},
+    }
+
+def event(event_type: str, data: dict | None = None) -> dict:
+    return {
+        "kind": KIND_EVENT,
+        "type": event_type,
+        "data": data or {},
     }
 
 def send_response(sock, response: dict) -> None:

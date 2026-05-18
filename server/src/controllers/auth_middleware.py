@@ -9,13 +9,12 @@ Handler = Callable[[dict, dict], dict]
 def authenticated(handler: Handler) -> Callable[[dict], dict]:
     @wraps(handler)
     def wrapper(request: dict) -> dict:
-        request_type = request.get("type") or "unknown"
         token = _extract_token(request)
         if not token:
-            return error_response(request_type, "missing_fields")
+            return error_response(request, "missing_fields")
         session_data, error_code = validate_session(token)
         if error_code is not None:
-            return error_response(request_type, error_code)
+            return error_response(request, error_code)
         auth = {**session_data, "token": token}
         return handler(request, auth)
 

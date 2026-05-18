@@ -4,6 +4,7 @@ from controllers.request_worker import RequestWorker
 from models.preferences import Preferences
 from models.session import Session
 from transport.client import Client
+from transport.protocol import request
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",
@@ -15,6 +16,7 @@ _ERROR_MESSAGES = {
     "unknown_type": "Unknown request type.",
     "unexpected_error": "Unexpected server error.",
 }
+
 class AuthController(QObject):
 
     loading = pyqtSignal(bool)
@@ -46,14 +48,11 @@ class AuthController(QObject):
             return
         self._pending_login_username = username
         self._pending_remember = remember_me
-        self._send({
-            "type": "login",
-            "data": {
-                "username": username,
-                "password": password,
-                "remember_me": remember_me,
-            },
-        })
+        self._send(request("login", {
+            "username": username,
+            "password": password,
+            "remember_me": remember_me,
+        }))
 
     def register(self, username: str, password: str, confirm_password: str) -> None:
         username = username.strip()
@@ -63,19 +62,16 @@ class AuthController(QObject):
         if password != confirm_password:
             self.error.emit("Passwords do not match.")
             return
-        self._send({
-            "type": "register",
-            "data": {
-                "username": username,
-                "password": password,
-            },
-        })
+        self._send(request("register", {
+            "username": username,
+            "password": password,
+        }))
 
     def logout(self) -> None:
-        self._send({"type": "logout", "data": {"token": self.session.token}})
+        self._send(request("logout", {"token": self.session.token}))
 
     def validate_session(self) -> None:
-        self._send({"type": "validate_session", "data": {"token": self.session.token}})
+        self._send(request("validate_session", {"token": self.session.token}))
 
     def _send(self, request: dict) -> None:
         self.loading.emit(True)
