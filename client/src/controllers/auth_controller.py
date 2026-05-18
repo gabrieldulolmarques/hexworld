@@ -1,9 +1,8 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from controllers.request_worker import RequestWorker
+from controllers.transport_worker import TransportWorker
 from models.preferences import Preferences
 from models.session import Session
-from transport.client import Client
 from transport.protocol import request
 
 _ERROR_MESSAGES = {
@@ -29,17 +28,20 @@ class AuthController(QObject):
 
     def __init__(
         self,
-        client: Client,
+        transport_worker: TransportWorker,
         session: Session,
         preferences: Preferences,
     ) -> None:
         super().__init__()
-        self.client = client
+        self._transport_worker = transport_worker
         self.session = session
         self.preferences = preferences
-        self._worker: RequestWorker | None = None
+        self._pending: set[str] = set()
         self._pending_login_username = ""
         self._pending_remember = False
+
+        transport_worker.response.connect(self._on_response)
+        transport_worker.error.connect(self._on_error)
 
     def login(self, username: str, password: str, remember_me: bool = False) -> None:
         username = username.strip()
@@ -74,15 +76,18 @@ class AuthController(QObject):
         self._send(request("validate_session", {"token": self.session.token}))
 
     def _send(self, request: dict) -> None:
-        self.loading.emit(True)
-        self._worker = RequestWorker(self.client, request)
-        self._worker.response.connect(self._on_response)
-        self._worker.error.connect(self._on_error)
-        self._worker.finished.connect(self._worker.deleteLater)
-        self._worker.start()
+        self._pending.add(request["request_id"])
+        if len(self._pending) == 1:
+            self.loading.emit(True)
+        self._transport_worker.submit(request)
 
     def _on_response(self, response: dict) -> None:
-        self.loading.emit(False)
+        request_id = response.get("request_id", "")
+        if request_id not in self._pending:
+            return
+        self._pending.discard(request_id)
+        if not self._pending:
+            self.loading.emit(False)
 
         if response.get("status") == "error":
             code = response.get("code", "")
@@ -112,5 +117,8 @@ class AuthController(QObject):
                 self.logged_out.emit()
 
     def _on_error(self, message: str) -> None:
-        self.loading.emit(False)
+        had_pending = bool(self._pending)
+        self._pending.clear()
+        if had_pending:
+            self.loading.emit(False)
         self.error.emit(message)

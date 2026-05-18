@@ -1,4 +1,5 @@
 from controllers.auth_controller import AuthController
+from controllers.transport_worker import TransportWorker
 from models.preferences import Preferences
 from models.session import Session
 from transport.client import Client
@@ -16,13 +17,15 @@ class ClientController:
         main_view.stack.addWidget(self.home_view)
 
         self.client = Client()
+        self.transport_worker = TransportWorker(self.client)
+        self.transport_worker.start()
 
         self.session = Session()
-        
+
         self.preferences = Preferences()
         self._restore_preferences()
 
-        self.auth = AuthController(self.client, self.session, self.preferences)
+        self.auth = AuthController(self.transport_worker, self.session, self.preferences)
         self._connect_signals()
 
         if self.session.is_authenticated():
@@ -68,4 +71,5 @@ class ClientController:
         self.auth_view.set_login_defaults(username, remember)
 
     def stop(self) -> None:
+        self.transport_worker.stop()
         self.client.stop()
