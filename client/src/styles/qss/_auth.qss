@@ -1,0 +1,95 @@
+/* Login / register: bold UI copy; normal weight only for typed input (QLineEdit). */
+QWidget#authScreen QLabel#subtitle {
+    font-weight: 600;
+}
+
+QWidget#authScreen QLabel#fieldLabel {
+    font-weight: 700;
+}
+
+QWidget#authScreen QLabel#status {
+    font-weight: 600;
+}
+
+QWidget#authScreen QLineEdit {
+    font-weight: normal;
+}
+
+QWidget#authScreen QPushButton {
+    font-weight: 700;
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox,
+QWidget#authScreen QCheckBox#showPasswordCheckbox {
+    color: #9f9fa9;
+    font-size: 13px;
+    font-weight: 500;
+    spacing: 8px;
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox::indicator,
+QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid #52525c;
+    background-color: #27272a;
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox::indicator:unchecked,
+QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:unchecked {
+    image: none;
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox::indicator:checked,
+QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:checked {
+    background-color: #5ea500;
+    border-color: #5ea500;
+    image: url(__CHECK_ICON__);
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox::indicator:checked:hover,
+QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:checked:hover {
+    background-color: #497d00;
+    border-color: #497d00;
+    image: url(__CHECK_ICON__);
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox::indicator:unchecked:hover,
+QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:unchecked:hover {
+    border-color: #71717b;
+}
+
+QWidget#authScreen QCheckBox#rememberCheckbox:disabled,
+QWidget#authScreen QCheckBox#showPasswordCheckbox:disabled {
+    color: #71717b;
+}
+
+QWidget#card {
+    background-color: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 14px;
+}
+
+/* PasswordEdit (pyqt-login-page style): extra trailing padding for QAction icon */
+PasswordEdit {
+    padding: 10px 40px 10px 14px;
+}
+
+QWidget#authScreen PasswordEdit QToolButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 6px;
+    color: #ffffff;
+}
+
+QWidget#authScreen PasswordEdit QToolButton:hover {
+    background-color: #3f3f46;
+    color: #ffffff;
+}
+
+QWidget#authScreen PasswordEdit QToolButton:disabled {
+    background-color: transparent;
+    color: #71717b;
+}
