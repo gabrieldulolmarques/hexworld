@@ -1,0 +1,161 @@
+* {
+    font-family: "Inter", "Segoe UI", "SF Pro Display", "Helvetica Neue", sans-serif;
+}
+
+QLabel {
+    color: #e4e4e7;
+    font-size: 14px;
+    background-color: transparent;
+}
+
+QLabel#brand {
+    color: #e4e4e7;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+QLabel#brandSmall {
+    color: #e4e4e7;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+QLabel#title {
+    color: #e4e4e7;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+QLabel#subtitle {
+    color: #9f9fa9;
+    font-size: 13px;
+}
+
+QLabel#fieldLabel {
+    color: #9f9fa9;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+QLabel#status {
+    color: #9f9fa9;
+    font-size: 12px;
+    min-height: 16px;
+}
+
+QLabel[level="error"] {
+    color: #e7000b;
+}
+
+QLabel[level="success"] {
+    color: #497d00;
+}
+
+QLabel[level="info"] {
+    color: #9f9fa9;
+}
+
+QLabel#welcome {
+    color: #e4e4e7;
+    font-size: 26px;
+    font-weight: 700;
+}
+
+QLabel#userBadge {
+    color: #9ae600;
+    font-size: 13px;
+    font-weight: 600;
+    background-color: rgba(94, 165, 0, 0.14);
+    border: 1px solid rgba(94, 165, 0, 0.38);
+    border-radius: 999px;
+    padding: 4px 12px;
+}
+
+QLineEdit {
+    background-color: #27272a;
+    color: #e4e4e7;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    selection-background-color: #5ea500;
+    selection-color: #FFFFFF;
+}
+
+QLineEdit:focus {
+    border: 1px solid #5ea500;
+    background-color: #27272a;
+}
+
+QLineEdit:disabled {
+    color: #71717b;
+    background-color: #18181b;
+}
+
+QPushButton {
+    background-color: #5ea500;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #497d00;
+}
+
+QPushButton:pressed {
+    background-color: #3c6300;
+}
+
+QPushButton:disabled {
+    background-color: #3f3f46;
+    color: #9f9fa9;
+}
+
+QPushButton#ghost {
+    background-color: transparent;
+    color: #9f9fa9;
+    border: 1px solid #3f3f46;
+}
+
+QPushButton#ghost:hover {
+    background-color: #18181b;
+    border-color: #52525c;
+    color: #e4e4e7;
+}
+
+QPushButton#ghost:disabled {
+    color: #71717b;
+    border-color: #27272a;
+}
+
+QPushButton#link {
+    background-color: transparent;
+    color: #7ccf00;
+    font-weight: 600;
+    border: none;
+    padding: 2px 4px;
+    text-align: center;
+}
+
+QPushButton#link:hover {
+    color: #9ae600;
+}
+
+QPushButton#link:disabled {
+    color: #71717b;
+}
+
+QFrame#divider {
+    background-color: #27272a;
+    max-height: 1px;
+    min-height: 1px;
+    border: none;
+}

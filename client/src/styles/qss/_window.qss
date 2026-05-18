@@ -1,0 +1,49 @@
+QMainWindow#mainView,
+QWidget#windowContainer {
+    background-color: transparent;
+}
+
+QFrame#windowChrome {
+    background-color: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 14px;
+}
+
+QFrame#windowChrome[maximized="true"] {
+    border: none;
+    border-radius: 0;
+}
+
+QWidget#root,
+QWidget#authScreen,
+QStackedWidget {
+    background-color: #09090b;
+}
+
+QWidget#titleBar {
+    background-color: transparent;
+    border-bottom: 1px solid #27272a;
+}
+
+QLabel#titleBrand {
+    color: #e4e4e7;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+QPushButton#winCtrl,
+QPushButton#winClose {
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+}
+
+QPushButton#winCtrl:hover {
+    background-color: #27272a;
+}
+
+QPushButton#winClose:hover {
+    background-color: #e7000b;
+}
