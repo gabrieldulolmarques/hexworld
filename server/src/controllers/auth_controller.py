@@ -1,6 +1,6 @@
-from services.auth_service import register, login, logout, validate_session
+from controllers.auth_middleware import authenticated
+from services.auth_service import login, logout, register
 from transport.protocol import error_response, success_response
-
 
 def handle_register(request: dict) -> dict:
     data = request.get("data", {})
@@ -17,7 +17,6 @@ def handle_register(request: dict) -> dict:
         return error_response("register", error_code)
 
     return success_response("register")
-
 
 def handle_login(request: dict) -> dict:
     data = request.get("data", {})
@@ -36,34 +35,21 @@ def handle_login(request: dict) -> dict:
 
     return success_response("login", response_data)
 
-
-def handle_logout(request: dict) -> dict:
-    data = request.get("data", {})
-
-    token = str(data.get("token", ""))
-
-    if not token:
-        return error_response("logout", "missing_fields")
-
-    error_code = logout(token)
+@authenticated
+def handle_logout(request: dict, auth: dict) -> dict:
+    error_code = logout(auth["token"])
 
     if error_code is not None:
         return error_response("logout", error_code)
 
     return success_response("logout")
 
-
-def handle_validate_session(request: dict) -> dict:
-    data = request.get("data", {})
-
-    token = str(data.get("token", ""))
-
-    if not token:
-        return error_response("validate_session", "missing_fields")
-
-    response_data, error_code = validate_session(token)
-
-    if error_code is not None:
-        return error_response("validate_session", error_code)
-
-    return success_response("validate_session", response_data)
+@authenticated
+def handle_validate_session(request: dict, auth: dict) -> dict:
+    return success_response(
+        "validate_session",
+        {
+            "user_id": auth["user_id"],
+            "username": auth["username"],
+        },
+    )

@@ -13,6 +13,7 @@ def get_database_path() -> Path:
     return Path(__file__).resolve().parents[2] / "data" / "hexworld.db"
 
 def get_connection() -> Connection:
+    """Return the SQLite connection for the calling thread (thread-local; not shareable across threads)."""
     connection = getattr(_local, "connection", None)
     if connection is None:
         try:
@@ -29,6 +30,7 @@ def get_connection() -> Connection:
     return connection
 
 def close_connection() -> None:
+    """Close the calling thread's SQLite connection; must be called from the same thread that opened it."""
     connection = getattr(_local, "connection", None)
     if connection is not None:
         try:

@@ -24,7 +24,7 @@ class Connection:
             print(format_exc())
         finally:
             self.stop()
-    
+
     def stop(self) -> None:
         close_connection()
         if self._client_socket:

@@ -13,10 +13,8 @@ _ERROR_MESSAGES = {
     "password_too_long": "Password is too long.",
     "invalid_token": "Session expired.",
     "unknown_type": "Unknown request type.",
+    "unexpected_error": "Unexpected server error.",
 }
-
-_UNEXPECTED_ERROR = "Unexpected server error."
-
 class AuthController(QObject):
 
     loading = pyqtSignal(bool)
@@ -95,7 +93,7 @@ class AuthController(QObject):
             if code == "invalid_token":
                 self.session.clear()
                 self.session_expired.emit()
-            self.error.emit(_ERROR_MESSAGES.get(code, _UNEXPECTED_ERROR))
+            self.error.emit(_ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"]))
             return
 
         data = response.get("data", {})
