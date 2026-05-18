@@ -12,7 +12,8 @@ from socket import (
 )
 from threading import Lock
 
-from transport.protocol import recv_response, send_request
+from transport.protocol import recv_response as read_response
+from transport.protocol import send_request
 
 DEFAULT_SERVER_ADDRESS = "127.0.0.1:5000"
 CONNECT_TIMEOUT_SECONDS = 5.0
@@ -28,26 +29,53 @@ class Client:
     def is_connected(self) -> bool:
         return self._client_socket is not None
 
-    def send(self, request: dict) -> dict:
+    def socket_fileno(self) -> int | None:
+        with self._io_lock:
+            if self._client_socket is None:
+                return None
+            return self._client_socket.fileno()
+
+    def ensure_connected(self) -> None:
+        with self._io_lock:
+            if not self.is_connected():
+                self._connect()
+
+    def send_request(self, request: dict) -> None:
         with self._io_lock:
             if not self.is_connected():
                 self._connect()
             try:
                 send_request(self._client_socket, request)
-                response = recv_response(self._client_socket)
             except Exception as exception:
-                self.stop()
+                self._disconnect_locked()
                 raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
-            if response is None:
-                self.stop()
-                raise Exception(SERVER_UNREACHABLE_MESSAGE)
-            return response
+
+    def recv_response(self) -> dict | None:
+        """Read the next server frame (kind response or event)."""
+        with self._io_lock:
+            if not self.is_connected():
+                return None
+            try:
+                frame = read_response(self._client_socket)
+            except Exception as exception:
+                self._disconnect_locked()
+                raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
+            if frame is None:
+                self._disconnect_locked()
+            return frame
 
     def stop(self) -> None:
+        with self._io_lock:
+            self._disconnect_locked()
+
+    def _disconnect_locked(self) -> None:
         if self._client_socket:
             self._client_socket.close()
             self._client_socket = None
-        print(f"Client {self._client_id} disconnected from {self._server_address[0]}:{self._server_address[1]}")
+            print(
+                f"Client {self._client_id} disconnected from "
+                f"{self._server_address[0]}:{self._server_address[1]}"
+            )
 
     def _connect(self) -> None:
         try:
@@ -57,7 +85,10 @@ class Client:
             sock.settimeout(None)
             _configure_keepalive(sock)
             self._client_socket = sock
-            print(f"Client {self._client_id} connected to {self._server_address[0]}:{self._server_address[1]}")
+            print(
+                f"Client {self._client_id} connected to "
+                f"{self._server_address[0]}:{self._server_address[1]}"
+            )
         except Exception as exception:
             self._client_socket = None
             raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception

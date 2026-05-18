@@ -27,6 +27,7 @@ def send_request(sock, request: dict) -> None:
     sock.sendall(header + payload)
 
 def recv_response(sock) -> dict | None:
+    """Read one inbound frame from the server (kind response or event)."""
     header = _recv_exact(sock, HEADER_SIZE)
     if not header:
         return None
