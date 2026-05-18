@@ -20,10 +20,10 @@ def handle_request(request: dict) -> dict:
     request_type = request.get("type") or "unknown"
     handler = REQUEST_HANDLERS.get(request_type)
     if handler is None:
-        return error_response(request_type, "unknown_type")
+        return error_response(request, "unknown_type")
     try:
         return handler(request)
     except Exception as exception:
         print(f"Error handling request {request}: {exception}")
         print(format_exc())
-        return error_response(request_type, "unexpected_error")
+        return error_response(request, "unexpected_error")
