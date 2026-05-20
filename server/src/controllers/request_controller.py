@@ -16,13 +16,13 @@ REQUEST_HANDLERS = {
     "logout": handle_logout,
 }
 
-def handle_request(request: dict, conn) -> dict:
+def handle_request(request: dict, connection) -> dict:
     request_type = request.get("type") or "unknown"
     handler = REQUEST_HANDLERS.get(request_type)
     if handler is None:
         return error_response(request, "unknown_type")
     try:
-        return handler(request, conn)
+        return handler(request, connection)
     except Exception as exception:
         print(f"Error handling request {request}: {exception}")
         print(format_exc())
