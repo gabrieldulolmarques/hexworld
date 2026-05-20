@@ -8,7 +8,7 @@ Handler = Callable[[dict, object, dict], dict]
 
 def authenticated(handler: Handler) -> Callable[[dict, object], dict]:
     @wraps(handler)
-    def wrapper(request: dict, conn) -> dict:
+    def wrapper(request: dict, connection) -> dict:
         token = _extract_token(request)
         if not token:
             return error_response(request, "missing_fields")
@@ -16,7 +16,7 @@ def authenticated(handler: Handler) -> Callable[[dict, object], dict]:
         if error_code is not None:
             return error_response(request, error_code)
         auth = {**session_data, "token": token}
-        return handler(request, conn, auth)
+        return handler(request, connection, auth)
 
     return wrapper
 
