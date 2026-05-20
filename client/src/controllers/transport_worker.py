@@ -1,5 +1,6 @@
 from queue import Empty, Queue
 from select import select
+from traceback import format_exc
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
@@ -47,6 +48,8 @@ class TransportWorker(QThread):
         try:
             self._client.ensure_connected()
         except Exception as exception:
+            print(f"Error connecting to server: {exception}")
+            print(format_exc())
             self._fail(str(exception))
             return
 
@@ -71,6 +74,8 @@ class TransportWorker(QThread):
             try:
                 frame = self._client.recv_response()
             except Exception as exception:
+                print(f"Error reading frame from server: {exception}")
+                print(format_exc())
                 self._fail(str(exception))
                 break
 
@@ -84,7 +89,7 @@ class TransportWorker(QThread):
             elif kind == KIND_EVENT:
                 self.event.emit(frame)
             else:
-                print(f"TransportWorker: discarding frame with unknown kind={kind!r}")
+                print(f"Error processing frame: unknown kind={kind!r}")
 
     def _flush_outgoing(self) -> None:
         while True:
@@ -98,6 +103,8 @@ class TransportWorker(QThread):
             try:
                 self._client.send_request(item)
             except Exception as exception:
+                print(f"Error sending request to server: {exception}")
+                print(format_exc())
                 self._fail(str(exception))
                 return
 

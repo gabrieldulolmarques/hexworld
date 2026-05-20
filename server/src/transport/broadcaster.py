@@ -2,7 +2,7 @@ from collections import defaultdict
 from threading import Lock
 from traceback import format_exc
 
-class EventBus:
+class Broadcaster:
     """Per-map fanout for server-pushed events.
 
     Subscribers are `Connection` objects (any duck-typed `.send(payload)` works).
@@ -38,7 +38,7 @@ class EventBus:
             try:
                 connection.send(stamped)
             except Exception as exception:
-                print(f"EventBus: drop subscriber after send failure: {exception}")
+                print(f"Error broadcasting event for map {map_id}: {exception}")
                 print(format_exc())
 
-event_bus = EventBus()
+broadcaster = Broadcaster()
