@@ -4,11 +4,11 @@ from functools import wraps
 from services.auth_service import validate_session
 from transport.protocol import error_response
 
-Handler = Callable[[dict, dict], dict]
+Handler = Callable[[dict, object, dict], dict]
 
-def authenticated(handler: Handler) -> Callable[[dict], dict]:
+def authenticated(handler: Handler) -> Callable[[dict, object], dict]:
     @wraps(handler)
-    def wrapper(request: dict) -> dict:
+    def wrapper(request: dict, conn) -> dict:
         token = _extract_token(request)
         if not token:
             return error_response(request, "missing_fields")
@@ -16,7 +16,7 @@ def authenticated(handler: Handler) -> Callable[[dict], dict]:
         if error_code is not None:
             return error_response(request, error_code)
         auth = {**session_data, "token": token}
-        return handler(request, auth)
+        return handler(request, conn, auth)
 
     return wrapper
 

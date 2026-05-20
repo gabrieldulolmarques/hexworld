@@ -14,6 +14,7 @@ from socket import (
 from threading import Thread
 from traceback import format_exc
 
+from database.connection import close_pool
 from transport.connection import Connection
 
 DEFAULT_SERVER_ADDRESS = "0.0.0.0:5000"
@@ -50,6 +51,7 @@ class Server:
         if self._server_socket:
             self._server_socket.close()
             self._server_socket = None
+        close_pool()
         print("Server stopped")
 
 def _configure_keepalive(sock: socket) -> None:
