@@ -1,3 +1,5 @@
+from PyQt6.QtCore import QTimer
+
 from controllers.auth_controller import AuthController
 from controllers.transport_worker import TransportWorker
 from models.preferences import Preferences
@@ -6,6 +8,8 @@ from transport.client import Client
 from views.auth_view import AuthView
 from views.home_view import HomeView
 from views.main_view import MainView
+
+_RECONNECT_DELAY_MS = 5000
 
 class ClientController:
     def __init__(self, main_view: MainView) -> None:
@@ -74,6 +78,11 @@ class ClientController:
         self.auth_view.set_login_defaults(username, remember)
 
     def _on_worker_finished(self) -> None:
+        if self._stopping:
+            return
+        QTimer.singleShot(_RECONNECT_DELAY_MS, self._restart_worker)
+
+    def _restart_worker(self) -> None:
         if self._stopping:
             return
         self.transport_worker.reset()
