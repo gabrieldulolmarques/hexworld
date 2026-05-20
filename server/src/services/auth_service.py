@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from sqlite3 import IntegrityError
 from uuid import uuid4
 
 from argon2 import PasswordHasher
