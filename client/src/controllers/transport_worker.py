@@ -19,12 +19,27 @@ class TransportWorker(QThread):
         self._client = client
         self._outgoing: Queue = Queue()
         self._running = True
+        self._alive = True
 
-    def submit(self, request: dict) -> None:
+    def submit(self, request: dict) -> bool:
+        if not self._alive:
+            return False
         self._outgoing.put(request)
+        return True
+
+    def reset(self) -> None:
+        """Prepare for a fresh start() after a previous run ended. Drains stale queue."""
+        while not self._outgoing.empty():
+            try:
+                self._outgoing.get_nowait()
+            except Empty:
+                break
+        self._running = True
+        self._alive = True
 
     def stop(self) -> None:
         self._running = False
+        self._alive = False
         self._outgoing.put(_STOP)
         self.wait(3000)
 
@@ -32,29 +47,35 @@ class TransportWorker(QThread):
         try:
             self._client.ensure_connected()
         except Exception as exception:
-            self.error.emit(str(exception))
+            self._fail(str(exception))
             return
 
         while self._running:
             self._flush_outgoing()
+            if not self._running:
+                break
 
             fileno = self._client.socket_fileno()
             if fileno is None:
-                self.error.emit(SERVER_UNREACHABLE_MESSAGE)
+                self._fail(SERVER_UNREACHABLE_MESSAGE)
                 break
 
-            readable, _, _ = select([fileno], [], [], 0.05)
+            try:
+                readable, _, _ = select([fileno], [], [], 0.05)
+            except OSError:
+                self._fail(SERVER_UNREACHABLE_MESSAGE)
+                break
             if not readable:
                 continue
 
             try:
                 frame = self._client.recv_response()
             except Exception as exception:
-                self.error.emit(str(exception))
+                self._fail(str(exception))
                 break
 
             if frame is None:
-                self.error.emit(SERVER_UNREACHABLE_MESSAGE)
+                self._fail(SERVER_UNREACHABLE_MESSAGE)
                 break
 
             kind = frame.get("kind")
@@ -62,6 +83,8 @@ class TransportWorker(QThread):
                 self.response.emit(frame)
             elif kind == KIND_EVENT:
                 self.event.emit(frame)
+            else:
+                print(f"TransportWorker: discarding frame with unknown kind={kind!r}")
 
     def _flush_outgoing(self) -> None:
         while True:
@@ -75,6 +98,10 @@ class TransportWorker(QThread):
             try:
                 self._client.send_request(item)
             except Exception as exception:
-                self.error.emit(str(exception))
-                self._running = False
+                self._fail(str(exception))
                 return
+
+    def _fail(self, message: str) -> None:
+        self._alive = False
+        self._running = False
+        self.error.emit(message)
