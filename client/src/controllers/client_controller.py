@@ -21,6 +21,7 @@ class ClientController:
         self.transport_worker.start()
 
         self.session = Session()
+        self._stopping = False
 
         self.preferences = Preferences()
         self._restore_preferences()
@@ -43,6 +44,8 @@ class ClientController:
         self.auth.session_expired.connect(self._show_auth)
         self.auth.loading.connect(self._on_loading)
         self.auth.error.connect(self._on_error)
+
+        self.transport_worker.finished.connect(self._on_worker_finished)
 
     def _on_loading(self, loading: bool) -> None:
         current = self.main_view.stack.currentWidget()
@@ -70,6 +73,13 @@ class ClientController:
         username, remember = self.preferences.load()
         self.auth_view.set_login_defaults(username, remember)
 
+    def _on_worker_finished(self) -> None:
+        if self._stopping:
+            return
+        self.transport_worker.reset()
+        self.transport_worker.start()
+
     def stop(self) -> None:
+        self._stopping = True
         self.transport_worker.stop()
         self.client.stop()

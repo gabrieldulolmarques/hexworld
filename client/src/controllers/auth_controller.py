@@ -79,7 +79,11 @@ class AuthController(QObject):
         self._pending.add(request["request_id"])
         if len(self._pending) == 1:
             self.loading.emit(True)
-        self._transport_worker.submit(request)
+        if not self._transport_worker.submit(request):
+            self._pending.discard(request["request_id"])
+            if not self._pending:
+                self.loading.emit(False)
+            self.error.emit(_ERROR_MESSAGES["unexpected_error"])
 
     def _on_response(self, response: dict) -> None:
         request_id = response.get("request_id", "")
@@ -121,4 +125,7 @@ class AuthController(QObject):
         self._pending.clear()
         if had_pending:
             self.loading.emit(False)
+        if self.session.is_authenticated():
+            self.session.clear()
+            self.session_expired.emit()
         self.error.emit(message)
