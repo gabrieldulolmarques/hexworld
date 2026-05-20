@@ -32,7 +32,7 @@ class Server:
             self._server_socket.listen()
             print(f"Server started on {self._server_address[0]}:{self._server_address[1]}")
         except Exception as exception:
-            print(f"Error on starting server: {exception}")
+            print(f"Error starting server: {exception}")
             print(format_exc())
             self.stop()
             raise
