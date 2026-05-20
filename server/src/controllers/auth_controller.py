@@ -2,7 +2,7 @@ from controllers.auth_middleware import authenticated
 from services.auth_service import login, logout, register
 from transport.protocol import error_response, success_response
 
-def handle_register(request: dict) -> dict:
+def handle_register(request: dict, conn) -> dict:
     data = request.get("data", {})
 
     username = str(data.get("username", "")).strip()
@@ -18,7 +18,7 @@ def handle_register(request: dict) -> dict:
 
     return success_response(request)
 
-def handle_login(request: dict) -> dict:
+def handle_login(request: dict, conn) -> dict:
     data = request.get("data", {})
 
     username = str(data.get("username", "")).strip()
@@ -36,7 +36,7 @@ def handle_login(request: dict) -> dict:
     return success_response(request, response_data)
 
 @authenticated
-def handle_logout(request: dict, auth: dict) -> dict:
+def handle_logout(request: dict, conn, auth: dict) -> dict:
     error_code = logout(auth["token"])
 
     if error_code is not None:
@@ -45,7 +45,7 @@ def handle_logout(request: dict, auth: dict) -> dict:
     return success_response(request)
 
 @authenticated
-def handle_validate_session(request: dict, auth: dict) -> dict:
+def handle_validate_session(request: dict, conn, auth: dict) -> dict:
     return success_response(
         request,
         {

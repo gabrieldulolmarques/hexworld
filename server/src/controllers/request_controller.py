@@ -3,9 +3,9 @@ from traceback import format_exc
 from transport.protocol import error_response
 
 from controllers.auth_controller import (
-    handle_register,
     handle_login,
     handle_logout,
+    handle_register,
     handle_validate_session,
 )
 
@@ -16,13 +16,13 @@ REQUEST_HANDLERS = {
     "logout": handle_logout,
 }
 
-def handle_request(request: dict) -> dict:
+def handle_request(request: dict, conn) -> dict:
     request_type = request.get("type") or "unknown"
     handler = REQUEST_HANDLERS.get(request_type)
     if handler is None:
         return error_response(request, "unknown_type")
     try:
-        return handler(request)
+        return handler(request, conn)
     except Exception as exception:
         print(f"Error handling request {request}: {exception}")
         print(format_exc())
