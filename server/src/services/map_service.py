@@ -1,7 +1,10 @@
 import secrets
 from uuid import uuid4
 
-from repositories.component_repository import get_cell_details as db_get_cell_details
+from repositories.component_repository import (
+    get_cell_details as db_get_cell_details,
+    upsert_structure,
+)
 from repositories.map_repository import (
     create_map as db_create_map,
     delete_map as db_delete_map,
@@ -9,7 +12,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
-from repositories.tile_repository import get_tile_by_id, list_tiles_with_components
+from repositories.tile_repository import get_or_create_tile, get_tile_by_id, list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
     get_role,
@@ -134,6 +137,15 @@ def get_cell_details(map_id: str, tile_id: str) -> dict | str:
         "description": _resolve(details["description"], ["text"]),
         "roads": [_resolve(road, ["id", "color"]) for road in details["roads"]],
     }
+
+
+def set_structure(user_id: str, map_id: str, q: int, r: int, structure_type: str) -> dict | str:
+    structure_type = structure_type.strip()
+    if not structure_type:
+        return "missing_fields"
+    tile_id = get_or_create_tile(map_id, q, r)
+    upsert_structure(tile_id, structure_type, user_id)
+    return {"tile_id": tile_id, "q": q, "r": r, "type": structure_type}
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
