@@ -7,6 +7,7 @@ from services.map_service import (
     get_map_state,
     get_maps,
     join_map,
+    set_structure,
 )
 from transport.broadcaster import broadcaster
 from transport.protocol import error_response, event, success_response
@@ -87,6 +88,22 @@ def handle_get_map_state(request: dict, connection, auth: dict) -> dict:
     map_id = (request.get("data") or {}).get("map_id", "")
     connection.subscribe(map_id)
     result = get_map_state(auth["user_id"], map_id)
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_set_structure(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    q = data.get("q")
+    r = data.get("r")
+    structure_type = data.get("type", "")
+    if q is None or r is None or not structure_type:
+        return error_response(request, "missing_fields")
+    result = set_structure(auth["user_id"], map_id, int(q), int(r), structure_type)
+    if isinstance(result, str):
+        return error_response(request, result)
     return success_response(request, result)
 
 
