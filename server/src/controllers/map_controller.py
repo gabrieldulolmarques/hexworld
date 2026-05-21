@@ -106,6 +106,7 @@ def handle_set_structure(request: dict, connection, auth: dict) -> dict:
     result = set_structure(auth["user_id"], map_id, int(q), int(r), structure_type)
     if isinstance(result, str):
         return error_response(request, result)
+    broadcaster.broadcast(map_id, event("structure_set", result))
     return success_response(request, result)
 
 
@@ -122,6 +123,7 @@ def handle_add_road(request: dict, connection, auth: dict) -> dict:
     result = add_road(auth["user_id"], map_id, int(q), int(r), color)
     if isinstance(result, str):
         return error_response(request, result)
+    broadcaster.broadcast(map_id, event("road_added", result))
     return success_response(request, result)
 
 
@@ -138,6 +140,7 @@ def handle_set_description(request: dict, connection, auth: dict) -> dict:
     result = set_description(auth["user_id"], map_id, int(q), int(r), text)
     if isinstance(result, str):
         return error_response(request, result)
+    broadcaster.broadcast(map_id, event("description_set", result))
     return success_response(request, result)
 
 
