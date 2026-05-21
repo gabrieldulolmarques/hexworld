@@ -4,7 +4,10 @@ from uuid import uuid4
 
 from repositories.component_repository import (
     add_road as db_add_road,
+    delete_description as db_delete_description,
+    delete_road as db_delete_road,
     get_cell_details as db_get_cell_details,
+    get_road_by_id,
     upsert_description,
     upsert_structure,
 )
@@ -15,7 +18,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
-from repositories.tile_repository import get_or_create_tile, get_tile_by_id, list_tiles_with_components
+from repositories.tile_repository import delete_tile, get_or_create_tile, get_tile_by_id, list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
     get_role,
@@ -181,6 +184,36 @@ def set_description(user_id: str, map_id: str, q: int, r: int, text: str) -> dic
         tile_id = get_or_create_tile(map_id, q, r)
         upsert_description(tile_id, text, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "text": text}
+
+
+def remove_structure(map_id: str, tile_id: str) -> dict | str:
+    tile = get_tile_by_id(tile_id)
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    with _get_tile_lock(map_id, tile["q"], tile["r"]):
+        delete_tile(tile_id)
+    return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
+
+
+def remove_road(map_id: str, road_id: str) -> dict | str:
+    road = get_road_by_id(road_id)
+    if road is None:
+        return "not_found"
+    tile = get_tile_by_id(road["tile_id"])
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    with _get_tile_lock(map_id, tile["q"], tile["r"]):
+        db_delete_road(road_id)
+    return {"tile_id": tile["id"], "q": tile["q"], "r": tile["r"], "road_id": road_id}
+
+
+def remove_description(map_id: str, tile_id: str) -> dict | str:
+    tile = get_tile_by_id(tile_id)
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    with _get_tile_lock(map_id, tile["q"], tile["r"]):
+        db_delete_description(tile_id)
+    return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
