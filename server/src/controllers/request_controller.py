@@ -16,6 +16,7 @@ from controllers.map_controller import (
     handle_get_map_state,
     handle_get_maps,
     handle_join_map,
+    handle_set_structure,
 )
 
 REQUEST_HANDLERS = {
@@ -30,6 +31,7 @@ REQUEST_HANDLERS = {
     "get_map_state": handle_get_map_state,
     "dissociate_map": handle_dissociate_map,
     "delete_map": handle_delete_map,
+    "set_structure": handle_set_structure,
 }
 
 def handle_request(request: dict, connection) -> dict:
