@@ -16,6 +16,7 @@ QFrame#windowChrome[maximized="true"] {
 
 QWidget#root,
 QWidget#authScreen,
+QWidget#mapScreen,
 QStackedWidget {
     background-color: #09090b;
 }
