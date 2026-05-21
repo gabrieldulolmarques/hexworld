@@ -52,8 +52,10 @@ class MapBody(QWidget):
 
         select_panel.hide()
         road_panel.hide()
+        palette.hide()
 
         members_bar.toggled.connect(self._reposition_panels)
+        self.sync_panels(TOOL_SELECT)
 
     def sync_panels(self, tool_id: str) -> None:
         show_select = tool_id == TOOL_SELECT and self._select_panel.has_selection()

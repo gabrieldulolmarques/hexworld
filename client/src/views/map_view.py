@@ -62,6 +62,7 @@ class MapView(QWidget):
         self.canvas = HexCanvas()
         self.canvas.setObjectName("hexCanvas")
         self.canvas.hex_clicked.connect(self._on_hex_clicked)
+        self.canvas.hex_deselected.connect(self._on_hex_deselected)
         self.canvas.hex_clicked.connect(self.hex_selected)
 
         self._toolbar      = MapToolbar()
@@ -95,6 +96,7 @@ class MapView(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         root.addWidget(self._body, 1)
+        self._body.sync_panels(TOOL_SELECT)
 
     # ------------------------------------------------------------------
     # Internal signal handlers
@@ -102,6 +104,11 @@ class MapView(QWidget):
 
     def _on_hex_clicked(self, q: int, r: int) -> None:
         self._select_panel.set_coord(q, r)
+        if self._active_tool == TOOL_SELECT:
+            self._body.sync_panels(TOOL_SELECT)
+
+    def _on_hex_deselected(self) -> None:
+        self._select_panel.clear_selection()
         if self._active_tool == TOOL_SELECT:
             self._body.sync_panels(TOOL_SELECT)
 
@@ -119,9 +126,14 @@ class MapView(QWidget):
         return self._road_panel.selected_color()
 
     def set_map(self, data: dict) -> None:
+        self._active_tool = TOOL_SELECT
+        self._select_panel.clear_selection()
+        self.canvas.clear_selection()
+        self._tool_strip.set_active_tool(TOOL_SELECT)
+        self._palette.apply_tool(TOOL_SELECT)
         self._toolbar.set_map_name(data.get("name", ""))
         self._members_bar.set_total(data.get("member_count", 0))
-        self._body.reposition_panels()
+        self._body.sync_panels(TOOL_SELECT)
 
     def update_member_count(self, count: int) -> None:
         self._members_bar.set_total(count)
