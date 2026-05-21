@@ -8,6 +8,7 @@ from services.map_service import (
     get_map_state,
     get_maps,
     join_map,
+    set_description,
     set_structure,
 )
 from transport.broadcaster import broadcaster
@@ -119,6 +120,22 @@ def handle_add_road(request: dict, connection, auth: dict) -> dict:
     if q is None or r is None or not color:
         return error_response(request, "missing_fields")
     result = add_road(auth["user_id"], map_id, int(q), int(r), color)
+    if isinstance(result, str):
+        return error_response(request, result)
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_set_description(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    q = data.get("q")
+    r = data.get("r")
+    text = data.get("text", "")
+    if q is None or r is None or not text:
+        return error_response(request, "missing_fields")
+    result = set_description(auth["user_id"], map_id, int(q), int(r), text)
     if isinstance(result, str):
         return error_response(request, result)
     return success_response(request, result)
