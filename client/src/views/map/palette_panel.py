@@ -127,6 +127,7 @@ class PalettePanel(MapPanel):
         super().__init__("mapPalette")
         self.setFixedWidth(SIDE_PANEL_W)
         self._active_tile: TileButton | None = None
+        self._structure_stem: str | None = None
         self._active_tool = TOOL_SELECT
         self._biome_list = [_EMPTY_CAT] + REGISTRY.biomes()
 
@@ -267,11 +268,15 @@ class PalettePanel(MapPanel):
     def active_tool(self) -> str:
         return self._active_tool
 
+    def selected_structure(self) -> str | None:
+        return self._structure_stem
+
     def _on_tile_clicked(self, btn: TileButton, stem: str) -> None:
         if self._active_tool != TOOL_STRUCTURE:
             return
         if self._active_tile and self._active_tile is not btn:
             self._active_tile.set_checked(False)
         self._active_tile = btn
+        self._structure_stem = stem
         btn.set_checked(True)
         self.structure_selected.emit(stem)

@@ -16,6 +16,7 @@ _ERROR_MESSAGES = {
     "map_has_members":   "Remove all other members before deleting.",
     "use_delete":        "You are the only member — use Delete instead.",
     "unexpected_error":  "Unexpected server error.",
+    "not_editor":        "You need editor access to change this map.",
 }
 
 
@@ -32,6 +33,8 @@ class MapController(QObject):
     map_role_changed         = pyqtSignal(str, str)   # map_id, new_role
     map_presence_changed     = pyqtSignal(str, list)  # map_id, online_users
     map_tile_changed         = pyqtSignal(str, int, int, dict)  # map_id, q, r, payload
+    map_state_loaded         = pyqtSignal(dict)
+    map_editor_error         = pyqtSignal(str)
     session_error            = pyqtSignal()           # invalid/expired session
 
     def __init__(self, transport_worker: TransportWorker, session: Session) -> None:
@@ -39,6 +42,9 @@ class MapController(QObject):
         self._worker  = transport_worker
         self._session = session
         self._pending: set[str] = set()
+        self._open_map_id: str | None = None
+        self._tile_ids: dict[tuple[int, int], str] = {}
+        self._map_role: str = "viewer"
         transport_worker.response.connect(self._on_response)
         transport_worker.event.connect(self._on_event)
 
@@ -67,6 +73,50 @@ class MapController(QObject):
 
     def delete_map(self, map_id: str) -> None:
         self._send(request("delete_map", {"token": self._session.token, "map_id": map_id}))
+
+    def open_map(self, map_id: str) -> None:
+        self._open_map_id = map_id
+        self._tile_ids.clear()
+        self._send(
+            request(
+                "get_map_state",
+                {"token": self._session.token, "map_id": map_id},
+            ),
+        )
+
+    def close_map(self) -> None:
+        self._open_map_id = None
+        self._tile_ids.clear()
+
+    @property
+    def open_map_id(self) -> str | None:
+        return self._open_map_id
+
+    @property
+    def can_edit(self) -> bool:
+        return self._map_role in ("owner", "editor")
+
+    def tile_id_at(self, q: int, r: int) -> str | None:
+        return self._tile_ids.get((q, r))
+
+    def remember_tile(self, q: int, r: int, tile_id: str) -> None:
+        self._tile_ids[(q, r)] = tile_id
+
+    def set_structure(self, q: int, r: int, structure_type: str) -> None:
+        if not self._open_map_id or not structure_type:
+            return
+        self._send(
+            request(
+                "set_structure",
+                {
+                    "token": self._session.token,
+                    "map_id": self._open_map_id,
+                    "q": q,
+                    "r": r,
+                    "type": structure_type,
+                },
+            ),
+        )
 
     # ------------------------------------------------------------------
     # Internal
@@ -102,6 +152,8 @@ class MapController(QObject):
                 self.create_error.emit(msg)
             elif req_type == "join_map":
                 self.join_error.emit(msg)
+            elif req_type in ("get_map_state", "set_structure"):
+                self.map_editor_error.emit(msg)
             else:
                 self.error.emit(msg)
             return
@@ -110,6 +162,32 @@ class MapController(QObject):
         match req_type:
             case "get_maps":
                 self.maps_loaded.emit(data.get("maps", []))
+            case "get_map_state":
+                self._map_role = data.get("role", "viewer")
+                self.map_state_loaded.emit(data)
+            case "set_structure":
+                tile_id = data.get("tile_id")
+                q, r = data.get("q"), data.get("r")
+                stype = data.get("type", "")
+                if (
+                    self._open_map_id
+                    and tile_id is not None
+                    and q is not None
+                    and r is not None
+                ):
+                    qi, ri = int(q), int(r)
+                    self.remember_tile(qi, ri, tile_id)
+                    self.map_tile_changed.emit(
+                        self._open_map_id,
+                        qi,
+                        ri,
+                        {
+                            "q": qi,
+                            "r": ri,
+                            "tile_id": tile_id,
+                            "structure": {"type": stype},
+                        },
+                    )
             case "create_map":
                 self.map_created.emit(data["map"])
             case "join_map":

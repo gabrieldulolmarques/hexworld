@@ -43,6 +43,7 @@ class HexCanvas(QWidget):
         self._offset = [0.0, 0.0]
         self._hex_size = _HEX_SIZE_DEFAULT
         self._pan_anchor: tuple[float, float, float, float] | None = None
+        self._pick_any_hex = False
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMinimumSize(400, 300)
@@ -86,6 +87,20 @@ class HexCanvas(QWidget):
         self._selected = None
         self.update()
 
+    def set_pick_any_hex(self, enabled: bool) -> None:
+        self._pick_any_hex = enabled
+        if not enabled and self._hover is not None and self._hover not in self._tiles:
+            self._hover = None
+            self.update()
+
+    def zoom_in(self) -> None:
+        self._hex_size = min(_HEX_SIZE_MAX, self._hex_size + _ZOOM_STEP)
+        self.update()
+
+    def zoom_out(self) -> None:
+        self._hex_size = max(_HEX_SIZE_MIN, self._hex_size - _ZOOM_STEP)
+        self.update()
+
     # ------------------------------------------------------------------
     # Painting
     # ------------------------------------------------------------------
@@ -96,6 +111,12 @@ class HexCanvas(QWidget):
         painter.fillRect(self.rect(), _BG)
         for (q, r), data in self._tiles.items():
             self._draw_hex(painter, q, r, data)
+        if (
+            self._pick_any_hex
+            and self._hover is not None
+            and self._hover not in self._tiles
+        ):
+            self._draw_hex(painter, self._hover[0], self._hover[1], {})
 
     def _origin(self) -> tuple[float, float]:
         return (self.width() / 2 + self._offset[0], self.height() / 2 + self._offset[1])
@@ -178,19 +199,20 @@ class HexCanvas(QWidget):
         pos = event.position()
         x, y = pos.x(), pos.y()
         if event.button() == Qt.MouseButton.LeftButton:
-            hit = self._hit_test(x, y)
+            hit = self._pick_hex(x, y)
             if hit is None:
                 if self._selected is not None:
                     self._selected = None
                     self.update()
                     self.hex_deselected.emit()
                 return
-            if self._selected == hit:
-                self._selected = None
-                self.update()
-                self.hex_deselected.emit()
-                return
-            self._selected = hit
+            if not self._pick_any_hex:
+                if self._selected == hit:
+                    self._selected = None
+                    self.update()
+                    self.hex_deselected.emit()
+                    return
+                self._selected = hit
             self.update()
             self.hex_clicked.emit(hit[0], hit[1])
             return
@@ -209,7 +231,7 @@ class HexCanvas(QWidget):
             self._offset[1] = oy + (y - y0)
             self.update()
             return
-        hit = self._hit_test(x, y)
+        hit = self._pick_hex(x, y)
         if self._hover != hit:
             self._hover = hit
             self.update()
@@ -232,16 +254,12 @@ class HexCanvas(QWidget):
         ox, oy = self._origin()
         return pixel_to_hex(cx - ox, cy - oy, self._hex_size)
 
-    def _hit_test(self, cx: float, cy: float) -> Coord | None:
-        """Return the map tile under (cx, cy), or None for empty canvas / gaps.
-
-        Unlike raw pixel_to_hex (infinite grid), only coords present in
-        ``_tiles`` count — same rule as hex-mvp-recovered's ``HexState.hexes``.
-        """
-        if not self._tiles:
+    def _pick_hex(self, cx: float, cy: float) -> Coord | None:
+        """Hex under cursor. Select mode: only painted tiles. Paint mode: any cell."""
+        if not self._pick_any_hex and not self._tiles:
             return None
         q, r = self._canvas_to_hex(cx, cy)
-        if (q, r) not in self._tiles:
+        if not self._pick_any_hex and (q, r) not in self._tiles:
             return None
         ox, oy = self._origin()
         hpx, hpy = hex_to_pixel(q, r, self._hex_size)
