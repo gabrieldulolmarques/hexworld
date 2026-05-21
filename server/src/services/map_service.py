@@ -6,6 +6,7 @@ from repositories.component_repository import (
     add_road as db_add_road,
     delete_description as db_delete_description,
     delete_road as db_delete_road,
+    delete_structure as db_delete_structure,
     get_cell_details as db_get_cell_details,
     get_road_by_id,
     upsert_description,
@@ -18,7 +19,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
-from repositories.tile_repository import delete_tile, get_or_create_tile, get_tile_by_id, list_tiles_with_components
+from repositories.tile_repository import get_or_create_tile, get_tile_by_id, list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
     get_role,
@@ -126,7 +127,14 @@ def get_map_state(user_id: str, map_id: str) -> dict:
     row = get_map_by_id(map_id)
     role = get_role(user_id, map_id)
     tiles = list_tiles_with_components(map_id)
-    return {"map_id": map_id, "name": row["name"], "role": role, "tiles": tiles}
+    members = list_members(map_id)
+    return {
+        "map_id": map_id,
+        "name": row["name"],
+        "role": role,
+        "tiles": tiles,
+        "member_count": len(members),
+    }
 
 
 def get_cell_details(map_id: str, tile_id: str) -> dict | str:
@@ -195,7 +203,7 @@ def remove_structure(map_id: str, tile_id: str) -> dict | str:
     if tile is None or tile["map_id"] != map_id:
         return "not_found"
     with _get_tile_lock(map_id, tile["q"], tile["r"]):
-        delete_tile(tile_id)
+        db_delete_structure(tile_id)
     return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
 
 
