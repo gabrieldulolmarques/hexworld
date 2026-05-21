@@ -8,6 +8,9 @@ from services.map_service import (
     get_map_state,
     get_maps,
     join_map,
+    remove_description,
+    remove_road,
+    remove_structure,
     set_description,
     set_structure,
 )
@@ -141,6 +144,51 @@ def handle_set_description(request: dict, connection, auth: dict) -> dict:
     if isinstance(result, str):
         return error_response(request, result)
     broadcaster.broadcast(map_id, event("description_set", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_remove_structure(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    tile_id = data.get("tile_id", "")
+    if not tile_id:
+        return error_response(request, "missing_fields")
+    result = remove_structure(map_id, tile_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("structure_removed", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_remove_road(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    road_id = data.get("road_id", "")
+    if not road_id:
+        return error_response(request, "missing_fields")
+    result = remove_road(map_id, road_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("road_removed", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_remove_description(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    tile_id = data.get("tile_id", "")
+    if not tile_id:
+        return error_response(request, "missing_fields")
+    result = remove_description(map_id, tile_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("description_removed", result))
     return success_response(request, result)
 
 
