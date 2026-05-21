@@ -13,7 +13,7 @@ class SelectPanel(MapPanel):
         self.setFixedWidth(SIDE_PANEL_W)
         self._has_selection = False
 
-        heading = QLabel("SELECT")
+        heading = QLabel("INSPECTOR")
         heading.setObjectName("panelTitle")
         heading.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -29,6 +29,10 @@ class SelectPanel(MapPanel):
 
     def has_selection(self) -> bool:
         return self._has_selection
+
+    def clear_selection(self) -> None:
+        self._has_selection = False
+        self._coord_label.clear()
 
     def set_coord(self, q: int, r: int) -> None:
         self._has_selection = True

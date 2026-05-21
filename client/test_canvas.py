@@ -17,16 +17,13 @@ _FAKE_MAP = {
 }
 
 _FAKE_TILES = {
-    (0,  0): {},
     (1,  0): {"structure": {"type": "castle"}},
     (0,  1): {"structure": {"type": "village"}, "description": {"text": "A small village"}},
     (-1, 1): {"road": {"color": "#5ea500"}},
     (1, -1): {"structure": {"type": "fortress"}, "road": {"color": "#ef4444"}},
     (-1, 0): {"structure": {"type": "ruins"}},
     (0, -1): {"structure": {"type": "port"}},
-    (2,  0): {},
     (2, -1): {"structure": {"type": "tower"}},
-    (-2, 1): {},
     (0,  2): {"road": {"color": "#3b82f6"}, "description": {"text": "crossroads"}},
 }
 
@@ -42,12 +39,53 @@ def main() -> None:
         {"username": "alice", "role": "owner"},
         {"username": "bob",   "role": "editor"},
         {"username": "carol", "role": "viewer"},
+        {"username": "david", "role": "viewer"},
+        {"username": "eve",   "role": "viewer"},
+        {"username": "frank", "role": "viewer"},
+        {"username": "george", "role": "viewer"},
+        {"username": "hannah", "role": "viewer"},
+        {"username": "isaac", "role": "viewer"},
+        {"username": "james", "role": "viewer"},
+        {"username": "karen", "role": "viewer"},
+        {"username": "larry", "role": "viewer"},
+        {"username": "mary", "role": "viewer"},
+        {"username": "nancy", "role": "viewer"},
+        {"username": "oliver", "role": "viewer"},
+        {"username": "pam", "role": "viewer"},
+        {"username": "quincy", "role": "viewer"},
+        {"username": "rachel", "role": "viewer"},
+        {"username": "sam", "role": "viewer"},
+        {"username": "tara", "role": "viewer"},
+        {"username": "uwe", "role": "viewer"},
+        {"username": "victor", "role": "viewer"},
+        {"username": "wendy", "role": "viewer"},
+        {"username": "xavier", "role": "viewer"},
+        {"username": "yara", "role": "viewer"},
+        {"username": "zach", "role": "viewer"},
+        {"username": "alice", "role": "owner"},
+        {"username": "bob",   "role": "editor"},
+        {"username": "carol", "role": "viewer"},
+        {"username": "david", "role": "viewer"},
+        {"username": "eve",   "role": "viewer"},
+        {"username": "frank", "role": "viewer"},
+        {"username": "george", "role": "viewer"},
+        {"username": "hannah", "role": "viewer"},
+        {"username": "isaac", "role": "viewer"},
+        {"username": "james", "role": "viewer"},
+        {"username": "karen", "role": "viewer"},
+        {"username": "larry", "role": "viewer"},
+        {"username": "mary", "role": "viewer"},
+        {"username": "nancy", "role": "viewer"},
+        {"username": "oliver", "role": "viewer"},
+        {"username": "pam", "role": "viewer"},
+        {"username": "quincy", "role": "viewer"},
     ])
     view.hex_selected.connect(lambda q, r: print(f"selected ({q}, {r})"))
+    view.canvas.hex_deselected.connect(lambda: print("deselected"))
     view.tool_changed.connect(lambda t: print(f"tool: {t}"))
     view.structure_selected.connect(lambda s: print(f"structure: {s}"))
     view.road_color_selected.connect(lambda c: print(f"road color: {c}"))
-    view.request_back.connect(lambda: print("← back"))
+    view.request_back.connect(lambda: print("back"))
     view.zoom_in_requested.connect(lambda: print("zoom in"))
     view.zoom_out_requested.connect(lambda: print("zoom out"))
     view.undo_requested.connect(lambda: print("undo"))

@@ -31,7 +31,8 @@ _STRUCTURE_COLORS: dict[str, QColor] = {
 
 
 class HexCanvas(QWidget):
-    hex_clicked = pyqtSignal(int, int)   # q, r
+    hex_clicked = pyqtSignal(int, int)   # q, r — existing tile selected
+    hex_deselected = pyqtSignal()
     hex_hovered = pyqtSignal(int, int)   # q, r
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -53,6 +54,10 @@ class HexCanvas(QWidget):
 
     def set_tiles(self, tiles: dict[Coord, dict]) -> None:
         self._tiles = dict(tiles)
+        if self._selected is not None and self._selected not in self._tiles:
+            self._selected = None
+        if self._hover is not None and self._hover not in self._tiles:
+            self._hover = None
         self.update()
 
     def apply_tile(self, q: int, r: int, data: dict) -> None:
@@ -73,6 +78,12 @@ class HexCanvas(QWidget):
 
     def set_selected(self, coord: Coord | None) -> None:
         self._selected = coord
+        self.update()
+
+    def clear_selection(self) -> None:
+        if self._selected is None:
+            return
+        self._selected = None
         self.update()
 
     # ------------------------------------------------------------------
@@ -167,10 +178,21 @@ class HexCanvas(QWidget):
         pos = event.position()
         x, y = pos.x(), pos.y()
         if event.button() == Qt.MouseButton.LeftButton:
-            q, r = self._canvas_to_hex(x, y)
-            self._selected = (q, r)
+            hit = self._hit_test(x, y)
+            if hit is None:
+                if self._selected is not None:
+                    self._selected = None
+                    self.update()
+                    self.hex_deselected.emit()
+                return
+            if self._selected == hit:
+                self._selected = None
+                self.update()
+                self.hex_deselected.emit()
+                return
+            self._selected = hit
             self.update()
-            self.hex_clicked.emit(q, r)
+            self.hex_clicked.emit(hit[0], hit[1])
             return
         if event.button() in (Qt.MouseButton.MiddleButton, Qt.MouseButton.RightButton):
             self._pan_anchor = (x, y, self._offset[0], self._offset[1])
@@ -187,11 +209,12 @@ class HexCanvas(QWidget):
             self._offset[1] = oy + (y - y0)
             self.update()
             return
-        q, r = self._canvas_to_hex(x, y)
-        if self._hover != (q, r):
-            self._hover = (q, r)
+        hit = self._hit_test(x, y)
+        if self._hover != hit:
+            self._hover = hit
             self.update()
-            self.hex_hovered.emit(q, r)
+            if hit is not None:
+                self.hex_hovered.emit(hit[0], hit[1])
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event) -> None:
@@ -208,3 +231,21 @@ class HexCanvas(QWidget):
     def _canvas_to_hex(self, cx: float, cy: float) -> Coord:
         ox, oy = self._origin()
         return pixel_to_hex(cx - ox, cy - oy, self._hex_size)
+
+    def _hit_test(self, cx: float, cy: float) -> Coord | None:
+        """Return the map tile under (cx, cy), or None for empty canvas / gaps.
+
+        Unlike raw pixel_to_hex (infinite grid), only coords present in
+        ``_tiles`` count — same rule as hex-mvp-recovered's ``HexState.hexes``.
+        """
+        if not self._tiles:
+            return None
+        q, r = self._canvas_to_hex(cx, cy)
+        if (q, r) not in self._tiles:
+            return None
+        ox, oy = self._origin()
+        hpx, hpy = hex_to_pixel(q, r, self._hex_size)
+        dist_sq = (cx - ox - hpx) ** 2 + (cy - oy - hpy) ** 2
+        if dist_sq > (self._hex_size * 0.92) ** 2:
+            return None
+        return (q, r)
