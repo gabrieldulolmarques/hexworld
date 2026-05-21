@@ -3,10 +3,11 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
+from styles.ui_constants import CARD_WIDTH
 from views.widgets import apply_panel_style, make_card_shadow
 
 
-def make_card(width: int = 360) -> QWidget:
+def make_card(width: int = CARD_WIDTH) -> QWidget:
     """Return a styled #card widget used by the auxiliary form pages."""
     card = QWidget()
     card.setObjectName("card")

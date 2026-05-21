@@ -5,12 +5,12 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from views.home.helpers import centered, make_card, set_form_status
+from views.ui_buttons import make_form_ghost_button, make_form_primary_button
 from views.widgets import HexLogo
 
 
@@ -54,19 +54,17 @@ class JoinPage(QWidget):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setWordWrap(True)
 
-        self.confirm_button = QPushButton("Join Map")
+        self.confirm_button = make_form_primary_button("Join Map")
         self.confirm_button.setDefault(True)
         self.confirm_button.clicked.connect(self._submit)
 
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.setObjectName("ghost")
-        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn = make_form_ghost_button("Cancel")
         cancel_btn.clicked.connect(self.cancel)
 
         buttons = QHBoxLayout()
         buttons.setSpacing(10)
-        buttons.addWidget(cancel_btn)
-        buttons.addWidget(self.confirm_button)
+        buttons.addWidget(cancel_btn, 1)
+        buttons.addWidget(self.confirm_button, 1)
 
         card_layout = QVBoxLayout(card)
         card_layout.setContentsMargins(32, 22, 32, 28)

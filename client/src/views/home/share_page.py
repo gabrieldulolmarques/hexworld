@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 )
 
 from views.home.helpers import centered, make_card, set_form_status
+from views.ui_buttons import make_compact_button, make_form_ghost_button
 from views.widgets import HexLogo
 
 
@@ -64,9 +65,7 @@ class SharePage(QWidget):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setWordWrap(True)
 
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.setObjectName("ghost")
-        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        cancel_btn = make_form_ghost_button("Cancel")
         cancel_btn.clicked.connect(self.cancel)
 
         card_layout = QVBoxLayout(card)
@@ -104,10 +103,7 @@ class SharePage(QWidget):
         code_input = QLineEdit()
         code_input.setReadOnly(True)
 
-        copy_btn = QPushButton("Copy")
-        copy_btn.setObjectName("ghost")
-        copy_btn.setProperty("shareCopy", "true")
-        copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        copy_btn = make_compact_button("Copy")
         copy_btn.clicked.connect(
             lambda: self._copy_code(code_input, copy_btn),
         )
