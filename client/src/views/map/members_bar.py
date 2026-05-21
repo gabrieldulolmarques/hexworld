@@ -1,4 +1,4 @@
-"""Bottom-left card — collapsible online-members list and Back button."""
+"""Bottom-left card — collapsible online-members list and Close Map button."""
 
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
@@ -10,8 +10,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from styles.ui_constants import BTN_ACCENT, LABEL_CLOSE_MAP
 from views.map.icons import tinted_pixmap
 from views.map.panel import MapPanel
+from views.ui_buttons import make_toolbar_button
 from views.widgets import horizontal_divider
 
 
@@ -19,17 +21,23 @@ def _make_user_row(username: str, role: str) -> QWidget:
     row = QWidget()
     layout = QHBoxLayout(row)
     layout.setContentsMargins(0, 0, 0, 0)
-    layout.setSpacing(8)
+    layout.setSpacing(6)
 
-    role_lbl = QLabel(f"● {role.capitalize()}")
-    role_lbl.setObjectName("mapRole")
-    role_lbl.setProperty("role", role)
+    bullet = QLabel("●")
+    bullet.setObjectName("mapRole")
+    bullet.setProperty("role", role)
 
     name_lbl = QLabel(username)
     name_lbl.setObjectName("onlinePanelUser")
 
+    role_lbl = QLabel(f"[{role.capitalize()}]")
+    role_lbl.setObjectName("mapRole")
+    role_lbl.setProperty("role", role)
+
+    layout.addWidget(bullet)
+    layout.addWidget(name_lbl)
     layout.addWidget(role_lbl)
-    layout.addWidget(name_lbl, 1)
+    layout.addStretch(1)
     return row
 
 
@@ -57,18 +65,16 @@ class MembersBar(MapPanel):
         self._expand_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._expand_btn.clicked.connect(self._toggle)
 
-        self._back_btn = QPushButton("← Back")
-        self._back_btn.setObjectName("ghost")
-        self._back_btn.setFixedHeight(38)
-        self._back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._back_btn = make_toolbar_button(LABEL_CLOSE_MAP, variant=BTN_ACCENT)
 
         header = QHBoxLayout()
         header.setContentsMargins(0, 0, 0, 0)
-        header.setSpacing(8)
-        header.addWidget(users_icon)
-        header.addWidget(self._count_lbl, 1)
-        header.addWidget(self._expand_btn)
-        header.addWidget(self._back_btn)
+        header.setSpacing(10)
+        header.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        header.addWidget(users_icon, 0, Qt.AlignmentFlag.AlignVCenter)
+        header.addWidget(self._count_lbl, 1, Qt.AlignmentFlag.AlignVCenter)
+        header.addWidget(self._expand_btn, 0, Qt.AlignmentFlag.AlignVCenter)
+        header.addWidget(self._back_btn, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self._body_widget = QWidget()
         body_lay = QVBoxLayout(self._body_widget)
