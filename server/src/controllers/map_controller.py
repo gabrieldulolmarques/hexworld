@@ -14,8 +14,14 @@ from services.map_service import (
     set_description,
     set_structure,
 )
+from repositories.tile_repository import serialize_tile
+from services.presence_service import broadcast_presence, list_online_users
 from transport.broadcaster import broadcaster
 from transport.protocol import error_response, event, success_response
+
+
+def _broadcast_tile(map_id: str, event_type: str, q: int, r: int) -> None:
+    broadcaster.broadcast(map_id, event(event_type, serialize_tile(map_id, q, r)))
 
 
 @authenticated
@@ -91,8 +97,15 @@ def handle_get_cell_details(request: dict, connection, auth: dict) -> dict:
 @require_role("viewer")
 def handle_get_map_state(request: dict, connection, auth: dict) -> dict:
     map_id = (request.get("data") or {}).get("map_id", "")
+    user_id = auth["user_id"]
+    is_first = user_id and not any(
+        c.user_id == user_id for c in broadcaster.connections_for(map_id)
+    )
     connection.subscribe(map_id)
     result = get_map_state(auth["user_id"], map_id)
+    result["online_users"] = list_online_users(map_id)
+    if is_first:
+        broadcast_presence(map_id, "map_user_online")
     return success_response(request, result)
 
 
@@ -109,7 +122,7 @@ def handle_set_structure(request: dict, connection, auth: dict) -> dict:
     result = set_structure(auth["user_id"], map_id, int(q), int(r), structure_type)
     if isinstance(result, str):
         return error_response(request, result)
-    broadcaster.broadcast(map_id, event("structure_set", result))
+    _broadcast_tile(map_id, "structure_set", result["q"], result["r"])
     return success_response(request, result)
 
 
@@ -126,7 +139,7 @@ def handle_add_road(request: dict, connection, auth: dict) -> dict:
     result = add_road(auth["user_id"], map_id, int(q), int(r), color)
     if isinstance(result, str):
         return error_response(request, result)
-    broadcaster.broadcast(map_id, event("road_added", result))
+    _broadcast_tile(map_id, "road_added", result["q"], result["r"])
     return success_response(request, result)
 
 
@@ -143,7 +156,7 @@ def handle_set_description(request: dict, connection, auth: dict) -> dict:
     result = set_description(auth["user_id"], map_id, int(q), int(r), text)
     if isinstance(result, str):
         return error_response(request, result)
-    broadcaster.broadcast(map_id, event("description_set", result))
+    _broadcast_tile(map_id, "description_set", result["q"], result["r"])
     return success_response(request, result)
 
 
@@ -158,7 +171,7 @@ def handle_remove_structure(request: dict, connection, auth: dict) -> dict:
     result = remove_structure(map_id, tile_id)
     if isinstance(result, str):
         return error_response(request, result)
-    broadcaster.broadcast(map_id, event("structure_removed", result))
+    _broadcast_tile(map_id, "structure_removed", result["q"], result["r"])
     return success_response(request, result)
 
 
@@ -173,7 +186,7 @@ def handle_remove_road(request: dict, connection, auth: dict) -> dict:
     result = remove_road(map_id, road_id)
     if isinstance(result, str):
         return error_response(request, result)
-    broadcaster.broadcast(map_id, event("road_removed", result))
+    _broadcast_tile(map_id, "road_removed", result["q"], result["r"])
     return success_response(request, result)
 
 
@@ -188,7 +201,7 @@ def handle_remove_description(request: dict, connection, auth: dict) -> dict:
     result = remove_description(map_id, tile_id)
     if isinstance(result, str):
         return error_response(request, result)
-    broadcaster.broadcast(map_id, event("description_removed", result))
+    _broadcast_tile(map_id, "description_removed", result["q"], result["r"])
     return success_response(request, result)
 
 

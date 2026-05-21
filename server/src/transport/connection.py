@@ -12,6 +12,20 @@ class Connection:
         self._client_address = client_address
         self._send_lock = Lock()
         self._subscribed_maps: set[str] = set()
+        self._user_id: str | None = None
+        self._username: str | None = None
+
+    @property
+    def user_id(self) -> str | None:
+        return self._user_id
+
+    @property
+    def username(self) -> str | None:
+        return self._username
+
+    def bind_user(self, user_id: str, username: str) -> None:
+        self._user_id = user_id
+        self._username = username
 
     def send(self, payload: dict) -> None:
         """Serialize response/event writes on this socket (response and event must not interleave)."""
@@ -44,8 +58,22 @@ class Connection:
             self.stop()
 
     def stop(self) -> None:
+        from services.presence_service import broadcast_presence
+
         for map_id in list(self._subscribed_maps):
+            user_id = self._user_id
+            is_last = (
+                user_id
+                and sum(
+                    1
+                    for c in broadcaster.connections_for(map_id)
+                    if c.user_id == user_id
+                )
+                == 1
+            )
             broadcaster.unsubscribe(map_id, self)
+            if is_last:
+                broadcast_presence(map_id, "map_user_offline")
         self._subscribed_maps.clear()
         with self._send_lock:
             if self._client_socket:
