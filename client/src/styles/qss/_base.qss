@@ -133,6 +133,10 @@ QPushButton#ghost {
     background-color: transparent;
     color: #9f9fa9;
     border: 1px solid #3f3f46;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 QPushButton#ghost:hover {
@@ -150,8 +154,10 @@ QPushButton#primary {
     background-color: #5ea500;
     color: #ffffff;
     border: none;
-    padding: 14px 28px;
-    font-size: 17px;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 QPushButton#primary:hover {
@@ -167,12 +173,31 @@ QPushButton#primary:disabled {
     color: #9f9fa9;
 }
 
+QWidget#card QPushButton#primary,
+QWidget#authScreen QPushButton#primary,
+QWidget#card QPushButton#ghost {
+    min-height: 46px;
+    max-height: 46px;
+}
+
+QWidget#homeTopBar QPushButton#primary,
+QWidget#homeTopBar QPushButton#secondary,
+QWidget#homeTopBar QPushButton#danger {
+    min-width: 120px;
+    max-width: 120px;
+    min-height: 46px;
+    max-height: 46px;
+    padding: 0 8px;
+}
+
 QPushButton#secondary {
     background-color: #18181b;
     color: #e4e4e7;
     border: 1px solid #3f3f46;
-    padding: 14px 28px;
-    font-size: 17px;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 QPushButton#secondary:hover {
@@ -194,8 +219,10 @@ QPushButton#danger {
     background-color: transparent;
     color: #f87171;
     border: 1px solid #7f1d1d;
-    padding: 14px 28px;
-    font-size: 17px;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 QPushButton#danger:hover {
@@ -211,6 +238,163 @@ QPushButton#danger:pressed {
 QPushButton#danger:disabled {
     color: #71717b;
     border-color: #27272a;
+}
+
+QPushButton#accent,
+QPushButton#accentCompact {
+    background-color: #1f3d0a;
+    color: #ecfccb;
+    border: 1px solid #5ea500;
+    border-radius: 8px;
+    padding: 0 8px;
+    font-weight: 600;
+}
+
+QPushButton#accent:hover,
+QPushButton#accentCompact:hover {
+    background-color: #5ea500;
+    border-color: #7cc800;
+    color: #ffffff;
+}
+
+QPushButton#accent:pressed,
+QPushButton#accentCompact:pressed {
+    background-color: #497d00;
+    border-color: #497d00;
+}
+
+QPushButton#accent {
+    font-size: 15px;
+    min-width: 120px;
+    max-width: 120px;
+    min-height: 46px;
+    max-height: 46px;
+}
+
+QPushButton#accentCompact {
+    font-size: 14px;
+    min-width: 100px;
+    max-width: 100px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#ghostCompact {
+    background-color: transparent;
+    color: #9f9fa9;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    padding: 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 100px;
+    max-width: 100px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#ghostCompact:hover {
+    background-color: #18181b;
+    border-color: #52525c;
+    color: #e4e4e7;
+}
+
+QPushButton#ghostCompact:disabled {
+    color: #71717b;
+    border-color: #27272a;
+}
+
+QPushButton#dangerCompact {
+    background-color: transparent;
+    color: #f87171;
+    border: 1px solid #7f1d1d;
+    border-radius: 8px;
+    padding: 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 100px;
+    max-width: 100px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#dangerCompact:hover {
+    background-color: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+QPushButton#dangerCompact:pressed {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+QPushButton#dangerCompact:disabled {
+    color: #71717b;
+    border-color: #27272a;
+}
+
+/* Map list card actions — layout sets width (1/3 each); no global 100px cap */
+QPushButton#mapCardOpen,
+QPushButton#mapCardGhost,
+QPushButton#mapCardDanger {
+    border-radius: 8px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 0;
+    max-width: 16777215px;
+}
+
+QPushButton#mapCardOpen {
+    background-color: #1f3d0a;
+    color: #ecfccb;
+    border: 1px solid #5ea500;
+}
+
+QPushButton#mapCardOpen:hover {
+    background-color: #5ea500;
+    border-color: #7cc800;
+    color: #ffffff;
+}
+
+QPushButton#mapCardOpen:pressed {
+    background-color: #497d00;
+    border-color: #497d00;
+}
+
+QPushButton#mapCardGhost {
+    background-color: transparent;
+    color: #9f9fa9;
+    border: 1px solid #3f3f46;
+}
+
+QPushButton#mapCardGhost:hover {
+    background-color: #18181b;
+    border-color: #52525c;
+    color: #e4e4e7;
+}
+
+QPushButton#mapCardDanger {
+    background-color: transparent;
+    color: #f87171;
+    border: 1px solid #7f1d1d;
+}
+
+QPushButton#mapCardDanger:hover {
+    background-color: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+    color: #fca5a5;
+}
+
+QPushButton#mapCardDanger:pressed {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+QLabel#panelTitle {
+    color: #9f9fa9;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
 }
 
 QPushButton#link {

@@ -11,12 +11,6 @@ QWidget#mapTopBar {
     border-radius: 12px;
 }
 
-QWidget#mapTopBar QPushButton#ghost {
-    padding: 0 22px;
-    font-size: 15px;
-    min-height: 46px;
-}
-
 QWidget#mapTopBar QLabel#subtitle {
     font-size: 15px;
 }
@@ -228,18 +222,7 @@ QWidget#roadSavedRow {
 }
 
 QLabel#panelTitle {
-    color: #9f9fa9;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.6px;
     padding: 0 0 4px 0;
-}
-
-QLabel#hintTitle {
-    color: #9f9fa9;
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: 0.6px;
 }
 
 QLabel#hintDesc {
@@ -277,14 +260,6 @@ QLabel#mapRole[role="editor"] {
 
 QLabel#mapRole[role="viewer"] {
     color: #71717b;
-}
-
-QFrame#mapCard QPushButton {
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: 6px;
-    min-width: 0;
 }
 
 QScrollArea#mapScroll,

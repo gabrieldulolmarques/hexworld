@@ -1,18 +1,3 @@
-QPushButton#ghost[shareCopy="true"] {
-    min-width: 108px;
-    max-width: 108px;
-}
-
-QWidget#homeTopBar QPushButton#primary,
-QWidget#homeTopBar QPushButton#secondary,
-QWidget#homeTopBar QPushButton#danger {
-    min-width: 120px;
-    max-width: 120px;
-    min-height: 46px;
-    max-height: 46px;
-    padding: 0 8px;
-}
-
 QWidget#heroCard QLabel#brand {
     font-size: 40px;
     letter-spacing: -0.6px;
