@@ -15,6 +15,8 @@ from repositories.user_repository import (
     get_user_by_username,
 )
 
+MIN_USERNAME_LENGTH = 3
+MAX_USERNAME_LENGTH = 16
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 256
 
@@ -35,6 +37,10 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 def register(username: str, password: str) -> str | None:
+    if len(username) < MIN_USERNAME_LENGTH:
+        return "username_too_short"
+    if len(username) > MAX_USERNAME_LENGTH:
+        return "username_too_long"
     if len(password) < MIN_PASSWORD_LENGTH:
         return "password_too_short"
     if len(password) > MAX_PASSWORD_LENGTH:

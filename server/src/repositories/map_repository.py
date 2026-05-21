@@ -32,6 +32,12 @@ def get_map_by_code(code: str) -> tuple[str, str] | None:
             return row["id"], "viewer"
         return None
 
+def delete_map(map_id: str) -> None:
+    with get_connection() as connection:
+        connection.execute("DELETE FROM user_map WHERE map_id = ?", (map_id,))
+        connection.execute("DELETE FROM map WHERE id = ?", (map_id,))
+        connection.commit()
+
 def list_maps_for_user(user_id: str):
     with get_connection() as connection:
         return connection.execute(

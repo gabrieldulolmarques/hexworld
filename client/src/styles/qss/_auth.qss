@@ -22,7 +22,7 @@ QWidget#authScreen QPushButton {
 QWidget#authScreen QCheckBox#rememberCheckbox,
 QWidget#authScreen QCheckBox#showPasswordCheckbox {
     color: #9f9fa9;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     spacing: 8px;
 }
@@ -32,7 +32,7 @@ QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator {
     width: 18px;
     height: 18px;
     border-radius: 4px;
-    border: 1px solid #52525c;
+    border: 1px solid #3f3f46;
     background-color: #27272a;
 }
 
@@ -63,12 +63,6 @@ QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:unchecked:hover {
 QWidget#authScreen QCheckBox#rememberCheckbox:disabled,
 QWidget#authScreen QCheckBox#showPasswordCheckbox:disabled {
     color: #71717b;
-}
-
-QWidget#card {
-    background-color: #18181b;
-    border: 1px solid #27272a;
-    border-radius: 14px;
 }
 
 /* PasswordEdit (pyqt-login-page style): extra trailing padding for QAction icon */

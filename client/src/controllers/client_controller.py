@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QTimer
 
 from controllers.auth_controller import AuthController
+from controllers.map_controller import MapController
 from controllers.transport_worker import TransportWorker
 from models.preferences import Preferences
 from models.session import Session
@@ -10,6 +11,7 @@ from views.home_view import HomeView
 from views.main_view import MainView
 
 _RECONNECT_DELAY_MS = 5000
+
 
 class ClientController:
     def __init__(self, main_view: MainView) -> None:
@@ -31,42 +33,68 @@ class ClientController:
         self._restore_preferences()
 
         self.auth = AuthController(self.transport_worker, self.session, self.preferences)
+        self.maps = MapController(self.transport_worker, self.session)
         self._connect_signals()
 
         if self.session.is_authenticated():
             self.auth.validate_session()
 
     def _connect_signals(self) -> None:
+        # Auth
         self.auth_view.request_login.connect(self.auth.login)
         self.auth_view.request_register.connect(self.auth.register)
         self.home_view.request_logout.connect(self.auth.logout)
-
         self.auth.login_success.connect(self._show_home)
         self.auth.session_restored.connect(self._show_home)
         self.auth.register_success.connect(self._on_register_success)
         self.auth.logged_out.connect(self._show_auth)
-        self.auth.session_expired.connect(self._show_auth)
-        self.auth.loading.connect(self._on_loading)
-        self.auth.error.connect(self._on_error)
+        self.auth.session_error.connect(self._show_auth)
+        self.auth.loading.connect(self._on_auth_loading)
+        self.auth.error.connect(self._on_auth_error)
+
+        # Maps
+        self.home_view.request_create_map.connect(self.maps.create_map)
+        self.home_view.request_join_map.connect(self.maps.join_map)
+        self.home_view.request_dissociate_map.connect(self.maps.dissociate_map)
+        self.home_view.request_delete_map.connect(self.maps.delete_map)
+        self.maps.maps_loaded.connect(self.home_view.set_maps)
+        self.maps.map_created.connect(self._on_map_created)
+        self.maps.map_joined.connect(self._on_map_joined)
+        self.maps.map_removed.connect(self.home_view.remove_map)
+        self.maps.create_error.connect(self.home_view.show_create_error)
+        self.maps.join_error.connect(self.home_view.show_join_error)
+        self.maps.error.connect(lambda msg: self.home_view.show_message(msg, level="error"))
+        self.maps.session_error.connect(self._show_auth)
+        self.maps.loading.connect(self._on_map_loading)
+        self.maps.map_member_count_changed.connect(self.home_view.update_map_member_count)
+        self.maps.map_role_changed.connect(self.home_view.update_map_role)
 
         self.transport_worker.finished.connect(self._on_worker_finished)
 
-    def _on_loading(self, loading: bool) -> None:
-        current = self.main_view.stack.currentWidget()
-        if hasattr(current, "set_loading"):
-            current.set_loading(loading)
+    # ------------------------------------------------------------------
+    # Auth callbacks
+    # ------------------------------------------------------------------
 
-    def _on_error(self, message: str) -> None:
-        current = self.main_view.stack.currentWidget()
-        if hasattr(current, "show_message"):
-            current.show_message(message, level="error")
+    def _on_auth_loading(self, loading: bool) -> None:
+        if self.main_view.stack.currentWidget() is self.home_view:
+            self.home_view.set_loading(loading)
+        else:
+            self.auth_view.set_loading(loading)
+
+    def _on_auth_error(self, message: str) -> None:
+        if self.main_view.stack.currentWidget() is self.home_view:
+            self.home_view.show_message(message, level="error")
+        else:
+            self.auth_view.show_message(message, level="error")
 
     def _on_register_success(self) -> None:
         self.auth_view.show_register_success()
 
     def _show_home(self, username: str) -> None:
         self.home_view.set_user(username)
+        self.home_view.go_home()
         self.main_view.stack.setCurrentWidget(self.home_view)
+        self.maps.get_maps()
 
     def _show_auth(self) -> None:
         self._restore_preferences()
@@ -76,6 +104,26 @@ class ClientController:
     def _restore_preferences(self) -> None:
         username, remember = self.preferences.load()
         self.auth_view.set_login_defaults(username, remember)
+
+    # ------------------------------------------------------------------
+    # Map callbacks
+    # ------------------------------------------------------------------
+
+    def _on_map_loading(self, loading: bool) -> None:
+        self.home_view.set_create_loading(loading)
+        self.home_view.set_join_loading(loading)
+
+    def _on_map_created(self, data: dict) -> None:
+        self.home_view.add_map(data)
+        self.home_view.go_home()
+
+    def _on_map_joined(self, data: dict) -> None:
+        self.home_view.add_map(data)
+        self.home_view.go_home()
+
+    # ------------------------------------------------------------------
+    # Transport
+    # ------------------------------------------------------------------
 
     def _on_worker_finished(self) -> None:
         if self._stopping:

@@ -52,6 +52,11 @@ class HexLogo(QWidget):
             polygon.append(QPointF(cx + radius * cos(angle), cy + radius * sin(angle)))
         return polygon
 
+def apply_panel_style(widget: QWidget) -> None:
+    """Enable QSS background/border on panel widgets (#card, #heroCard)."""
+    widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+
 def make_card_shadow() -> QGraphicsDropShadowEffect:
     shadow = QGraphicsDropShadowEffect()
     shadow.setBlurRadius(40)
