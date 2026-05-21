@@ -3,6 +3,7 @@ from services.map_service import (
     create_map,
     delete_map,
     dissociate_map,
+    get_cell_details,
     get_map_state,
     get_maps,
     join_map,
@@ -64,6 +65,20 @@ def handle_dissociate_map(request: dict, connection, auth: dict) -> dict:
             event("map_ownership_transferred", {"new_owner_id": result["new_owner_id"]}),
         )
     return success_response(request, {"map_id": map_id})
+
+
+@authenticated
+@require_role("viewer")
+def handle_get_cell_details(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    tile_id = data.get("tile_id", "")
+    if not tile_id:
+        return error_response(request, "missing_fields")
+    result = get_cell_details(map_id, tile_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    return success_response(request, result)
 
 
 @authenticated
