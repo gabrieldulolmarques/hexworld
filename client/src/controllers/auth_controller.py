@@ -47,7 +47,10 @@ class AuthController(QObject):
     def login(self, username: str, password: str, remember_me: bool = False) -> None:
         username = username.strip()
         if not username or not password:
-            self.error.emit("Missing fields.")
+            self.error.emit(_ERROR_MESSAGES["missing_fields"])
+            return
+        if len(username) > 16:
+            self.error.emit(_ERROR_MESSAGES["username_too_long"])
             return
         self._pending_login_username = username
         self._pending_remember = remember_me
@@ -60,7 +63,19 @@ class AuthController(QObject):
     def register(self, username: str, password: str, confirm_password: str) -> None:
         username = username.strip()
         if not username or not password or not confirm_password:
-            self.error.emit("Missing fields.")
+            self.error.emit(_ERROR_MESSAGES["missing_fields"])
+            return
+        if len(username) < 3:
+            self.error.emit(_ERROR_MESSAGES["username_too_short"])
+            return
+        if len(username) > 16:
+            self.error.emit(_ERROR_MESSAGES["username_too_long"])
+            return
+        if len(password) < 8:
+            self.error.emit(_ERROR_MESSAGES["password_too_short"])
+            return
+        if len(password) > 256:
+            self.error.emit(_ERROR_MESSAGES["password_too_long"])
             return
         if password != confirm_password:
             self.error.emit("Passwords do not match.")
