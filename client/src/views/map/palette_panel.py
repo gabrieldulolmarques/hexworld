@@ -218,7 +218,7 @@ class PalettePanel(MapPanel):
         hint_lay.setSpacing(12)
         hint_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._hint_title = QLabel()
-        self._hint_title.setObjectName("hintTitle")
+        self._hint_title.setObjectName("panelTitle")
         self._hint_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._hint_desc = QLabel()
         self._hint_desc.setObjectName("hintDesc")

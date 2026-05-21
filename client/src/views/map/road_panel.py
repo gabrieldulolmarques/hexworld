@@ -16,9 +16,10 @@ from views.map.panel import MapPanel, styled
 from views.widgets import horizontal_divider
 
 _ROAD_COLOR_DEFAULT = "#5ea500"
-_SAVED_COLS = 6
-_MAX_SAVED_COLORS = _SAVED_COLS * 2   # 2 linhas × 6 colunas = 12
-_SAVED_SWATCH = 46
+_SAVED_COLS = 7
+_MAX_SAVED_COLORS = _SAVED_COLS * 2   # 2 linhas × 7 colunas = 14
+_SAVED_SWATCH = 42
+_SAVED_GAP = 6
 
 
 class RoadColorPanel(MapPanel):
@@ -50,20 +51,21 @@ class RoadColorPanel(MapPanel):
         current_row.addWidget(self._preview)
         current_row.addWidget(self._hex_input, 1)
 
-        saved_label = QLabel("Saved")
+        saved_label = QLabel("RECENTLY USED")
         saved_label.setObjectName("fieldLabel")
+        saved_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._saved_rows_layout = QVBoxLayout()
         self._saved_rows_layout.setContentsMargins(0, 0, 0, 0)
-        self._saved_rows_layout.setSpacing(6)
+        self._saved_rows_layout.setSpacing(_SAVED_GAP)
 
         self._saved_wrap = QWidget()
         styled(self._saved_wrap)
         self._saved_wrap.setObjectName("roadSavedRow")
-        # tamanho fixo para 2 linhas × 6 colunas — nunca expande
+        # tamanho fixo para 2 linhas × _SAVED_COLS colunas — nunca expande
         self._saved_wrap.setFixedSize(
-            _SAVED_COLS * _SAVED_SWATCH + (_SAVED_COLS - 1) * 6,
-            2 * _SAVED_SWATCH + 6,
+            _SAVED_COLS * _SAVED_SWATCH + (_SAVED_COLS - 1) * _SAVED_GAP,
+            2 * _SAVED_SWATCH + _SAVED_GAP,
         )
         self._saved_wrap.setLayout(self._saved_rows_layout)
 
@@ -75,7 +77,7 @@ class RoadColorPanel(MapPanel):
         layout.addWidget(horizontal_divider())
         layout.addLayout(current_row)
         layout.addWidget(saved_label)
-        layout.addWidget(self._saved_wrap)
+        layout.addWidget(self._saved_wrap, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self._apply_color(_ROAD_COLOR_DEFAULT, emit=False)
 
@@ -123,7 +125,7 @@ class RoadColorPanel(MapPanel):
             styled(row_widget)
             row_layout = QHBoxLayout(row_widget)
             row_layout.setContentsMargins(0, 0, 0, 0)
-            row_layout.setSpacing(6)
+            row_layout.setSpacing(_SAVED_GAP)
             for color in chunk:
                 swatch = QLabel()
                 swatch.setFixedSize(_SAVED_SWATCH, _SAVED_SWATCH)
@@ -138,7 +140,7 @@ class RoadColorPanel(MapPanel):
                 row_layout.addWidget(swatch)
             self._saved_rows_layout.addWidget(
                 row_widget,
-                alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop,
+                alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
             )
 
     def _on_saved_click(self, hex_str: str) -> None:
