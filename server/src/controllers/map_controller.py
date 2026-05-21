@@ -1,8 +1,9 @@
-from controllers.auth_middleware import authenticated
+from controllers.auth_middleware import authenticated, require_role
 from services.map_service import (
     create_map,
     delete_map,
     dissociate_map,
+    get_map_state,
     get_maps,
     join_map,
 )
@@ -63,6 +64,15 @@ def handle_dissociate_map(request: dict, connection, auth: dict) -> dict:
             event("map_ownership_transferred", {"new_owner_id": result["new_owner_id"]}),
         )
     return success_response(request, {"map_id": map_id})
+
+
+@authenticated
+@require_role("viewer")
+def handle_get_map_state(request: dict, connection, auth: dict) -> dict:
+    map_id = (request.get("data") or {}).get("map_id", "")
+    connection.subscribe(map_id)
+    result = get_map_state(auth["user_id"], map_id)
+    return success_response(request, result)
 
 
 @authenticated
