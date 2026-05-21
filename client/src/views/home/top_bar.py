@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from limits import MAX_USERNAME_LEN
 from styles.ui_constants import BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY
+from views.layout_utils import relayout_after_content_change
 from views.ui_buttons import make_toolbar_button
 
 _BADGE_MAX_PX = 160   # badge should not push the buttons off screen
@@ -26,10 +27,10 @@ class HomeTopBar(QWidget):
         self.user_badge.setObjectName("userBadge")
         self.user_badge.hide()
 
-        self.create_button = make_toolbar_button("Create Map", variant=BTN_PRIMARY)
+        self.create_button = make_toolbar_button("Create", variant=BTN_PRIMARY)
         self.create_button.clicked.connect(self.create_clicked)
 
-        self.join_button = make_toolbar_button("Join Map", variant=BTN_SECONDARY)
+        self.join_button = make_toolbar_button("Join", variant=BTN_SECONDARY)
         self.join_button.clicked.connect(self.join_clicked)
 
         self.logout_button = make_toolbar_button("Sign out", variant=BTN_DANGER)
@@ -50,6 +51,7 @@ class HomeTopBar(QWidget):
         self.user_badge.setText(f"⬢  {elided}")
         self.user_badge.setToolTip(username if elided != username else "")
         self.user_badge.show()
+        relayout_after_content_change(self)
 
     def set_logout_enabled(self, enabled: bool) -> None:
         self.logout_button.setEnabled(enabled)

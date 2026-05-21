@@ -56,6 +56,7 @@ class MapBody(QWidget):
         palette.hide()
 
         members_bar.toggled.connect(self._reposition_panels)
+        members_bar.geometry_changed.connect(self._reposition_panels)
         self.sync_panels(TOOL_SELECT)
 
     def sync_panels(self, tool_id: str) -> None:
@@ -79,8 +80,8 @@ class MapBody(QWidget):
         h = self.height()
 
         bar = self._toolbar
-        bar.adjustSize()
-        bar.move((w - bar.width()) // 2, m)
+        bar.refresh_name_label(w)
+        bar.move(max(m, (w - bar.width()) // 2), m)
 
         ts = self._tool_strip
         ts.adjustSize()
@@ -93,7 +94,6 @@ class MapBody(QWidget):
         mb = self._members_bar
         mb_max_h = h - 2 * m - ts.height() - MEMBERS_PANEL_GAP
         mb.set_max_panel_height(mb_max_h)
-        mb.adjustSize()
         mb.move(m, h - mb.height() - m)
 
         pal = self._palette
