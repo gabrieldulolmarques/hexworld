@@ -46,9 +46,10 @@ class HexLogo(QWidget):
 
     @staticmethod
     def _hexagon(cx: float, cy: float, radius: float) -> QPolygonF:
+        # flat-top: 0° offset → flat edge at top/bottom, vertex on sides
         polygon = QPolygonF()
         for i in range(6):
-            angle = radians(60 * i - 30)
+            angle = radians(60 * i)
             polygon.append(QPointF(cx + radius * cos(angle), cy + radius * sin(angle)))
         return polygon
 
