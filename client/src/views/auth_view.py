@@ -10,7 +10,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from styles.ui_constants import CARD_WIDTH
 from views.password_edit import PasswordEdit
+from views.ui_buttons import make_form_primary_button
 from views.widgets import (
     HexLogo,
     StatusMixin,
@@ -37,7 +39,7 @@ class AuthView(StatusMixin, QWidget):
         card = QWidget()
         card.setObjectName("card")
         apply_panel_style(card)
-        card.setFixedWidth(360)
+        card.setFixedWidth(CARD_WIDTH)
         card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
         card.setGraphicsEffect(make_card_shadow())
 
@@ -83,7 +85,7 @@ class AuthView(StatusMixin, QWidget):
         self.remember_checkbox.setObjectName("rememberCheckbox")
         self.remember_checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        self.primary_button = QPushButton()
+        self.primary_button = make_form_primary_button("Sign in")
         self.primary_button.setDefault(True)
         self.primary_button.setAutoDefault(True)
 

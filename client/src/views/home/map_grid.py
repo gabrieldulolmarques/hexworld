@@ -77,6 +77,12 @@ class MapGrid(StatusMixin, QWidget):
         self._scroll.setWidget(self._cards_wrap)
         self._scroll.setWidgetResizable(True)
         self._scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
+        )
+        self._scroll.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+        )
         self._scroll.hide()
 
         self.status_label = QLabel("")

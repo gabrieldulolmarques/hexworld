@@ -6,13 +6,23 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-CARD_WIDTH = 360
+from styles.ui_constants import (
+    BTN_MAP_CARD_DANGER,
+    BTN_MAP_CARD_GHOST,
+    BTN_MAP_CARD_OPEN,
+    LABEL_OPEN_MAP,
+    MAP_CARD_ACTION_GAP,
+    MAP_CARD_MARGIN_H,
+    MAP_CARD_WIDTH,
+)
+from views.ui_buttons import make_map_card_button
+
+CARD_WIDTH = MAP_CARD_WIDTH
 CARD_HEIGHT = 200
 
 
@@ -74,37 +84,31 @@ class MapCard(QFrame):
         divider.setObjectName("divider")
         divider.setFrameShape(QFrame.Shape.HLine)
 
-        open_btn = QPushButton("Open")
-        open_btn.setObjectName("ghost")
-        open_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        open_btn = make_map_card_button(LABEL_OPEN_MAP, variant=BTN_MAP_CARD_OPEN)
         open_btn.clicked.connect(lambda: self.open_clicked.emit(self._map_id))
 
-        share_btn = QPushButton("Share")
-        share_btn.setObjectName("ghost")
-        share_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        share_btn = make_map_card_button("Share Map", variant=BTN_MAP_CARD_GHOST)
         share_btn.clicked.connect(lambda: self.share_clicked.emit(self._map_id))
 
         is_solo_owner = self._role == "owner" and self._member_count == 1
         if is_solo_owner:
-            action_btn = QPushButton("Delete")
-            action_btn.setObjectName("danger")
+            action_btn = make_map_card_button("Delete Map", variant=BTN_MAP_CARD_DANGER)
             action_btn.clicked.connect(lambda: self.delete_clicked.emit(self._map_id))
         else:
-            action_btn = QPushButton("Dissociate")
-            action_btn.setObjectName("ghost")
+            action_btn = make_map_card_button("Dissociate Map", variant=BTN_MAP_CARD_GHOST)
             action_btn.clicked.connect(lambda: self.dissociate_clicked.emit(self._map_id))
-        action_btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
         actions = QHBoxLayout()
-        actions.setSpacing(6)
+        actions.setSpacing(MAP_CARD_ACTION_GAP)
         actions.setContentsMargins(0, 0, 0, 0)
-        actions.addWidget(open_btn)
-        actions.addWidget(share_btn)
-        actions.addStretch(1)
-        actions.addWidget(action_btn)
+        actions.addWidget(open_btn, 1)
+        actions.addWidget(share_btn, 1)
+        actions.addWidget(action_btn, 1)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 18)
+        layout.setContentsMargins(
+            MAP_CARD_MARGIN_H, 18, MAP_CARD_MARGIN_H, 16,
+        )
         layout.setSpacing(14)
         layout.addLayout(header)
         layout.addWidget(meta)

@@ -1,10 +1,10 @@
 """Top bar with Create / Join / user badge / Sign out controls."""
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-_BTN_WIDTH = 120
-_BTN_HEIGHT = 46
+from styles.ui_constants import BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY
+from views.ui_buttons import make_toolbar_button
 
 
 class HomeTopBar(QWidget):
@@ -22,23 +22,14 @@ class HomeTopBar(QWidget):
         self.user_badge.setObjectName("userBadge")
         self.user_badge.hide()
 
-        self.logout_button = QPushButton("Sign out")
-        self.logout_button.setObjectName("danger")
-        self.logout_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.logout_button.clicked.connect(self.logout_clicked)
-
-        self.create_button = QPushButton("Create")
-        self.create_button.setObjectName("primary")
-        self.create_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.create_button = make_toolbar_button("Create Map", variant=BTN_PRIMARY)
         self.create_button.clicked.connect(self.create_clicked)
 
-        self.join_button = QPushButton("Join")
-        self.join_button.setObjectName("secondary")
-        self.join_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.join_button = make_toolbar_button("Join Map", variant=BTN_SECONDARY)
         self.join_button.clicked.connect(self.join_clicked)
 
-        for btn in (self.create_button, self.join_button, self.logout_button):
-            btn.setFixedSize(_BTN_WIDTH, _BTN_HEIGHT)
+        self.logout_button = make_toolbar_button("Sign out", variant=BTN_DANGER)
+        self.logout_button.clicked.connect(self.logout_clicked)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(20, 12, 20, 12)
