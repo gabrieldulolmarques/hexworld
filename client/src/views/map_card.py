@@ -87,15 +87,15 @@ class MapCard(QFrame):
         open_btn = make_map_card_button(LABEL_OPEN_MAP, variant=BTN_MAP_CARD_OPEN)
         open_btn.clicked.connect(lambda: self.open_clicked.emit(self._map_id))
 
-        share_btn = make_map_card_button("Share Map", variant=BTN_MAP_CARD_GHOST)
+        share_btn = make_map_card_button("Share", variant=BTN_MAP_CARD_GHOST)
         share_btn.clicked.connect(lambda: self.share_clicked.emit(self._map_id))
 
         is_solo_owner = self._role == "owner" and self._member_count == 1
         if is_solo_owner:
-            action_btn = make_map_card_button("Delete Map", variant=BTN_MAP_CARD_DANGER)
+            action_btn = make_map_card_button("Delete", variant=BTN_MAP_CARD_DANGER)
             action_btn.clicked.connect(lambda: self.delete_clicked.emit(self._map_id))
         else:
-            action_btn = make_map_card_button("Dissociate Map", variant=BTN_MAP_CARD_GHOST)
+            action_btn = make_map_card_button("Dissociate", variant=BTN_MAP_CARD_GHOST)
             action_btn.clicked.connect(lambda: self.dissociate_clicked.emit(self._map_id))
 
         actions = QHBoxLayout()

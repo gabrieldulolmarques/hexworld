@@ -28,7 +28,7 @@ class SharePage(QWidget):
         card = make_card()
 
         logo = HexLogo(size=72)
-        brand = QLabel("Share Map")
+        brand = QLabel("Share")
         brand.setObjectName("brand")
         brand.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
