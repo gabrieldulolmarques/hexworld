@@ -1,4 +1,5 @@
 import secrets
+from threading import Lock
 from uuid import uuid4
 
 from repositories.component_repository import (
@@ -25,6 +26,17 @@ from repositories.user_map_repository import (
 from repositories.user_repository import get_user_by_id
 
 MAX_MAP_NAME_LENGTH = 50
+
+_tile_locks: dict[tuple, Lock] = {}
+_tile_locks_lock = Lock()
+
+
+def _get_tile_lock(map_id: str, q: int, r: int) -> Lock:
+    key = (map_id, q, r)
+    with _tile_locks_lock:
+        if key not in _tile_locks:
+            _tile_locks[key] = Lock()
+        return _tile_locks[key]
 
 
 def _invite_code() -> str:
@@ -145,8 +157,9 @@ def set_structure(user_id: str, map_id: str, q: int, r: int, structure_type: str
     structure_type = structure_type.strip()
     if not structure_type:
         return "missing_fields"
-    tile_id = get_or_create_tile(map_id, q, r)
-    upsert_structure(tile_id, structure_type, user_id)
+    with _get_tile_lock(map_id, q, r):
+        tile_id = get_or_create_tile(map_id, q, r)
+        upsert_structure(tile_id, structure_type, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "type": structure_type}
 
 
@@ -154,8 +167,9 @@ def add_road(user_id: str, map_id: str, q: int, r: int, color: str) -> dict | st
     color = color.strip()
     if not color:
         return "missing_fields"
-    tile_id = get_or_create_tile(map_id, q, r)
-    road_id = db_add_road(tile_id, color, user_id)
+    with _get_tile_lock(map_id, q, r):
+        tile_id = get_or_create_tile(map_id, q, r)
+        road_id = db_add_road(tile_id, color, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "road_id": road_id, "color": color}
 
 
@@ -163,8 +177,9 @@ def set_description(user_id: str, map_id: str, q: int, r: int, text: str) -> dic
     text = text.strip()
     if not text:
         return "missing_fields"
-    tile_id = get_or_create_tile(map_id, q, r)
-    upsert_description(tile_id, text, user_id)
+    with _get_tile_lock(map_id, q, r):
+        tile_id = get_or_create_tile(map_id, q, r)
+        upsert_description(tile_id, text, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "text": text}
 
 
