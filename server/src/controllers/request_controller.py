@@ -9,6 +9,7 @@ from controllers.auth_controller import (
     handle_validate_session,
 )
 from controllers.map_controller import (
+    handle_add_road,
     handle_create_map,
     handle_delete_map,
     handle_dissociate_map,
@@ -32,6 +33,7 @@ REQUEST_HANDLERS = {
     "dissociate_map": handle_dissociate_map,
     "delete_map": handle_delete_map,
     "set_structure": handle_set_structure,
+    "add_road": handle_add_road,
 }
 
 def handle_request(request: dict, connection) -> dict:
