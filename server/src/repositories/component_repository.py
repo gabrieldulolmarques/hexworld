@@ -80,6 +80,12 @@ def delete_road(road_id: str) -> None:
         connection.commit()
 
 
+def delete_structure(tile_id: str) -> None:
+    with get_connection() as connection:
+        connection.execute("DELETE FROM structure WHERE tile_id = ?", (tile_id,))
+        connection.commit()
+
+
 def delete_description(tile_id: str) -> None:
     with get_connection() as connection:
         connection.execute("DELETE FROM description WHERE tile_id = ?", (tile_id,))
