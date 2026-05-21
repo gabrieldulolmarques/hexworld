@@ -34,6 +34,7 @@ def get_map_by_code(code: str) -> tuple[str, str] | None:
 
 def delete_map(map_id: str) -> None:
     with get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
         connection.execute("DELETE FROM user_map WHERE map_id = ?", (map_id,))
         connection.execute("DELETE FROM map WHERE id = ?", (map_id,))
         connection.commit()
