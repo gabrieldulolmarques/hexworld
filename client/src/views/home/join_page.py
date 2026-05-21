@@ -27,7 +27,7 @@ class JoinPage(QWidget):
         card = make_card()
 
         logo = HexLogo(size=72)
-        brand = QLabel("Join Map")
+        brand = QLabel("Join")
         brand.setObjectName("brand")
         brand.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle = QLabel("Enter your invite code to join a map.")
@@ -55,7 +55,7 @@ class JoinPage(QWidget):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setWordWrap(True)
 
-        self.confirm_button = make_form_primary_button("Join Map")
+        self.confirm_button = make_form_primary_button("Join")
         self.confirm_button.setDefault(True)
         self.confirm_button.clicked.connect(self._submit)
 

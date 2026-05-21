@@ -28,7 +28,7 @@ class CreatePage(QWidget):
         card = make_card()
 
         logo = HexLogo(size=72)
-        brand = QLabel("New Map")
+        brand = QLabel("New")
         brand.setObjectName("brand")
         brand.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle = QLabel("Name your new hex map.")
@@ -56,7 +56,7 @@ class CreatePage(QWidget):
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.status_label.setWordWrap(True)
 
-        self.confirm_button = make_form_primary_button("Create Map")
+        self.confirm_button = make_form_primary_button("Create")
         self.confirm_button.setDefault(True)
         self.confirm_button.clicked.connect(self._submit)
 

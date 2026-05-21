@@ -15,15 +15,15 @@ BTN_GHOST = "ghost"
 BTN_GHOST_COMPACT = "ghostCompact"
 BTN_DANGER = "danger"
 BTN_DANGER_COMPACT = "dangerCompact"
-BTN_ACCENT = "accent"               # 120×46 — Close Map (members bar)
+BTN_ACCENT = "accent"               # 120×46 — Close (members bar)
 BTN_ACCENT_COMPACT = "accentCompact"  # 100×40 — share page, etc.
 BTN_MAP_CARD_OPEN = "mapCardOpen"
 BTN_MAP_CARD_GHOST = "mapCardGhost"
 BTN_MAP_CARD_DANGER = "mapCardDanger"
 
-# Map ↔ home navigation (paired labels, like Create Map / Join Map)
-LABEL_OPEN_MAP = "Open Map"
-LABEL_CLOSE_MAP = "Close Map"
+# Map ↔ home navigation (paired labels)
+LABEL_OPEN_MAP = "Open"
+LABEL_CLOSE_MAP = "Close"
 
 # Form / auth card width (login, register, create, join, share)
 CARD_WIDTH = 360
