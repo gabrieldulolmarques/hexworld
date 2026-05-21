@@ -8,12 +8,24 @@ from controllers.auth_controller import (
     handle_register,
     handle_validate_session,
 )
+from controllers.map_controller import (
+    handle_create_map,
+    handle_delete_map,
+    handle_dissociate_map,
+    handle_get_maps,
+    handle_join_map,
+)
 
 REQUEST_HANDLERS = {
     "register": handle_register,
     "login": handle_login,
     "validate_session": handle_validate_session,
     "logout": handle_logout,
+    "create_map": handle_create_map,
+    "join_map": handle_join_map,
+    "get_maps": handle_get_maps,
+    "dissociate_map": handle_dissociate_map,
+    "delete_map": handle_delete_map,
 }
 
 def handle_request(request: dict, connection) -> dict:

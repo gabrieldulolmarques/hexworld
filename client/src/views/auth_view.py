@@ -11,7 +11,13 @@ from PyQt6.QtWidgets import (
 )
 
 from views.password_edit import PasswordEdit
-from views.widgets import HexLogo, StatusMixin, horizontal_divider, make_card_shadow
+from views.widgets import (
+    HexLogo,
+    StatusMixin,
+    apply_panel_style,
+    horizontal_divider,
+    make_card_shadow,
+)
 
 class AuthView(StatusMixin, QWidget):
     request_login = pyqtSignal(str, str, bool)
@@ -30,11 +36,12 @@ class AuthView(StatusMixin, QWidget):
     def _setup_ui(self) -> None:
         card = QWidget()
         card.setObjectName("card")
+        apply_panel_style(card)
         card.setFixedWidth(360)
         card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
         card.setGraphicsEffect(make_card_shadow())
 
-        logo = HexLogo(size=64)
+        logo = HexLogo(size=72)
 
         self.brand = QLabel("HexWorld")
         self.brand.setObjectName("brand")
@@ -56,6 +63,7 @@ class AuthView(StatusMixin, QWidget):
         username_label = QLabel("Username")
         username_label.setObjectName("fieldLabel")
         self.username_input = QLineEdit()
+        self.username_input.setMaxLength(16)
         self.username_input.setPlaceholderText("your_username")
 
         password_label = QLabel("Password")

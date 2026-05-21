@@ -1,7 +1,7 @@
 from pathlib import Path
 
 _STYLES_DIR = Path(__file__).resolve().parent / "qss"
-_QSS_FILES = ("_base.qss", "_window.qss", "_auth.qss", "_map.qss")
+_QSS_FILES = ("_base.qss", "_window.qss", "_auth.qss", "_home.qss", "_map.qss")
 
 _CHECK_ICON_PATH = (
     Path(__file__).resolve().parents[2] / "assets" / "icons" / "check.svg"

@@ -7,11 +7,12 @@ from transport.protocol import request
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",
+    "username_too_short": "Username must be at least 3 characters.",
+    "username_too_long": "Username must be at most 16 characters.",
     "username_taken": "That username is already taken.",
     "missing_fields": "Missing fields.",
     "password_too_short": "Password is too short.",
     "password_too_long": "Password is too long.",
-    "invalid_token": "Session expired.",
     "unknown_type": "Unknown request type.",
     "unexpected_error": "Unexpected server error.",
 }
@@ -24,7 +25,7 @@ class AuthController(QObject):
     session_restored = pyqtSignal(str)
     register_success = pyqtSignal()
     logged_out = pyqtSignal()
-    session_expired = pyqtSignal()
+    session_error = pyqtSignal()
 
     def __init__(
         self,
@@ -97,7 +98,8 @@ class AuthController(QObject):
             code = response.get("code", "")
             if code == "invalid_token":
                 self.session.clear()
-                self.session_expired.emit()
+                self.session_error.emit()
+                return
             self.error.emit(_ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"]))
             return
 
@@ -127,5 +129,5 @@ class AuthController(QObject):
             self.loading.emit(False)
         if self.session.is_authenticated():
             self.session.clear()
-            self.session_expired.emit()
+            self.session_error.emit()
         self.error.emit(message)

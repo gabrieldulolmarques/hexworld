@@ -92,7 +92,7 @@ class WindowTitleBar(QWidget):
         self._setup_ui()
 
     def _setup_ui(self) -> None:
-        logo = HexLogo(size=18)
+        logo = HexLogo(size=20)
         logo.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         brand = QLabel("HexWorld")
         brand.setObjectName("titleBrand")
