@@ -17,6 +17,9 @@ from controllers.map_controller import (
     handle_get_map_state,
     handle_get_maps,
     handle_join_map,
+    handle_remove_description,
+    handle_remove_road,
+    handle_remove_structure,
     handle_set_description,
     handle_set_structure,
 )
@@ -36,6 +39,9 @@ REQUEST_HANDLERS = {
     "set_structure": handle_set_structure,
     "add_road": handle_add_road,
     "set_description": handle_set_description,
+    "remove_structure": handle_remove_structure,
+    "remove_road": handle_remove_road,
+    "remove_description": handle_remove_description,
 }
 
 def handle_request(request: dict, connection) -> dict:
