@@ -46,6 +46,13 @@ class MapController(QObject):
         self._send(request("get_maps", {"token": self._session.token}))
 
     def create_map(self, name: str) -> None:
+        name = name.strip()
+        if not name:
+            self.create_error.emit(_ERROR_MESSAGES["missing_fields"])
+            return
+        if len(name) > 50:
+            self.create_error.emit(_ERROR_MESSAGES["map_name_too_long"])
+            return
         self._send(request("create_map", {"token": self._session.token, "name": name}))
 
     def join_map(self, code: str) -> None:

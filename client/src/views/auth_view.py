@@ -69,8 +69,10 @@ class AuthView(StatusMixin, QWidget):
         password_label = QLabel("Password")
         password_label.setObjectName("fieldLabel")
         self.password_input = PasswordEdit()
+        self.password_input.setMaxLength(256)
 
         self.confirm_password_input = PasswordEdit(show_visibility_toggle=False)
+        self.confirm_password_input.setMaxLength(256)
         self.confirm_password_input.setPlaceholderText("repeat password")
 
         self.show_password_checkbox = QCheckBox("Show password")
