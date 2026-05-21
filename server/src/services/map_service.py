@@ -4,6 +4,7 @@ from uuid import uuid4
 from repositories.component_repository import (
     add_road as db_add_road,
     get_cell_details as db_get_cell_details,
+    upsert_description,
     upsert_structure,
 )
 from repositories.map_repository import (
@@ -156,6 +157,15 @@ def add_road(user_id: str, map_id: str, q: int, r: int, color: str) -> dict | st
     tile_id = get_or_create_tile(map_id, q, r)
     road_id = db_add_road(tile_id, color, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "road_id": road_id, "color": color}
+
+
+def set_description(user_id: str, map_id: str, q: int, r: int, text: str) -> dict | str:
+    text = text.strip()
+    if not text:
+        return "missing_fields"
+    tile_id = get_or_create_tile(map_id, q, r)
+    upsert_description(tile_id, text, user_id)
+    return {"tile_id": tile_id, "q": q, "r": r, "text": text}
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
