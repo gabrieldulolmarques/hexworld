@@ -1,10 +1,14 @@
 """Top bar with Create / Join / user badge / Sign out controls."""
 
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
+from limits import MAX_USERNAME_LEN
 from styles.ui_constants import BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY
 from views.ui_buttons import make_toolbar_button
+
+_BADGE_MAX_PX = 160   # badge should not push the buttons off screen
 
 
 class HomeTopBar(QWidget):
@@ -41,7 +45,10 @@ class HomeTopBar(QWidget):
         layout.addWidget(self.logout_button)
 
     def set_user(self, username: str) -> None:
-        self.user_badge.setText(f"⬢  {username}")
+        metrics = QFontMetrics(self.user_badge.font())
+        elided = metrics.elidedText(username, Qt.TextElideMode.ElideRight, _BADGE_MAX_PX)
+        self.user_badge.setText(f"⬢  {elided}")
+        self.user_badge.setToolTip(username if elided != username else "")
         self.user_badge.show()
 
     def set_logout_enabled(self, enabled: bool) -> None:

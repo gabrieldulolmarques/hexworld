@@ -69,6 +69,10 @@ QWidget#mapRoadPanel {
     border-radius: 12px;
 }
 
+QWidget#mapBottomBar {
+    max-width: 400px;
+}
+
 QWidget#mapSelectPanel QLabel#title {
     font-size: 20px;
     font-weight: 600;
@@ -225,12 +229,6 @@ QLabel#panelTitle {
     padding: 0 0 4px 0;
 }
 
-QLabel#hintDesc {
-    color: #d4d4d8;
-    font-size: 17px;
-    font-weight: 500;
-}
-
 /* Home map list — unchanged */
 QLabel#mapName {
     color: #e4e4e7;
@@ -260,6 +258,36 @@ QLabel#mapRole[role="editor"] {
 
 QLabel#mapRole[role="viewer"] {
     color: #71717b;
+}
+
+QScrollArea#membersScroll,
+QScrollArea#membersScroll > QWidget > QWidget {
+    background-color: transparent;
+    border: none;
+}
+
+QScrollArea#membersScroll QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    margin: 2px 2px 2px 0;
+}
+
+QScrollArea#membersScroll QScrollBar::handle:vertical {
+    background-color: #3f3f46;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QScrollArea#membersScroll QScrollBar::handle:vertical:hover {
+    background-color: #52525c;
+}
+
+QScrollArea#membersScroll QScrollBar::add-line:vertical,
+QScrollArea#membersScroll QScrollBar::add-page:vertical,
+QScrollArea#membersScroll QScrollBar::sub-line:vertical,
+QScrollArea#membersScroll QScrollBar::sub-page:vertical {
+    height: 0;
+    background: transparent;
 }
 
 QScrollArea#mapScroll,

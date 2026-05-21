@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from views.hex_canvas import HexCanvas
 from views.map.constants import (
+    MEMBERS_PANEL_GAP,
     PANEL_MARGIN,
     TOOL_DESCRIPTION,
     TOOL_ROAD,
@@ -90,6 +91,8 @@ class MapBody(QWidget):
         sp.move(w - sp.width() - m, m)
 
         mb = self._members_bar
+        mb_max_h = h - 2 * m - ts.height() - MEMBERS_PANEL_GAP
+        mb.set_max_panel_height(mb_max_h)
         mb.adjustSize()
         mb.move(m, h - mb.height() - m)
 
