@@ -1,3 +1,254 @@
+/* Map editor — scale aligned with _base.qss / home / auth */
+
+QWidget#mapScreen {
+    background-color: #09090b;
+    color: #e4e4e7;
+}
+
+QWidget#mapTopBar {
+    background-color: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 12px;
+}
+
+QWidget#mapTopBar QPushButton#ghost {
+    padding: 0 22px;
+    font-size: 15px;
+    min-height: 46px;
+}
+
+QWidget#mapTopBar QLabel#subtitle {
+    font-size: 15px;
+}
+
+QWidget#mapTopBar QLabel#title {
+    font-size: 21px;
+    font-weight: 700;
+}
+
+QWidget#mapWorkspace,
+QWidget#mapCanvasArea {
+    background-color: #09090b;
+}
+
+QWidget#mapStructureArea,
+QWidget#paletteGrid {
+    background-color: #18181b;
+}
+
+QWidget#mapInspectorMembers {
+    background-color: transparent;
+}
+
+QLabel#onlinePanelTitle {
+    color: #e4e4e7;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+QLabel#onlinePanelUser {
+    color: #d4d4d8;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+QPushButton#onlinePanelCollapse {
+    background: transparent;
+    border: none;
+    padding: 0;
+    min-width: 0;
+}
+
+QPushButton#onlinePanelCollapse:hover {
+    background: #27272a;
+    border-radius: 8px;
+}
+
+QWidget#mapTopBar,
+QWidget#mapSelectPanel,
+QWidget#mapBottomBar,
+QWidget#mapPalette,
+QWidget#mapToolStrip,
+QWidget#mapRoadPanel {
+    background-color: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 12px;
+}
+
+QWidget#mapSelectPanel QLabel#title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+QWidget#hexCanvas {
+    background-color: #09090b;
+}
+
+QWidget#biomeTabStrip {
+    background-color: #141416;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+}
+
+QWidget#mapSelectPanel QLabel#fieldLabel,
+QWidget#mapBottomBar QLabel#fieldLabel,
+QWidget#mapPalette QLabel#fieldLabel {
+    color: #9f9fa9;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+}
+
+QToolButton#biomeTab {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #71717b;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 4px;
+}
+
+QToolButton#biomeTab:hover {
+    color: #a1a1aa;
+    background-color: #1c1c1f;
+}
+
+QToolButton#biomeTab:checked {
+    background-color: rgba(94, 165, 0, 0.14);
+    color: #7ccf00;
+}
+
+QWidget#tileBtn {
+    background-color: #09090b;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+}
+
+QWidget#tileBtn[hovered="true"] {
+    background-color: #141416;
+    border-color: #52525c;
+}
+
+QWidget#tileBtn[checked="true"] {
+    background-color: rgba(94, 165, 0, 0.14);
+    border-color: #5ea500;
+}
+
+QWidget#tileBtn QLabel {
+    background: transparent;
+}
+
+QLabel#tileBtnLabel {
+    color: #d4d4d8;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+QWidget#tileBtn[checked="true"] QLabel#tileBtnLabel {
+    color: #d8f999;
+}
+
+QScrollArea#paletteScroll {
+    background-color: #18181b;
+    border: none;
+}
+
+QScrollArea#paletteScroll > QWidget > QWidget {
+    background-color: #18181b;
+}
+
+QScrollArea#paletteScroll QScrollBar:vertical {
+    background-color: #27272a;
+    border-radius: 5px;
+    width: 10px;
+    margin: 4px 3px 4px 3px;
+}
+
+QScrollArea#paletteScroll QScrollBar::handle:vertical {
+    background-color: #52525c;
+    border-radius: 4px;
+    min-height: 32px;
+}
+
+QScrollArea#paletteScroll QScrollBar::handle:vertical:hover {
+    background-color: #71717b;
+}
+
+QScrollArea#paletteScroll QScrollBar::add-line:vertical,
+QScrollArea#paletteScroll QScrollBar::add-page:vertical,
+QScrollArea#paletteScroll QScrollBar::sub-line:vertical,
+QScrollArea#paletteScroll QScrollBar::sub-page:vertical {
+    height: 0;
+    background: transparent;
+}
+
+QWidget#paletteGrid {
+    background-color: #18181b;
+}
+
+
+QToolButton#mapToolBtn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0;
+}
+
+QToolButton#mapToolBtn:hover {
+    background-color: #27272a;
+    border-color: #3f3f46;
+}
+
+QToolButton#mapToolBtn[active="true"] {
+    background-color: rgba(94, 165, 0, 0.14);
+    border-color: #5ea500;
+}
+
+QToolButton#mapToolBtn[toolId="erase"][active="true"] {
+    background-color: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+}
+
+QWidget#mapRoadPanel QLineEdit {
+    background-color: #27272a;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    color: #e4e4e7;
+    padding: 12px 16px;
+    font-size: 15px;
+}
+
+QWidget#mapRoadPanel QLineEdit:focus {
+    border-color: #5ea500;
+}
+
+QWidget#roadSavedRow {
+    background: transparent;
+}
+
+QLabel#panelTitle {
+    color: #9f9fa9;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    padding: 0 0 4px 0;
+}
+
+QLabel#hintTitle {
+    color: #9f9fa9;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+}
+
+QLabel#hintDesc {
+    color: #d4d4d8;
+    font-size: 17px;
+    font-weight: 500;
+}
+
+/* Home map list — unchanged */
 QLabel#mapName {
     color: #e4e4e7;
     font-size: 17px;
@@ -13,7 +264,7 @@ QLabel#mapMeta {
 QLabel#mapRole {
     font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.2px;
 }
 
 QLabel#mapRole[role="owner"] {
@@ -42,23 +293,26 @@ QScrollArea#mapScroll > QWidget > QWidget {
     border: none;
 }
 
-QScrollBar:vertical {
+QScrollArea#mapScroll QScrollBar:vertical {
     background-color: transparent;
-    width: 6px;
-    margin: 0;
+    width: 10px;
+    margin: 4px 5px 4px 3px;
 }
 
-QScrollBar::handle:vertical {
+QScrollArea#mapScroll QScrollBar::handle:vertical {
     background-color: #3f3f46;
-    border-radius: 3px;
+    border-radius: 4px;
     min-height: 32px;
 }
 
-QScrollBar::handle:vertical:hover {
+QScrollArea#mapScroll QScrollBar::handle:vertical:hover {
     background-color: #52525c;
 }
 
-QScrollBar::add-line:vertical,
-QScrollBar::sub-line:vertical {
+QScrollArea#mapScroll QScrollBar::add-line:vertical,
+QScrollArea#mapScroll QScrollBar::add-page:vertical,
+QScrollArea#mapScroll QScrollBar::sub-line:vertical,
+QScrollArea#mapScroll QScrollBar::sub-page:vertical {
     height: 0;
+    background: transparent;
 }
