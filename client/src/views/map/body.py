@@ -6,11 +6,11 @@ from views.hex_canvas import HexCanvas
 from views.map.constants import (
     MEMBERS_PANEL_GAP,
     PANEL_MARGIN,
-    TOOL_DESCRIPTION,
     TOOL_ROAD,
     TOOL_SELECT,
     TOOL_STRUCTURE,
 )
+from views.map.description_editor import DescriptionEditor
 from views.map.members_bar import MembersBar
 from views.map.palette_panel import PalettePanel
 from views.map.panel import styled
@@ -32,6 +32,7 @@ class MapBody(QWidget):
         tool_strip: ToolStrip,
         palette: PalettePanel,
         road_panel: RoadColorPanel,
+        description_editor: DescriptionEditor,
     ) -> None:
         super().__init__()
         self.setObjectName("mapCanvasArea")
@@ -42,6 +43,7 @@ class MapBody(QWidget):
         self._tool_strip = tool_strip
         self._palette = palette
         self._road_panel = road_panel
+        self._description_editor = description_editor
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -50,6 +52,9 @@ class MapBody(QWidget):
         for panel in (select_panel, members_bar, tool_strip, road_panel, palette, toolbar):
             panel.setParent(self)
             panel.raise_()
+
+        description_editor.setParent(self)
+        description_editor.hide()
 
         select_panel.hide()
         road_panel.hide()
@@ -62,7 +67,7 @@ class MapBody(QWidget):
     def sync_panels(self, tool_id: str) -> None:
         show_select = tool_id == TOOL_SELECT and self._select_panel.has_selection()
         self._select_panel.setVisible(show_select)
-        self._palette.setVisible(tool_id in (TOOL_STRUCTURE, TOOL_DESCRIPTION))
+        self._palette.setVisible(tool_id == TOOL_STRUCTURE)
         self._road_panel.setVisible(tool_id == TOOL_ROAD)
         self._reposition_panels()
 
@@ -103,3 +108,5 @@ class MapBody(QWidget):
         rp = self._road_panel
         rp.adjustSize()
         rp.move(w - rp.width() - m, m)
+
+        self._description_editor.setGeometry(self.rect())
