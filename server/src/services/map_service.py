@@ -1,6 +1,7 @@
 import secrets
 from uuid import uuid4
 
+from repositories.component_repository import get_cell_details as db_get_cell_details
 from repositories.map_repository import (
     create_map as db_create_map,
     delete_map as db_delete_map,
@@ -8,7 +9,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
-from repositories.tile_repository import list_tiles_with_components
+from repositories.tile_repository import get_tile_by_id, list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
     get_role,
@@ -16,6 +17,7 @@ from repositories.user_map_repository import (
     remove_user_from_map,
     transfer_ownership,
 )
+from repositories.user_repository import get_user_by_id
 
 MAX_MAP_NAME_LENGTH = 50
 
@@ -101,6 +103,37 @@ def get_map_state(user_id: str, map_id: str) -> dict:
     role = get_role(user_id, map_id)
     tiles = list_tiles_with_components(map_id)
     return {"map_id": map_id, "name": row["name"], "role": role, "tiles": tiles}
+
+
+def get_cell_details(map_id: str, tile_id: str) -> dict | str:
+    tile = get_tile_by_id(tile_id)
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    details = db_get_cell_details(tile_id)
+    author_ids = set()
+    if details["structure"]:
+        author_ids.add(details["structure"]["author_id"])
+    if details["description"]:
+        author_ids.add(details["description"]["author_id"])
+    for road in details["roads"]:
+        author_ids.add(road["author_id"])
+    usernames = {uid: get_user_by_id(uid)["username"] for uid in author_ids}
+    def _resolve(component: dict | None, extra_fields: list[str]) -> dict | None:
+        if component is None:
+            return None
+        return {
+            **{k: component[k] for k in extra_fields},
+            "author": usernames.get(component["author_id"], "unknown"),
+            "created_at": component["created_at"],
+        }
+    return {
+        "tile_id": tile_id,
+        "q": tile["q"],
+        "r": tile["r"],
+        "structure": _resolve(details["structure"], ["type"]),
+        "description": _resolve(details["description"], ["text"]),
+        "roads": [_resolve(road, ["id", "color"]) for road in details["roads"]],
+    }
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
