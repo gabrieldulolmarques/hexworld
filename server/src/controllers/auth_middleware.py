@@ -35,6 +35,7 @@ def authenticated(handler: Handler) -> Callable[[dict, object], dict]:
         if error_code is not None:
             return error_response(request, error_code)
         auth = {**session_data, "token": token}
+        connection.bind_user(auth["user_id"], auth["username"])
         return handler(request, connection, auth)
 
     return wrapper

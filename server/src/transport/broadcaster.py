@@ -19,6 +19,10 @@ class Broadcaster:
         with self._lock:
             self._subscribers[map_id].add(connection)
 
+    def connections_for(self, map_id: str) -> list:
+        with self._lock:
+            return list(self._subscribers.get(map_id, ()))
+
     def unsubscribe(self, map_id: str, connection) -> None:
         with self._lock:
             subscribers = self._subscribers.get(map_id)

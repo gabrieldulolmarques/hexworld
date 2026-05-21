@@ -30,6 +30,8 @@ class MapController(QObject):
     map_removed              = pyqtSignal(str)   # map_id
     map_member_count_changed = pyqtSignal(str, int)   # map_id, new_count
     map_role_changed         = pyqtSignal(str, str)   # map_id, new_role
+    map_presence_changed     = pyqtSignal(str, list)  # map_id, online_users
+    map_tile_changed         = pyqtSignal(str, int, int, dict)  # map_id, q, r, payload
     session_error            = pyqtSignal()           # invalid/expired session
 
     def __init__(self, transport_worker: TransportWorker, session: Session) -> None:
@@ -122,6 +124,19 @@ class MapController(QObject):
 
         if evt_type in ("map_member_joined", "map_member_left"):
             self.map_member_count_changed.emit(map_id, data.get("member_count", 0))
+        elif evt_type in ("map_user_online", "map_user_offline"):
+            self.map_presence_changed.emit(map_id, data.get("online_users", []))
         elif evt_type == "map_ownership_transferred":
             if data.get("new_owner_id") == self._session.user_id:
                 self.map_role_changed.emit(map_id, "owner")
+        elif evt_type in (
+            "structure_set",
+            "structure_removed",
+            "road_added",
+            "road_removed",
+            "description_set",
+            "description_removed",
+        ):
+            q, r = data.get("q"), data.get("r")
+            if q is not None and r is not None:
+                self.map_tile_changed.emit(map_id, int(q), int(r), data)
