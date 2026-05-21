@@ -19,6 +19,20 @@ def get_or_create_tile(map_id: str, q: int, r: int) -> str:
         connection.commit()
         return tile_id
 
+def get_tile_by_id(tile_id: str):
+    with get_connection() as connection:
+        return connection.execute(
+            "SELECT id, map_id, q, r FROM tile WHERE id = ?",
+            (tile_id,),
+        ).fetchone()
+
+
+def delete_tile(tile_id: str) -> None:
+    with get_connection() as connection:
+        connection.execute("DELETE FROM tile WHERE id = ?", (tile_id,))
+        connection.commit()
+
+
 def list_tiles_with_components(map_id: str) -> list[dict]:
     """Serialize the full map state for RF09.
 

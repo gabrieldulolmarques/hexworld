@@ -1,10 +1,18 @@
-from controllers.auth_middleware import authenticated
+from controllers.auth_middleware import authenticated, require_role
 from services.map_service import (
+    add_road,
     create_map,
     delete_map,
     dissociate_map,
+    get_cell_details,
+    get_map_state,
     get_maps,
     join_map,
+    remove_description,
+    remove_road,
+    remove_structure,
+    set_description,
+    set_structure,
 )
 from transport.broadcaster import broadcaster
 from transport.protocol import error_response, event, success_response
@@ -63,6 +71,125 @@ def handle_dissociate_map(request: dict, connection, auth: dict) -> dict:
             event("map_ownership_transferred", {"new_owner_id": result["new_owner_id"]}),
         )
     return success_response(request, {"map_id": map_id})
+
+
+@authenticated
+@require_role("viewer")
+def handle_get_cell_details(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    tile_id = data.get("tile_id", "")
+    if not tile_id:
+        return error_response(request, "missing_fields")
+    result = get_cell_details(map_id, tile_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("viewer")
+def handle_get_map_state(request: dict, connection, auth: dict) -> dict:
+    map_id = (request.get("data") or {}).get("map_id", "")
+    connection.subscribe(map_id)
+    result = get_map_state(auth["user_id"], map_id)
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_set_structure(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    q = data.get("q")
+    r = data.get("r")
+    structure_type = data.get("type", "")
+    if q is None or r is None or not structure_type:
+        return error_response(request, "missing_fields")
+    result = set_structure(auth["user_id"], map_id, int(q), int(r), structure_type)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("structure_set", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_add_road(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    q = data.get("q")
+    r = data.get("r")
+    color = data.get("color", "")
+    if q is None or r is None or not color:
+        return error_response(request, "missing_fields")
+    result = add_road(auth["user_id"], map_id, int(q), int(r), color)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("road_added", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_set_description(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    q = data.get("q")
+    r = data.get("r")
+    text = data.get("text", "")
+    if q is None or r is None or not text:
+        return error_response(request, "missing_fields")
+    result = set_description(auth["user_id"], map_id, int(q), int(r), text)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("description_set", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_remove_structure(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    tile_id = data.get("tile_id", "")
+    if not tile_id:
+        return error_response(request, "missing_fields")
+    result = remove_structure(map_id, tile_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("structure_removed", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_remove_road(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    road_id = data.get("road_id", "")
+    if not road_id:
+        return error_response(request, "missing_fields")
+    result = remove_road(map_id, road_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("road_removed", result))
+    return success_response(request, result)
+
+
+@authenticated
+@require_role("editor")
+def handle_remove_description(request: dict, connection, auth: dict) -> dict:
+    data = request.get("data") or {}
+    map_id = data.get("map_id", "")
+    tile_id = data.get("tile_id", "")
+    if not tile_id:
+        return error_response(request, "missing_fields")
+    result = remove_description(map_id, tile_id)
+    if isinstance(result, str):
+        return error_response(request, result)
+    broadcaster.broadcast(map_id, event("description_removed", result))
+    return success_response(request, result)
 
 
 @authenticated

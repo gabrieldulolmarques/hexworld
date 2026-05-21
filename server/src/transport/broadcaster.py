@@ -34,11 +34,19 @@ class Broadcaster:
             seq = self._sequences[map_id]
             recipients = list(self._subscribers.get(map_id, ()))
         stamped = {**event, "seq": seq, "map_id": map_id}
+        failed = []
         for connection in recipients:
             try:
                 connection.send(stamped)
             except Exception as exception:
                 print(f"Error broadcasting event for map {map_id}: {exception}")
                 print(format_exc())
+                failed.append(connection)
+        if failed:
+            with self._lock:
+                for connection in failed:
+                    self._subscribers[map_id].discard(connection)
+                if not self._subscribers.get(map_id):
+                    self._subscribers.pop(map_id, None)
 
 broadcaster = Broadcaster()
