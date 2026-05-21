@@ -8,6 +8,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
+from repositories.tile_repository import list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
     get_role,
@@ -93,6 +94,13 @@ def dissociate_map(user_id: str, map_id: str) -> tuple[str, None] | tuple[None, 
         remove_user_from_map(user_id, map_id)
     remaining = list_members(map_id)
     return (None, {"member_count": len(remaining), "new_owner_id": new_owner_id})
+
+
+def get_map_state(user_id: str, map_id: str) -> dict:
+    row = get_map_by_id(map_id)
+    role = get_role(user_id, map_id)
+    tiles = list_tiles_with_components(map_id)
+    return {"map_id": map_id, "name": row["name"], "role": role, "tiles": tiles}
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
