@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from database.connection import get_connection
+from repositories.component_repository import get_cell_details
 
 def get_or_create_tile(map_id: str, q: int, r: int) -> str:
     """Return the tile id at (map_id, q, r), creating the row if absent. Covers RF19."""
@@ -24,6 +25,14 @@ def get_tile_by_id(tile_id: str):
         return connection.execute(
             "SELECT id, map_id, q, r FROM tile WHERE id = ?",
             (tile_id,),
+        ).fetchone()
+
+
+def get_tile_at(map_id: str, q: int, r: int):
+    with get_connection() as connection:
+        return connection.execute(
+            "SELECT id, map_id, q, r FROM tile WHERE map_id = ? AND q = ? AND r = ?",
+            (map_id, q, r),
         ).fetchone()
 
 
@@ -77,6 +86,7 @@ def list_tiles_with_components(map_id: str) -> list[dict]:
             if not structure and not description and not roads:
                 continue
             result.append({
+                "tile_id": tile_id,
                 "q": tile["q"],
                 "r": tile["r"],
                 "structure": structure,
@@ -84,3 +94,19 @@ def list_tiles_with_components(map_id: str) -> list[dict]:
                 "roads": roads,
             })
         return result
+
+
+def serialize_tile(map_id: str, q: int, r: int) -> dict:
+    """RF17: full tile snapshot for apply_tile, or {q, r} if empty / absent."""
+    tile = get_tile_at(map_id, q, r)
+    if tile is None:
+        return {"q": q, "r": r}
+    details = get_cell_details(tile["id"])
+    payload: dict = {"q": q, "r": r, "tile_id": tile["id"]}
+    if details["structure"]:
+        payload["structure"] = details["structure"]
+    if details["description"]:
+        payload["description"] = details["description"]
+    if details["roads"]:
+        payload["roads"] = details["roads"]
+    return payload

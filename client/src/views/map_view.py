@@ -147,6 +147,16 @@ class MapView(QWidget):
     def apply_tile(self, q: int, r: int, data: dict) -> None:
         self.canvas.apply_tile(q, r, data)
 
+    def apply_server_tile(self, q: int, r: int, payload: dict) -> None:
+        """RF17: apply full server tile snapshot (or clear hex if empty)."""
+        from models.tile_format import tile_from_server
+
+        tile = tile_from_server(payload)
+        if tile is None:
+            self.canvas.remove_tile(q, r)
+        else:
+            self.canvas.apply_tile(q, r, tile)
+
     def active_tool(self) -> str:
         return self._palette.active_tool()
 
