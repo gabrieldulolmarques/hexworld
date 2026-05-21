@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from styles.ui_constants import CARD_MARGINS, CARD_SPACING
 from views.home.helpers import centered, make_card, set_form_status
 from views.ui_buttons import make_form_ghost_button, make_form_primary_button
 from views.widgets import HexLogo
@@ -67,8 +68,8 @@ class JoinPage(QWidget):
         buttons.addWidget(self.confirm_button, 1)
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(32, 22, 32, 28)
-        card_layout.setSpacing(10)
+        card_layout.setContentsMargins(*CARD_MARGINS)
+        card_layout.setSpacing(CARD_SPACING)
         card_layout.addLayout(header)
         card_layout.addSpacing(16)
         card_layout.addWidget(code_label)

@@ -9,6 +9,8 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from limits import MAX_MAP_NAME_LEN
+from styles.ui_constants import CARD_MARGINS, CARD_SPACING
 from views.home.helpers import centered, make_card, set_form_status
 from views.ui_buttons import make_form_ghost_button, make_form_primary_button
 from views.widgets import HexLogo
@@ -45,7 +47,7 @@ class CreatePage(QWidget):
         name_label.setObjectName("fieldLabel")
 
         self.name_input = QLineEdit()
-        self.name_input.setMaxLength(50)
+        self.name_input.setMaxLength(MAX_MAP_NAME_LEN)
         self.name_input.setPlaceholderText("My hex world")
         self.name_input.returnPressed.connect(self._submit)
 
@@ -67,8 +69,8 @@ class CreatePage(QWidget):
         buttons.addWidget(self.confirm_button, 1)
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(32, 22, 32, 28)
-        card_layout.setSpacing(10)
+        card_layout.setContentsMargins(*CARD_MARGINS)
+        card_layout.setSpacing(CARD_SPACING)
         card_layout.addLayout(header)
         card_layout.addSpacing(16)
         card_layout.addWidget(name_label)
@@ -110,7 +112,7 @@ class CreatePage(QWidget):
         if not name:
             set_form_status(self.status_label, "Map name is required.", "error")
             return
-        if len(name) > 50:
+        if len(name) > MAX_MAP_NAME_LEN:
             set_form_status(self.status_label, "Map name is too long.", "error")
             return
         self.submit_create.emit(name)

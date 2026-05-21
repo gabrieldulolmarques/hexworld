@@ -5,20 +5,19 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
-    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
-from styles.ui_constants import CARD_WIDTH
+from limits import MAX_PASSWORD_LEN, MAX_USERNAME_LEN
+from styles.ui_constants import CARD_MARGINS, CARD_SPACING
+from views.home.helpers import make_card
 from views.password_edit import PasswordEdit
 from views.ui_buttons import make_form_primary_button
 from views.widgets import (
     HexLogo,
     StatusMixin,
-    apply_panel_style,
     horizontal_divider,
-    make_card_shadow,
 )
 
 class AuthView(StatusMixin, QWidget):
@@ -36,12 +35,7 @@ class AuthView(StatusMixin, QWidget):
         self._apply_login_defaults()
 
     def _setup_ui(self) -> None:
-        card = QWidget()
-        card.setObjectName("card")
-        apply_panel_style(card)
-        card.setFixedWidth(CARD_WIDTH)
-        card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
-        card.setGraphicsEffect(make_card_shadow())
+        card = make_card()
 
         logo = HexLogo(size=72)
 
@@ -65,16 +59,16 @@ class AuthView(StatusMixin, QWidget):
         username_label = QLabel("Username")
         username_label.setObjectName("fieldLabel")
         self.username_input = QLineEdit()
-        self.username_input.setMaxLength(16)
+        self.username_input.setMaxLength(MAX_USERNAME_LEN)
         self.username_input.setPlaceholderText("your_username")
 
         password_label = QLabel("Password")
         password_label.setObjectName("fieldLabel")
         self.password_input = PasswordEdit()
-        self.password_input.setMaxLength(256)
+        self.password_input.setMaxLength(MAX_PASSWORD_LEN)
 
         self.confirm_password_input = PasswordEdit(show_visibility_toggle=False)
-        self.confirm_password_input.setMaxLength(256)
+        self.confirm_password_input.setMaxLength(MAX_PASSWORD_LEN)
         self.confirm_password_input.setPlaceholderText("repeat password")
 
         self.show_password_checkbox = QCheckBox("Show password")
@@ -108,8 +102,8 @@ class AuthView(StatusMixin, QWidget):
         mode_row.addWidget(self.mode_link)
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(32, 22, 32, 28)
-        card_layout.setSpacing(10)
+        card_layout.setContentsMargins(*CARD_MARGINS)
+        card_layout.setSpacing(CARD_SPACING)
         card_layout.addLayout(header)
         card_layout.addSpacing(16)
         card_layout.addWidget(username_label)

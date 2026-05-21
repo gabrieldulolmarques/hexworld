@@ -20,12 +20,12 @@ _TOOL_BTN_SIZE = 44
 
 # Mode tools — checkable, exclusive (id, icon file, tooltip).
 _TOOLS: tuple[tuple[str, str, str], ...] = (
-    (TOOL_SELECT,      "tool-select.svg",      "Select — inspect a hex"),
-    (TOOL_PAN,         "tool-pan.svg",         "Pan — drag to move"),
-    (TOOL_STRUCTURE,   "tool-structure.svg",   "Structure — paint a hex"),
-    (TOOL_ROAD,        "tool-road.svg",        "Road — draw on an edge"),
-    (TOOL_DESCRIPTION, "tool-description.svg", "Description — add text"),
-    (TOOL_ERASE,       "tool-erase.svg",       "Erase — remove a component"),
+    (TOOL_SELECT,      "tool-select.svg",      "Select"),
+    (TOOL_PAN,         "tool-pan.svg",         "Pan"),
+    (TOOL_STRUCTURE,   "tool-structure.svg",   "Structure"),
+    (TOOL_ROAD,        "tool-road.svg",        "Road"),
+    (TOOL_DESCRIPTION, "tool-description.svg", "Description"),
+    (TOOL_ERASE,       "tool-erase.svg",       "Erase"),
 )
 
 # Action buttons — one-shot, not checkable.
@@ -34,7 +34,7 @@ _ACTIONS: tuple[tuple[str, str, str], ...] = (
     ("zoom_out", "tool-zoom-out.svg", "Zoom out"),
     ("undo",     "tool-undo.svg",     "Undo"),
     ("redo",     "tool-redo.svg",     "Redo"),
-    ("export",   "tool-export.svg",   "Export map"),
+    ("export",   "tool-export.svg",   "Export"),
 )
 
 

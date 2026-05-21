@@ -15,12 +15,12 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from views.map_card import CARD_WIDTH, MapCard
+from styles.ui_constants import CARD_WIDTH
+from views.home.helpers import make_card
+from views.map_card import MapCard
 from views.widgets import (
     HexLogo,
     StatusMixin,
-    apply_panel_style,
-    make_card_shadow,
 )
 
 _GRID_COLS = 3
@@ -100,12 +100,7 @@ class MapGrid(StatusMixin, QWidget):
 
     @staticmethod
     def _build_empty_state() -> QWidget:
-        card = QWidget()
-        card.setObjectName("card")
-        apply_panel_style(card)
-        card.setFixedWidth(440)
-        card.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Maximum)
-        card.setGraphicsEffect(make_card_shadow())
+        card = make_card()
 
         logo = HexLogo(size=96)
         brand = QLabel("HexWorld")

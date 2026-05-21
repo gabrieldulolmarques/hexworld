@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from controllers.transport_worker import TransportWorker
+from limits import MAX_MAP_NAME_LEN
 from models.session import Session
 from transport.protocol import request
 
@@ -9,6 +10,7 @@ _ERROR_MESSAGES = {
     "map_name_too_long": "Map name is too long.",
     "invalid_code":      "Invalid invite code.",
     "already_member":    "You are already a member of this map.",
+    "map_full":          "This map is full (128 members max).",
     "not_member":        "You are not a member of this map.",
     "not_owner":         "Only the owner can delete this map.",
     "map_has_members":   "Remove all other members before deleting.",
@@ -50,7 +52,7 @@ class MapController(QObject):
         if not name:
             self.create_error.emit(_ERROR_MESSAGES["missing_fields"])
             return
-        if len(name) > 50:
+        if len(name) > MAX_MAP_NAME_LEN:
             self.create_error.emit(_ERROR_MESSAGES["map_name_too_long"])
             return
         self._send(request("create_map", {"token": self._session.token, "name": name}))

@@ -28,7 +28,8 @@ from repositories.user_map_repository import (
 )
 from repositories.user_repository import get_user_by_id
 
-MAX_MAP_NAME_LENGTH = 50
+MAX_MAP_NAME_LENGTH = 64
+MAX_MAP_MEMBERS = 128
 
 _tile_locks: dict[tuple, Lock] = {}
 _tile_locks_lock = Lock()
@@ -84,6 +85,9 @@ def join_map(user_id: str, code: str) -> dict | str:
     map_id, role = result
     if get_role(user_id, map_id) is not None:
         return "already_member"
+    members = list_members(map_id)
+    if len(members) >= MAX_MAP_MEMBERS:
+        return "map_full"
     add_user_to_map(user_id, map_id, role)
     row = get_map_by_id(map_id)
     members = list_members(map_id)

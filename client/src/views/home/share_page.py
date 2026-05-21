@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from styles.ui_constants import CARD_MARGINS, CARD_SPACING
 from views.home.helpers import centered, make_card, set_form_status
 from views.ui_buttons import make_compact_button, make_form_ghost_button
 from views.widgets import HexLogo
@@ -69,17 +70,16 @@ class SharePage(QWidget):
         cancel_btn.clicked.connect(self.cancel)
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(32, 22, 32, 28)
-        card_layout.setSpacing(10)
+        card_layout.setContentsMargins(*CARD_MARGINS)
+        card_layout.setSpacing(CARD_SPACING)
         card_layout.addLayout(header)
         card_layout.addSpacing(8)
         card_layout.addWidget(hint)
         card_layout.addSpacing(12)
         card_layout.addWidget(self.editor_section)
         card_layout.addWidget(self.viewer_section)
-        card_layout.addWidget(self.status_label)
-        card_layout.addSpacing(8)
         card_layout.addWidget(cancel_btn)
+        card_layout.addWidget(self.status_label)
 
         self.editor_section.hide()
         self.viewer_section.hide()

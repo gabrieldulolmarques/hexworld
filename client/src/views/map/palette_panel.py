@@ -1,4 +1,4 @@
-"""Palette panel — biome tabs + tile grid + tool-specific hint area."""
+"""Palette panel — biome tabs + tile grid (structure tool)."""
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
@@ -18,8 +18,6 @@ from models.asset_registry import REGISTRY
 from views.map.constants import (
     SIDE_PANEL_W,
     TOOL_DESCRIPTION,
-    TOOL_ERASE,
-    TOOL_ROAD,
     TOOL_SELECT,
     TOOL_STRUCTURE,
 )
@@ -40,12 +38,8 @@ _BIOME_LABELS: dict[str, str] = {
 _THUMB_SIZE = 44        # pixmap = 2*44 = 88×88
 _TILE_BTN_H = 150       # 8 + 88 + 6 + 40(text 2-line) + 8
 
-_TOOL_HINTS: dict[str, str] = {
-    TOOL_ROAD: "Select a hex edge to draw a road.",
-    TOOL_DESCRIPTION: "Click a hex to add or edit its description.",
-    TOOL_ERASE: "Click a component to remove (description, road, or tile).",
-}
-_TOOL_TITLES: dict[str, str] = {
+_PANEL_HEADINGS: dict[str, str] = {
+    TOOL_STRUCTURE: "STRUCTURE",
     TOOL_DESCRIPTION: "DESCRIPTION",
 }
 
@@ -208,32 +202,15 @@ class PalettePanel(MapPanel):
         structure_lay.addWidget(self._tab_strip)
         structure_lay.addWidget(scroll, 1)
 
-        self._struct_heading = QLabel("STRUCTURE")
-        self._struct_heading.setObjectName("panelTitle")
-        self._struct_heading.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self._hint_area = QWidget()
-        hint_lay = QVBoxLayout(self._hint_area)
-        hint_lay.setContentsMargins(0, 0, 0, 0)
-        hint_lay.setSpacing(12)
-        hint_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._hint_title = QLabel()
-        self._hint_title.setObjectName("panelTitle")
-        self._hint_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._hint_desc = QLabel()
-        self._hint_desc.setObjectName("hintDesc")
-        self._hint_desc.setWordWrap(True)
-        self._hint_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        hint_lay.addWidget(self._hint_title)
-        hint_lay.addWidget(self._hint_desc)
-        self._hint_area.hide()
+        self._heading = QLabel("STRUCTURE")
+        self._heading.setObjectName("panelTitle")
+        self._heading.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(10)
-        layout.addWidget(self._struct_heading)
+        layout.addWidget(self._heading)
         layout.addWidget(self._structure_area, 1)
-        layout.addWidget(self._hint_area, 1)
 
         self._apply_tool(TOOL_SELECT, emit=False)
 
@@ -279,15 +256,10 @@ class PalettePanel(MapPanel):
         changed = tool_id != self._active_tool
         self._active_tool = tool_id
 
-        is_structure = tool_id == TOOL_STRUCTURE
-        self._struct_heading.setVisible(is_structure)
-        self._structure_area.setVisible(is_structure)
-        if is_structure:
-            self._hint_area.hide()
-        else:
-            self._hint_title.setText(_TOOL_TITLES.get(tool_id, ""))
-            self._hint_desc.setText(_TOOL_HINTS.get(tool_id, ""))
-            self._hint_area.setVisible(bool(_TOOL_HINTS.get(tool_id)))
+        heading = _PANEL_HEADINGS.get(tool_id, "")
+        self._heading.setText(heading)
+        self._heading.setVisible(bool(heading))
+        self._structure_area.setVisible(tool_id == TOOL_STRUCTURE)
 
         if emit and changed:
             self.tool_changed.emit(tool_id)
