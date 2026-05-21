@@ -8,6 +8,7 @@ from transport.protocol import error_response
 Handler = Callable[[dict, object, dict], dict]
 
 _ROLE_RANK: dict[str | None, int] = {"owner": 2, "editor": 1, "viewer": 0, None: -1}
+_ROLE_ERRORS: dict[str, str] = {"editor": "not_editor", "owner": "not_owner"}
 
 def require_role(min_role: str) -> Callable:
     def decorator(handler: Handler) -> Callable[[dict, object, dict], dict]:
@@ -18,7 +19,7 @@ def require_role(min_role: str) -> Callable:
                 return error_response(request, "missing_fields")
             role = get_role(auth["user_id"], map_id)
             if _ROLE_RANK.get(role, -1) < _ROLE_RANK[min_role]:
-                error_code = "not_editor" if min_role == "editor" else "not_owner"
+                error_code = _ROLE_ERRORS.get(min_role, "not_owner")
                 return error_response(request, error_code)
             return handler(request, connection, auth)
         return wrapper
