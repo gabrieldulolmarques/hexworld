@@ -9,6 +9,7 @@ QWidget#mapTopBar {
     background-color: #18181b;
     border: 1px solid #3f3f46;
     border-radius: 12px;
+    max-width: 16777215px;
 }
 
 QWidget#mapTopBar QLabel#subtitle {
@@ -16,8 +17,12 @@ QWidget#mapTopBar QLabel#subtitle {
 }
 
 QWidget#mapTopBar QLabel#title {
+    color: #e4e4e7;
     font-size: 21px;
     font-weight: 700;
+    padding: 0;
+    min-width: 0;
+    max-width: 16777215px;
 }
 
 QWidget#mapWorkspace,
@@ -38,6 +43,13 @@ QLabel#onlinePanelTitle {
     color: #e4e4e7;
     font-size: 17px;
     font-weight: 700;
+}
+
+QLabel#onlinePanelRatio {
+    color: #e4e4e7;
+    font-size: 17px;
+    font-weight: 700;
+    padding-left: 4px;
 }
 
 QLabel#onlinePanelUser {
