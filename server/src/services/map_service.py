@@ -2,6 +2,7 @@ import secrets
 from uuid import uuid4
 
 from repositories.component_repository import (
+    add_road as db_add_road,
     get_cell_details as db_get_cell_details,
     upsert_structure,
 )
@@ -146,6 +147,15 @@ def set_structure(user_id: str, map_id: str, q: int, r: int, structure_type: str
     tile_id = get_or_create_tile(map_id, q, r)
     upsert_structure(tile_id, structure_type, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "type": structure_type}
+
+
+def add_road(user_id: str, map_id: str, q: int, r: int, color: str) -> dict | str:
+    color = color.strip()
+    if not color:
+        return "missing_fields"
+    tile_id = get_or_create_tile(map_id, q, r)
+    road_id = db_add_road(tile_id, color, user_id)
+    return {"tile_id": tile_id, "q": q, "r": r, "road_id": road_id, "color": color}
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
