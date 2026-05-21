@@ -90,6 +90,38 @@ QWidget#mapSelectPanel QLabel#title {
     font-weight: 600;
 }
 
+QTextBrowser#tileInfoBrowser {
+    background-color: transparent;
+    border: none;
+    color: #d4d4d8;
+    font-size: 14px;
+    selection-background-color: rgba(94, 165, 0, 0.35);
+}
+
+QTextBrowser#tileInfoBrowser QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    margin: 2px 2px 2px 0;
+}
+
+QTextBrowser#tileInfoBrowser QScrollBar::handle:vertical {
+    background-color: #3f3f46;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QTextBrowser#tileInfoBrowser QScrollBar::handle:vertical:hover {
+    background-color: #52525c;
+}
+
+QTextBrowser#tileInfoBrowser QScrollBar::add-line:vertical,
+QTextBrowser#tileInfoBrowser QScrollBar::add-page:vertical,
+QTextBrowser#tileInfoBrowser QScrollBar::sub-line:vertical,
+QTextBrowser#tileInfoBrowser QScrollBar::sub-page:vertical {
+    height: 0;
+    background: transparent;
+}
+
 QWidget#hexCanvas {
     background-color: #09090b;
 }
@@ -239,6 +271,61 @@ QWidget#roadSavedRow {
 
 QLabel#panelTitle {
     padding: 0 0 4px 0;
+}
+
+QWidget#descriptionEditorBackdrop {
+    background-color: rgba(9, 9, 11, 0.72);
+}
+
+QWidget#descriptionEditorCard {
+    background-color: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 12px;
+}
+
+QLabel#descriptionEditorCoord {
+    color: #9f9fa9;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+QTextEdit#descriptionEditorInput {
+    background-color: #09090b;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    color: #e4e4e7;
+    padding: 12px;
+    font-size: 15px;
+    selection-background-color: rgba(94, 165, 0, 0.35);
+}
+
+QTextEdit#descriptionEditorInput:focus {
+    border-color: #5ea500;
+}
+
+QTextEdit#descriptionEditorInput QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    margin: 2px 2px 2px 0;
+}
+
+QTextEdit#descriptionEditorInput QScrollBar::handle:vertical {
+    background-color: #3f3f46;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QTextEdit#descriptionEditorInput QScrollBar::handle:vertical:hover {
+    background-color: #52525c;
+}
+
+QTextEdit#descriptionEditorInput QScrollBar::add-line:vertical,
+QTextEdit#descriptionEditorInput QScrollBar::add-page:vertical,
+QTextEdit#descriptionEditorInput QScrollBar::sub-line:vertical,
+QTextEdit#descriptionEditorInput QScrollBar::sub-page:vertical {
+    height: 0;
+    background: transparent;
 }
 
 /* Home map list — unchanged */
