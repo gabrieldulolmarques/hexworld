@@ -1,6 +1,16 @@
 import secrets
+from threading import Lock
 from uuid import uuid4
 
+from repositories.component_repository import (
+    add_road as db_add_road,
+    delete_description as db_delete_description,
+    delete_road as db_delete_road,
+    get_cell_details as db_get_cell_details,
+    get_road_by_id,
+    upsert_description,
+    upsert_structure,
+)
 from repositories.map_repository import (
     create_map as db_create_map,
     delete_map as db_delete_map,
@@ -8,6 +18,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
+from repositories.tile_repository import delete_tile, get_or_create_tile, get_tile_by_id, list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
     get_role,
@@ -15,8 +26,20 @@ from repositories.user_map_repository import (
     remove_user_from_map,
     transfer_ownership,
 )
+from repositories.user_repository import get_user_by_id
 
 MAX_MAP_NAME_LENGTH = 50
+
+_tile_locks: dict[tuple, Lock] = {}
+_tile_locks_lock = Lock()
+
+
+def _get_tile_lock(map_id: str, q: int, r: int) -> Lock:
+    key = (map_id, q, r)
+    with _tile_locks_lock:
+        if key not in _tile_locks:
+            _tile_locks[key] = Lock()
+        return _tile_locks[key]
 
 
 def _invite_code() -> str:
@@ -93,6 +116,104 @@ def dissociate_map(user_id: str, map_id: str) -> tuple[str, None] | tuple[None, 
         remove_user_from_map(user_id, map_id)
     remaining = list_members(map_id)
     return (None, {"member_count": len(remaining), "new_owner_id": new_owner_id})
+
+
+def get_map_state(user_id: str, map_id: str) -> dict:
+    row = get_map_by_id(map_id)
+    role = get_role(user_id, map_id)
+    tiles = list_tiles_with_components(map_id)
+    return {"map_id": map_id, "name": row["name"], "role": role, "tiles": tiles}
+
+
+def get_cell_details(map_id: str, tile_id: str) -> dict | str:
+    tile = get_tile_by_id(tile_id)
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    details = db_get_cell_details(tile_id)
+    author_ids = set()
+    if details["structure"]:
+        author_ids.add(details["structure"]["author_id"])
+    if details["description"]:
+        author_ids.add(details["description"]["author_id"])
+    for road in details["roads"]:
+        author_ids.add(road["author_id"])
+    usernames = {uid: get_user_by_id(uid)["username"] for uid in author_ids}
+    def _resolve(component: dict | None, extra_fields: list[str]) -> dict | None:
+        if component is None:
+            return None
+        return {
+            **{k: component[k] for k in extra_fields},
+            "author": usernames.get(component["author_id"], "unknown"),
+            "created_at": component["created_at"],
+        }
+    return {
+        "tile_id": tile_id,
+        "q": tile["q"],
+        "r": tile["r"],
+        "structure": _resolve(details["structure"], ["type"]),
+        "description": _resolve(details["description"], ["text"]),
+        "roads": [_resolve(road, ["id", "color"]) for road in details["roads"]],
+    }
+
+
+def set_structure(user_id: str, map_id: str, q: int, r: int, structure_type: str) -> dict | str:
+    structure_type = structure_type.strip()
+    if not structure_type:
+        return "missing_fields"
+    with _get_tile_lock(map_id, q, r):
+        tile_id = get_or_create_tile(map_id, q, r)
+        upsert_structure(tile_id, structure_type, user_id)
+    return {"tile_id": tile_id, "q": q, "r": r, "type": structure_type}
+
+
+def add_road(user_id: str, map_id: str, q: int, r: int, color: str) -> dict | str:
+    color = color.strip()
+    if not color:
+        return "missing_fields"
+    with _get_tile_lock(map_id, q, r):
+        tile_id = get_or_create_tile(map_id, q, r)
+        road_id = db_add_road(tile_id, color, user_id)
+    return {"tile_id": tile_id, "q": q, "r": r, "road_id": road_id, "color": color}
+
+
+def set_description(user_id: str, map_id: str, q: int, r: int, text: str) -> dict | str:
+    text = text.strip()
+    if not text:
+        return "missing_fields"
+    with _get_tile_lock(map_id, q, r):
+        tile_id = get_or_create_tile(map_id, q, r)
+        upsert_description(tile_id, text, user_id)
+    return {"tile_id": tile_id, "q": q, "r": r, "text": text}
+
+
+def remove_structure(map_id: str, tile_id: str) -> dict | str:
+    tile = get_tile_by_id(tile_id)
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    with _get_tile_lock(map_id, tile["q"], tile["r"]):
+        delete_tile(tile_id)
+    return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
+
+
+def remove_road(map_id: str, road_id: str) -> dict | str:
+    road = get_road_by_id(road_id)
+    if road is None:
+        return "not_found"
+    tile = get_tile_by_id(road["tile_id"])
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    with _get_tile_lock(map_id, tile["q"], tile["r"]):
+        db_delete_road(road_id)
+    return {"tile_id": tile["id"], "q": tile["q"], "r": tile["r"], "road_id": road_id}
+
+
+def remove_description(map_id: str, tile_id: str) -> dict | str:
+    tile = get_tile_by_id(tile_id)
+    if tile is None or tile["map_id"] != map_id:
+        return "not_found"
+    with _get_tile_lock(map_id, tile["q"], tile["r"]):
+        db_delete_description(tile_id)
+    return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
 
 
 def delete_map(user_id: str, map_id: str) -> str | None:
