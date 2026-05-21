@@ -42,6 +42,7 @@ __all__ = [
 class MapView(QWidget):
     request_back        = pyqtSignal()
     hex_selected        = pyqtSignal(int, int)
+    hex_paint_clicked   = pyqtSignal(int, int)
     structure_selected  = pyqtSignal(str)
     road_color_selected = pyqtSignal(str)
     tool_changed        = pyqtSignal(str)
@@ -76,8 +77,8 @@ class MapView(QWidget):
         self._palette.structure_selected.connect(self.structure_selected)
         self._road_panel.road_color_selected.connect(self.road_color_selected)
         self._tool_strip.tool_changed.connect(self._on_tool_changed)
-        self._tool_strip.zoom_in_clicked.connect(self.zoom_in_requested)
-        self._tool_strip.zoom_out_clicked.connect(self.zoom_out_requested)
+        self._tool_strip.zoom_in_clicked.connect(self._on_zoom_in)
+        self._tool_strip.zoom_out_clicked.connect(self._on_zoom_out)
         self._tool_strip.undo_clicked.connect(self.undo_requested)
         self._tool_strip.redo_clicked.connect(self.redo_requested)
         self._tool_strip.export_clicked.connect(self.export_requested)
@@ -106,6 +107,8 @@ class MapView(QWidget):
         self._select_panel.set_coord(q, r)
         if self._active_tool == TOOL_SELECT:
             self._body.sync_panels(TOOL_SELECT)
+        elif self._active_tool in (TOOL_STRUCTURE, TOOL_ROAD, TOOL_DESCRIPTION, TOOL_ERASE):
+            self.hex_paint_clicked.emit(q, r)
 
     def _on_hex_deselected(self) -> None:
         self._select_panel.clear_selection()
@@ -116,7 +119,18 @@ class MapView(QWidget):
         self._active_tool = tool_id
         self._palette.apply_tool(tool_id)
         self._body.sync_panels(tool_id)
+        self.canvas.set_pick_any_hex(
+            tool_id in (TOOL_STRUCTURE, TOOL_ROAD, TOOL_DESCRIPTION, TOOL_ERASE),
+        )
         self.tool_changed.emit(tool_id)
+
+    def _on_zoom_in(self) -> None:
+        self.canvas.zoom_in()
+        self.zoom_in_requested.emit()
+
+    def _on_zoom_out(self) -> None:
+        self.canvas.zoom_out()
+        self.zoom_out_requested.emit()
 
     # ------------------------------------------------------------------
     # Public API (controller)
@@ -129,17 +143,23 @@ class MapView(QWidget):
         self._active_tool = TOOL_SELECT
         self._select_panel.clear_selection()
         self.canvas.clear_selection()
+        self.canvas.set_pick_any_hex(False)
         self._tool_strip.set_active_tool(TOOL_SELECT)
         self._palette.apply_tool(TOOL_SELECT)
         self._toolbar.set_map_name(data.get("name", ""))
         self._members_bar.set_total(data.get("member_count", 0))
         self._body.sync_panels(TOOL_SELECT)
+        self._body.reposition_panels()
+
+    def selected_structure(self) -> str | None:
+        return self._palette.selected_structure()
 
     def update_member_count(self, count: int) -> None:
         self._members_bar.set_total(count)
 
     def set_online_users(self, users: list[dict]) -> None:
         self._members_bar.set_users(users)
+        self._body.reposition_panels()
 
     def set_tiles(self, tiles: dict) -> None:
         self.canvas.set_tiles(tiles)
