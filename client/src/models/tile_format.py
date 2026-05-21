@@ -18,7 +18,7 @@ def tile_from_server(payload: dict) -> dict | None:
         tile["description"] = {"text": description.get("text", "")}
     roads = payload.get("roads") or []
     if roads:
-        tile["road"] = {"color": roads[0].get("color", "#5ea500")}
+        tile["road"] = {"color": roads[0].get("color", "#5ea500"), "id": roads[0].get("id", "")}
     return tile
 
 

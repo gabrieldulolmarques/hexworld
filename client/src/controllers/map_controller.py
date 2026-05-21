@@ -118,6 +118,57 @@ class MapController(QObject):
             ),
         )
 
+    def remove_structure(self, q: int, r: int) -> None:
+        tile_id = self._tile_ids.get((q, r))
+        if not self._open_map_id or not tile_id:
+            return
+        self._send(
+            request(
+                "remove_structure",
+                {"token": self._session.token, "map_id": self._open_map_id, "tile_id": tile_id},
+            ),
+        )
+
+    def remove_road(self, q: int, r: int, road_id: str) -> None:
+        if not self._open_map_id or not road_id:
+            return
+        self._send(
+            request(
+                "remove_road",
+                {"token": self._session.token, "map_id": self._open_map_id, "road_id": road_id},
+            ),
+        )
+
+    def remove_description(self, q: int, r: int) -> None:
+        tile_id = self._tile_ids.get((q, r))
+        if not self._open_map_id or not tile_id:
+            return
+        self._send(
+            request(
+                "remove_description",
+                {"token": self._session.token, "map_id": self._open_map_id, "tile_id": tile_id},
+            ),
+        )
+
+    def set_description(self, q: int, r: int, text: str) -> None:
+        if not self._open_map_id:
+            return
+        text = text.strip()
+        if not text:
+            return
+        self._send(
+            request(
+                "set_description",
+                {
+                    "token": self._session.token,
+                    "map_id": self._open_map_id,
+                    "q": q,
+                    "r": r,
+                    "text": text,
+                },
+            ),
+        )
+
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------
@@ -152,7 +203,10 @@ class MapController(QObject):
                 self.create_error.emit(msg)
             elif req_type == "join_map":
                 self.join_error.emit(msg)
-            elif req_type in ("get_map_state", "set_structure"):
+            elif req_type in (
+                "get_map_state", "set_structure", "set_description",
+                "remove_structure", "remove_road", "remove_description",
+            ):
                 self.map_editor_error.emit(msg)
             else:
                 self.error.emit(msg)
@@ -165,29 +219,18 @@ class MapController(QObject):
             case "get_map_state":
                 self._map_role = data.get("role", "viewer")
                 self.map_state_loaded.emit(data)
-            case "set_structure":
+            case "set_structure" | "set_description":
                 tile_id = data.get("tile_id")
                 q, r = data.get("q"), data.get("r")
-                stype = data.get("type", "")
                 if (
                     self._open_map_id
                     and tile_id is not None
                     and q is not None
                     and r is not None
                 ):
-                    qi, ri = int(q), int(r)
-                    self.remember_tile(qi, ri, tile_id)
-                    self.map_tile_changed.emit(
-                        self._open_map_id,
-                        qi,
-                        ri,
-                        {
-                            "q": qi,
-                            "r": ri,
-                            "tile_id": tile_id,
-                            "structure": {"type": stype},
-                        },
-                    )
+                    self.remember_tile(int(q), int(r), tile_id)
+            case "remove_structure" | "remove_road" | "remove_description":
+                pass  # broadcast event drives the visual update
             case "create_map":
                 self.map_created.emit(data["map"])
             case "join_map":

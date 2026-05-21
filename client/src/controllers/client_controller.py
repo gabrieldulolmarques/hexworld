@@ -10,7 +10,7 @@ from transport.client import Client
 from views.auth_view import AuthView
 from views.home_view import HomeView
 from views.main_view import MainView
-from views.map.constants import TOOL_STRUCTURE
+from views.map.constants import TOOL_DESCRIPTION, TOOL_ERASE, TOOL_STRUCTURE
 from views.map_view import MapView
 
 _RECONNECT_DELAY_MS = 5000
@@ -85,6 +85,7 @@ class ClientController:
             lambda msg: self.home_view.show_message(msg, level="error"),
         )
         self.map_view.hex_paint_clicked.connect(self._on_hex_paint_clicked)
+        self.map_view.description_submitted.connect(self.maps.set_description)
 
         self.transport_worker.finished.connect(self._on_worker_finished)
 
@@ -179,7 +180,8 @@ class ClientController:
     def _on_hex_paint_clicked(self, q: int, r: int) -> None:
         if not self.maps.can_edit:
             return
-        if self.map_view.active_tool() == TOOL_STRUCTURE:
+        tool = self.map_view.active_tool()
+        if tool == TOOL_STRUCTURE:
             structure = self.map_view.selected_structure()
             if not structure:
                 self.home_view.show_message(
@@ -188,6 +190,18 @@ class ClientController:
                 )
                 return
             self.maps.set_structure(q, r, structure)
+        elif tool == TOOL_DESCRIPTION:
+            self.map_view.prompt_description(q, r)
+        elif tool == TOOL_ERASE:
+            component = self.map_view.canvas.hovered_erase_component()
+            if component == "structure":
+                self.maps.remove_structure(q, r)
+            elif component == "road":
+                road_id = self.map_view.canvas.road_id_at(q, r)
+                if road_id:
+                    self.maps.remove_road(q, r, road_id)
+            elif component == "description":
+                self.maps.remove_description(q, r)
 
     # ------------------------------------------------------------------
     # Transport
