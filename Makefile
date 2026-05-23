@@ -1,8 +1,14 @@
+ifneq (,$(wildcard .env))
+include .env
+export
+endif
+
 PYTHON ?= python3
 SERVER_ADDRESS ?= 127.0.0.1:5000
+DEMO_SERVER_ADDRESS ?= hexworld.playit.plus:1048
 clients ?= 1
 
-.PHONY: build check up clean
+.PHONY: build check up clean demo
 
 build:
 	$(PYTHON) -m pip install -r client/requirements.txt
@@ -22,3 +28,6 @@ up:
 
 clean:
 	rm -f client/data/session*.json
+
+demo:
+	$(MAKE) up SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS)
