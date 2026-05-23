@@ -10,3 +10,24 @@ services:
       PYTHONUNBUFFERED: 1
     volumes:
       - ./server:/app
+    networks:
+      hexworld:
+        ipv4_address: 10.1.0.2
+
+  playit:
+    image: ghcr.io/playit-cloud/playit-agent:latest
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      - server
+    networks:
+      hexworld:
+        ipv4_address: 10.1.0.3
+
+networks:
+  hexworld:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.1.0.0/24
