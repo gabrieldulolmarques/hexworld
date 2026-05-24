@@ -1,16 +1,18 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from controllers.transport_worker import TransportWorker
-from limits import MAX_MAP_NAME_LEN
 from models.session import Session
 from transport.protocol import request
+
+MAX_MAP_NAME_LENGTH = 64
+MAX_MAP_MEMBERS = 128
 
 _ERROR_MESSAGES = {
     "missing_fields":    "Missing fields.",
     "map_name_too_long": "Map name is too long.",
     "invalid_code":      "Invalid invite code.",
     "already_member":    "You are already a member of this map.",
-    "map_full":          "This map is full (128 members max).",
+    "map_full":          f"This map is full ({MAX_MAP_MEMBERS} members max).",
     "not_member":        "You are not a member of this map.",
     "not_owner":         "Only the owner can delete this map.",
     "map_has_members":   "Remove all other members before deleting.",
@@ -20,7 +22,6 @@ _ERROR_MESSAGES = {
     "invalid_path":      "Roads must use adjacent hexes without reusing a segment.",
 }
 
-
 class MapController(QObject):
     loading                  = pyqtSignal(bool)
     error                    = pyqtSignal(str)
@@ -29,19 +30,19 @@ class MapController(QObject):
     maps_loaded              = pyqtSignal(list)
     map_created              = pyqtSignal(dict)
     map_joined               = pyqtSignal(dict)
-    map_removed              = pyqtSignal(str)   # map_id
-    map_member_count_changed = pyqtSignal(str, int)   # map_id, new_count
-    map_role_changed         = pyqtSignal(str, str)   # map_id, new_role
-    map_presence_changed     = pyqtSignal(str, list)  # map_id, online_users
-    map_tile_changed         = pyqtSignal(str, int, int, dict)  # map_id, q, r, payload
-    map_road_added           = pyqtSignal(str, str, list, str)  # map_id, segment_id, waypoints, color
-    map_road_removed         = pyqtSignal(str, str)             # map_id, road_id
-    map_inner_edges_changed  = pyqtSignal(str, list)            # map_id, cells
+    map_removed              = pyqtSignal(str)
+    map_member_count_changed = pyqtSignal(str, int)
+    map_role_changed         = pyqtSignal(str, str)
+    map_presence_changed     = pyqtSignal(str, list)
+    map_tile_changed         = pyqtSignal(str, int, int, dict)
+    map_road_added           = pyqtSignal(str, str, list, str)
+    map_road_removed         = pyqtSignal(str, str)
+    map_inner_edges_changed  = pyqtSignal(str, list)
     map_state_loaded         = pyqtSignal(dict)
     map_editor_error         = pyqtSignal(str)
-    cell_details_loaded      = pyqtSignal(int, int, dict)   # q, r, payload
-    cell_details_error       = pyqtSignal(int, int, str)    # q, r, message
-    session_error            = pyqtSignal()           # invalid/expired session
+    cell_details_loaded      = pyqtSignal(int, int, dict)
+    cell_details_error       = pyqtSignal(int, int, str)
+    session_error            = pyqtSignal()
 
     def __init__(self, transport_worker: TransportWorker, session: Session) -> None:
         super().__init__()
@@ -55,10 +56,6 @@ class MapController(QObject):
         transport_worker.response.connect(self._on_response)
         transport_worker.event.connect(self._on_event)
 
-    # ------------------------------------------------------------------
-    # Actions
-    # ------------------------------------------------------------------
-
     def get_maps(self) -> None:
         self._send(request("get_maps", {"token": self._session.token}))
 
@@ -67,7 +64,7 @@ class MapController(QObject):
         if not name:
             self.create_error.emit(_ERROR_MESSAGES["missing_fields"])
             return
-        if len(name) > MAX_MAP_NAME_LEN:
+        if len(name) > MAX_MAP_NAME_LENGTH:
             self.create_error.emit(_ERROR_MESSAGES["map_name_too_long"])
             return
         self._send(request("create_map", {"token": self._session.token, "name": name}))
@@ -110,14 +107,10 @@ class MapController(QObject):
     def can_edit(self) -> bool:
         return self._map_role in ("owner", "editor")
 
-    def tile_id_at(self, q: int, r: int) -> str | None:
-        return self._tile_ids.get((q, r))
-
     def remember_tile(self, q: int, r: int, tile_id: str) -> None:
         self._tile_ids[(q, r)] = tile_id
 
     def fetch_cell_details(self, q: int, r: int) -> None:
-        """Lazy-load structure/description metadata for the inspector."""
         if not self._open_map_id:
             self.cell_details_error.emit(q, r, "No map is open.")
             return
@@ -155,7 +148,6 @@ class MapController(QObject):
         )
 
     def add_road(self, waypoints: list, color: str) -> None:
-        """RF13: send a road polyline (>= 2 waypoints as [[q,r],...])."""
         if not self._open_map_id or not color or len(waypoints) < 2:
             return
         self._send(
@@ -254,10 +246,6 @@ class MapController(QObject):
             ),
         )
 
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
-
     def _send(self, req: dict) -> None:
         self._pending.add(req["request_id"])
         if len(self._pending) == 1:
@@ -334,7 +322,7 @@ class MapController(QObject):
             case "add_road":
                 self._emit_road_segments(data)
             case "remove_structure" | "remove_road" | "remove_description":
-                pass  # broadcast event drives the visual update
+                pass
             case "set_inner_edge" | "remove_inner_edge":
                 cells = data.get("cells", [])
                 if self._open_map_id and cells:

@@ -5,30 +5,19 @@ from PyQt6.QtCore import QTimer
 from controllers.auth_controller import AuthController
 from controllers.map_controller import MapController
 from controllers.transport_worker import TransportWorker
+from models.geometry import is_valid_polyline
 from models.preferences import Preferences
 from models.session import Session
-from geometry import is_valid_polyline
-from models.tile_format import (
-    inner_edges_from_server,
-    map_state_for_view,
-    roads_from_server,
-    tiles_from_server,
-)
+from models.tile_format import inner_edges_from_server, map_state_for_view, roads_from_server, tiles_from_server
 from transport.client import Client
 from views.auth_view import AuthView
 from views.home_view import HomeView
 from views.main_view import MainView
-from views.map.constants import (
-    TOOL_DESCRIPTION,
-    TOOL_ERASE,
-    TOOL_SELECT,
-    TOOL_STRUCTURE,
-)
+from views.map.constants import TOOL_DESCRIPTION, TOOL_ERASE, TOOL_SELECT, TOOL_STRUCTURE
 from views.map_view import MapView
 
 _RECONNECT_DELAY_MS = 5000
 _HISTORY_LIMIT = 200
-
 
 class ClientController:
     def __init__(self, main_view: MainView) -> None:
@@ -67,7 +56,7 @@ class ClientController:
             self.auth.validate_session()
 
     def _connect_signals(self) -> None:
-        # Auth
+
         self.auth_view.request_login.connect(self.auth.login)
         self.auth_view.request_register.connect(self.auth.register)
         self.home_view.request_logout.connect(self.auth.logout)
@@ -79,7 +68,6 @@ class ClientController:
         self.auth.loading.connect(self._on_auth_loading)
         self.auth.error.connect(self._on_auth_error)
 
-        # Maps — home
         self.home_view.request_create_map.connect(self.maps.create_map)
         self.home_view.request_join_map.connect(self.maps.join_map)
         self.home_view.request_dissociate_map.connect(self.maps.dissociate_map)
@@ -98,7 +86,6 @@ class ClientController:
         self.maps.map_member_count_changed.connect(self._on_map_member_count_changed)
         self.maps.map_role_changed.connect(self.home_view.update_map_role)
 
-        # Maps — editor
         self.map_view.request_back.connect(self._on_map_back)
         self.maps.map_state_loaded.connect(self._on_map_state_loaded)
         self.maps.map_presence_changed.connect(self._on_map_presence_changed)
@@ -120,10 +107,6 @@ class ClientController:
         self.maps.cell_details_error.connect(self._on_cell_details_error)
 
         self.transport_worker.finished.connect(self._on_worker_finished)
-
-    # ------------------------------------------------------------------
-    # Auth callbacks
-    # ------------------------------------------------------------------
 
     def _on_auth_loading(self, loading: bool) -> None:
         if self.main_view.stack.currentWidget() is self.home_view:
@@ -154,10 +137,6 @@ class ClientController:
     def _restore_preferences(self) -> None:
         username, remember = self.preferences.load()
         self.auth_view.set_login_defaults(username, remember)
-
-    # ------------------------------------------------------------------
-    # Map callbacks
-    # ------------------------------------------------------------------
 
     def _on_map_loading(self, loading: bool) -> None:
         self.home_view.set_create_loading(loading)
@@ -427,10 +406,6 @@ class ClientController:
         })
         self.maps.set_description(q, r, text)
 
-    # ------------------------------------------------------------------
-    # Undo / redo
-    # ------------------------------------------------------------------
-
     def _undo(self) -> None:
         if not self.maps.can_edit or not self._undo_stack or self._pending_road_history:
             return
@@ -671,10 +646,6 @@ class ClientController:
             keys.add((start, end) if start <= end else (end, start))
         return keys
 
-    # ------------------------------------------------------------------
-    # Export
-    # ------------------------------------------------------------------
-
     def _on_export_requested(self) -> None:
         self.map_view.open_export_dialog(str(Path.home() / self._default_export_filename()))
 
@@ -707,10 +678,6 @@ class ClientController:
         if image.isNull():
             return False
         return image.save(str(path), "PNG")
-
-    # ------------------------------------------------------------------
-    # Transport
-    # ------------------------------------------------------------------
 
     def _on_worker_finished(self) -> None:
         if self._stopping:

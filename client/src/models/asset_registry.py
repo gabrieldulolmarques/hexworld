@@ -1,23 +1,11 @@
-"""
-Asset registry for map tiles.
-
-Directory layout: assets/map/{biome}/{biome}_{nn}_{key}.png
-structure.type in the DB = filename stem = '{biome}_{nn}_{key}'
-  e.g. 'greenlands_11_village', 'forest_14_village', 'deadlands_00_empty'
-
-Each terrain biome (except forest and mountain) includes a biome-tinted
-``{biome}_00_empty`` tile. There is no shared empty biome folder.
-
-Access: REGISTRY.pixmap('greenlands_11_village', hex_size) → flat-top QPixmap
-"""
-import math
 from dataclasses import dataclass
+import math
 from pathlib import Path
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QPainterPath, QPixmap
 
-from geometry import hex_vertices
+from models.geometry import hex_vertices
 
 _ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets" / "map"
 
@@ -31,16 +19,14 @@ _BIOME_ORDER = (
     "sandlands",
 )
 
-
 @dataclass(frozen=True)
 class TileInfo:
     biome: str
     index: int
-    key:   str    # e.g. "dead_trees"
-    label: str    # e.g. "Dead Trees"
-    stem:  str    # e.g. "deadlands_17_dead_trees"  (= structure.type)
+    key:   str
+    label: str
+    stem:  str
     path:  Path
-
 
 class AssetRegistry:
     def __init__(self) -> None:
@@ -48,10 +34,6 @@ class AssetRegistry:
         self._by_biome: dict[str, list[TileInfo]] = {}
         self._cache:    dict[tuple[str, int], QPixmap] = {}
         self._scan()
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
 
     def biomes(self) -> list[str]:
         ordered = [b for b in _BIOME_ORDER if b in self._by_biome]
@@ -65,7 +47,6 @@ class AssetRegistry:
         return self._by_stem.get(structure_type)
 
     def pixmap(self, structure_type: str, hex_size: float) -> QPixmap | None:
-        """structure_type = structure.type from the DB, e.g. 'greenlands_11_village'."""
         info = self._by_stem.get(structure_type)
         if info is None:
             return None
@@ -74,10 +55,6 @@ class AssetRegistry:
         if cache_key not in self._cache:
             self._cache[cache_key] = _hex_fitted_pixmap(QPixmap(str(info.path)), size)
         return self._cache[cache_key]
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _scan(self) -> None:
         if not _ASSETS_DIR.exists():
@@ -95,13 +72,12 @@ class AssetRegistry:
             if tiles:
                 self._by_biome[biome] = tiles
 
-
 def _parse_tile(biome: str, path: Path) -> TileInfo | None:
-    stem = path.stem                        # e.g. "greenlands_11_village"
+    stem = path.stem
     prefix = f"{biome}_"
     if not stem.startswith(prefix):
         return None
-    rest = stem[len(prefix):]               # "11_village"
+    rest = stem[len(prefix):]
     idx_str, _, key = rest.partition("_")
     if not idx_str.isdigit():
         return None
@@ -114,7 +90,6 @@ def _parse_tile(biome: str, path: Path) -> TileInfo | None:
         stem=stem,
         path=path,
     )
-
 
 def _hex_fitted_pixmap(source: QPixmap, hex_size: int) -> QPixmap:
     diam = hex_size * 2
@@ -161,6 +136,5 @@ def _hex_fitted_pixmap(source: QPixmap, hex_size: int) -> QPixmap:
     )
     painter.end()
     return result
-
 
 REGISTRY = AssetRegistry()
