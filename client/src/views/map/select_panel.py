@@ -22,40 +22,40 @@ from models.inspector_format import (
     inner_edge_summary,
     structure_display,
 )
+from styles.colors import GREEN_PRIMARY
 from views.map.constants import SIDE_PANEL_W
 from views.map.panel import MapPanel
 
 _STRUCTURE_THUMB = 48
 _DESC_MIN_HEIGHT = 180
-_CONNECTION_VISIBLE_SLOTS = 4
 _CONNECTION_SLOT_H = 58
 _CONNECTIONS_CHROME_H = 52
 
-_INSPECTOR_MARKDOWN_CSS = """
-body, p, div, span, li, td, th, em, i {
+_INSPECTOR_MARKDOWN_CSS = f"""
+body, p, div, span, li, td, th, em, i {{
     color: #ffffff;
     font-size: 15px;
     line-height: 1.45;
-}
-body { margin: 0; }
-p { margin: 6px 0; }
-h1, h2, h3 { color: #ffffff; margin: 12px 0 6px; font-weight: 600; }
-h1 { font-size: 1.35em; }
-h2 { font-size: 1.2em; }
-h3 { font-size: 1.05em; }
-ul, ol { margin: 6px 0; padding-left: 1.4em; }
-li { margin: 3px 0; }
-code, pre { color: #ffffff; background: #27272a; }
-code { padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
-pre { padding: 10px; border-radius: 6px; overflow-x: auto; }
-blockquote {
-    border-left: 3px solid #5ea500;
+}}
+body {{ margin: 0; }}
+p {{ margin: 6px 0; }}
+h1, h2, h3 {{ color: #ffffff; margin: 12px 0 6px; font-weight: 600; }}
+h1 {{ font-size: 1.35em; }}
+h2 {{ font-size: 1.2em; }}
+h3 {{ font-size: 1.05em; }}
+ul, ol {{ margin: 6px 0; padding-left: 1.4em; }}
+li {{ margin: 3px 0; }}
+code, pre {{ color: #ffffff; background: #27272a; }}
+code {{ padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }}
+pre {{ padding: 10px; border-radius: 6px; overflow-x: auto; }}
+blockquote {{
+    border-left: 3px solid {GREEN_PRIMARY};
     margin: 8px 0;
     padding: 4px 12px;
     color: #e4e4e7;
-}
-a { color: #bbf7d0; text-decoration: none; }
-strong, b { color: #ffffff; font-weight: 600; }
+}}
+a {{ color: #bbf7d0; text-decoration: none; }}
+strong, b {{ color: #ffffff; font-weight: 600; }}
 """
 
 
@@ -98,6 +98,10 @@ class SelectPanel(MapPanel):
         self._scroll.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
         )
+        self._scroll.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Fixed,
+        )
 
         self._body = QWidget()
         self._body.setObjectName("inspectorBody")
@@ -115,12 +119,18 @@ class SelectPanel(MapPanel):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 18, 20, 18)
         layout.setSpacing(10)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(heading)
         layout.addWidget(self._coord_label)
         layout.addWidget(self._structure_host)
-        layout.addWidget(self._desc_host, 1)
-        layout.addWidget(self._scroll, 0)
+        layout.addWidget(self._desc_host)
+        layout.addWidget(self._scroll)
         layout.addWidget(self._footer_host)
+        layout.addStretch(1)
+
+    def apply_height_budget(self, max_h: int) -> int:
+        self.setFixedHeight(max_h)
+        return max_h
 
     def has_selection(self) -> bool:
         return self._has_selection
@@ -142,7 +152,8 @@ class SelectPanel(MapPanel):
         self._footer_host.hide()
         self._clear_sections()
         self._scroll.show()
-        self._reset_scroll_policy(expand=True)
+        self._scroll.setFixedHeight(0)
+        self._notify_layout_changed()
 
     def set_coord(self, q: int, r: int) -> None:
         self._has_selection = True
@@ -179,14 +190,20 @@ class SelectPanel(MapPanel):
         self._clear_sections()
         self._clear_host(self._footer_layout)
         self._footer_host.hide()
-        self._reset_scroll_policy(expand=True)
+        self._scroll.setFixedHeight(0)
 
         if self._loading:
             self._add_banner("Loading details…", level="info")
+            self._scroll.show()
+            self._fit_scroll_to_content()
+            self._notify_layout_changed()
             return
 
         if self._server_error:
             self._add_banner(self._server_error, level="error")
+            self._scroll.show()
+            self._fit_scroll_to_content()
+            self._notify_layout_changed()
             return
 
         server = self._server_details or {}
@@ -216,6 +233,8 @@ class SelectPanel(MapPanel):
 
         if not has_any:
             self._add_empty_state(server)
+            self._scroll.show()
+            self._fit_scroll_to_content()
 
         if has_connections:
             self._add_connections_section(
@@ -229,12 +248,23 @@ class SelectPanel(MapPanel):
         if has_connections:
             self._scroll.show()
             scroll_h = self._connections_scroll_height(conn_rows)
-            self._apply_connections_scroll_height(scroll_h, fill=not has_desc)
+            self._scroll.setFixedHeight(scroll_h)
         else:
             self._scroll.hide()
-            self._reset_scroll_policy(expand=True)
+            self._scroll.setFixedHeight(0)
 
         self._mount_footer(server, has_any=has_any)
+        self._notify_layout_changed()
+
+    def _fit_scroll_to_content(self) -> None:
+        self._body.adjustSize()
+        self._scroll.setFixedHeight(max(self._body.sizeHint().height(), 1))
+
+    def _notify_layout_changed(self) -> None:
+        self.adjustSize()
+        parent = self.parent()
+        if parent is not None and hasattr(parent, "reposition_panels"):
+            parent.reposition_panels()
 
     @staticmethod
     def _connection_row_count(
@@ -249,31 +279,9 @@ class SelectPanel(MapPanel):
 
     @staticmethod
     def _connections_scroll_height(row_count: int) -> int:
-        slots = max(_CONNECTION_VISIBLE_SLOTS, row_count)
-        return _CONNECTIONS_CHROME_H + slots * _CONNECTION_SLOT_H
-
-    def _apply_connections_scroll_height(self, height: int, *, fill: bool) -> None:
-        policy = self._scroll.sizePolicy()
-        if fill:
-            policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
-            self._scroll.setMinimumHeight(height)
-            self._scroll.setMaximumHeight(16777215)
-        else:
-            policy.setVerticalPolicy(QSizePolicy.Policy.Preferred)
-            self._scroll.setMinimumHeight(height)
-            self._scroll.setMaximumHeight(height)
-        self._scroll.setSizePolicy(policy)
-
-    def _reset_scroll_policy(self, *, expand: bool) -> None:
-        policy = self._scroll.sizePolicy()
-        if expand:
-            policy.setVerticalPolicy(QSizePolicy.Policy.Expanding)
-            self._scroll.setMinimumHeight(0)
-            self._scroll.setMaximumHeight(16777215)
-        else:
-            policy.setVerticalPolicy(QSizePolicy.Policy.Maximum)
-            self._scroll.setMaximumHeight(120)
-        self._scroll.setSizePolicy(policy)
+        if row_count <= 0:
+            return 0
+        return _CONNECTIONS_CHROME_H + row_count * _CONNECTION_SLOT_H
 
     @staticmethod
     def _editor_meta(component: dict | None) -> str:
@@ -354,7 +362,7 @@ class SelectPanel(MapPanel):
         browser.setMinimumHeight(_DESC_MIN_HEIGHT)
         browser.setSizePolicy(
             QSizePolicy.Policy.Preferred,
-            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Preferred,
         )
         palette = browser.palette()
         palette.setColor(QPalette.ColorRole.Text, QColor("#ffffff"))
@@ -362,7 +370,7 @@ class SelectPanel(MapPanel):
         browser.setPalette(palette)
         browser.document().setDefaultStyleSheet(_INSPECTOR_MARKDOWN_CSS)
         browser.setMarkdown(text)
-        lay.addWidget(browser, 1)
+        lay.addWidget(browser)
 
         if meta:
             meta_lbl = QLabel(meta)
@@ -427,8 +435,6 @@ class SelectPanel(MapPanel):
     ) -> None:
         card = QFrame()
         card.setObjectName("inspectorConnectionsSection")
-        min_h = self._connections_scroll_height(row_count) - 8
-        card.setMinimumHeight(min_h)
         lay = QVBoxLayout(card)
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
@@ -450,9 +456,6 @@ class SelectPanel(MapPanel):
                 f"Inner edges: {labels}" if count else "Inner edges",
                 meta=self._editor_meta(server_inner),
             )
-
-        if row_count < _CONNECTION_VISIBLE_SLOTS:
-            lay.addStretch(1)
 
         self._sections.addWidget(card)
 
