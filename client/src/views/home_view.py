@@ -59,8 +59,8 @@ class HomeView(QWidget):
     def _wire_signals(self) -> None:
         # Top bar
         self._top_bar.logout_clicked.connect(self.request_logout)
-        self._top_bar.create_clicked.connect(lambda: self._go(_PAGE_CREATE))
-        self._top_bar.join_clicked.connect(lambda: self._go(_PAGE_JOIN))
+        self._top_bar.create_clicked.connect(self._show_create_page)
+        self._top_bar.join_clicked.connect(self._show_join_page)
 
         # Map grid
         self._map_grid.open_clicked.connect(self.request_open_map)
@@ -70,10 +70,10 @@ class HomeView(QWidget):
 
         # Forms
         self._create_page.submit_create.connect(self.request_create_map)
-        self._create_page.cancel.connect(lambda: self._go(_PAGE_HOME))
+        self._create_page.cancel.connect(self._show_home_page)
         self._join_page.submit_join.connect(self.request_join_map)
-        self._join_page.cancel.connect(lambda: self._go(_PAGE_HOME))
-        self._share_page.cancel.connect(lambda: self._go(_PAGE_HOME))
+        self._join_page.cancel.connect(self._show_home_page)
+        self._share_page.cancel.connect(self._show_home_page)
 
     # ------------------------------------------------------------------
     # Public API (controller)
@@ -132,6 +132,15 @@ class HomeView(QWidget):
             self._create_page.focus()
         elif page == _PAGE_JOIN:
             self._join_page.focus()
+
+    def _show_home_page(self) -> None:
+        self._go(_PAGE_HOME)
+
+    def _show_create_page(self) -> None:
+        self._go(_PAGE_CREATE)
+
+    def _show_join_page(self) -> None:
+        self._go(_PAGE_JOIN)
 
     def _open_share_page(self, map_id: str) -> None:
         data = self._map_grid.map_by_id(map_id)
