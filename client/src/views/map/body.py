@@ -5,6 +5,8 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 from views.hex_canvas import HexCanvas
 from views.map.constants import (
     PANEL_MARGIN,
+    PANEL_MIN_H,
+    RIGHT_COLUMN_GAP,
     TOOL_ROAD,
     TOOL_SELECT,
     TOOL_STRUCTURE,
@@ -12,6 +14,7 @@ from views.map.constants import (
 from views.map.description_editor import DescriptionEditor
 from views.map.export_dialog import ExportDialog
 from views.map.members_bar import MembersBar
+from views.map.minimap import MinimapWidget
 from views.map.palette_panel import PalettePanel
 from views.map.panel import styled
 from views.map.road_panel import RoadColorPanel
@@ -34,6 +37,7 @@ class MapBody(QWidget):
         road_panel: RoadColorPanel,
         description_editor: DescriptionEditor,
         export_dialog: ExportDialog,
+        minimap: MinimapWidget,
     ) -> None:
         super().__init__()
         self.setObjectName("mapCanvasArea")
@@ -46,12 +50,13 @@ class MapBody(QWidget):
         self._road_panel = road_panel
         self._description_editor = description_editor
         self._export_dialog = export_dialog
+        self._minimap = minimap
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(canvas)
 
-        for panel in (select_panel, members_bar, tool_strip, road_panel, palette, toolbar):
+        for panel in (select_panel, members_bar, tool_strip, road_panel, palette, toolbar, minimap):
             panel.setParent(self)
             panel.raise_()
 
@@ -106,18 +111,22 @@ class MapBody(QWidget):
         ts.adjustSize()
         ts.move(m, m)
 
+        mm = self._minimap
+        mm.move(w - mm.width() - m, h - mm.height() - m)
+        right_budget = max(PANEL_MIN_H, mm.y() - m - RIGHT_COLUMN_GAP)
+
         sp = self._select_panel
-        sp.setFixedHeight(max(200, h - 2 * m))
+        sp.apply_height_budget(right_budget)
         sp.move(w - sp.width() - m, m)
 
         self._place_members_bar()
 
         pal = self._palette
-        pal.setFixedHeight(max(200, h - 2 * m))
+        pal.apply_height_budget(right_budget)
         pal.move(w - pal.width() - m, m)
 
         rp = self._road_panel
-        rp.adjustSize()
+        rp.apply_height_budget(right_budget)
         rp.move(w - rp.width() - m, m)
 
         self._description_editor.setGeometry(self.rect())
