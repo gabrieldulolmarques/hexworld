@@ -3,12 +3,6 @@ from threading import Lock
 from traceback import format_exc
 
 class Broadcaster:
-    """Per-map fanout for server-pushed events.
-
-    Subscribers are `Connection` objects (any duck-typed `.send(payload)` works).
-    Each broadcast stamps a monotonic `seq` per map_id so clients can detect
-    gaps and request resend (spec §2.9 / RF17).
-    """
 
     def __init__(self) -> None:
         self._subscribers: dict[str, set] = defaultdict(set)

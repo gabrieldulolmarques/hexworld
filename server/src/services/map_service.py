@@ -15,11 +15,10 @@ from repositories.component_repository import (
     list_roads_at_cell,
     list_roads_for_map,
     update_inner_edge_cell,
-    upsert_inner_edge_cell,
     upsert_description,
+    upsert_inner_edge_cell,
     upsert_structure,
 )
-
 from repositories.map_repository import (
     create_map as db_create_map,
     delete_map as db_delete_map,
@@ -27,6 +26,7 @@ from repositories.map_repository import (
     get_map_by_id,
     list_maps_for_user,
 )
+
 from repositories.tile_repository import get_or_create_tile, get_tile_by_id, list_tiles_with_components
 from repositories.user_map_repository import (
     add_user_to_map,
@@ -47,7 +47,6 @@ _AXIAL_DIRECTIONS = (
 _tile_locks: dict[tuple, Lock] = {}
 _tile_locks_lock = Lock()
 
-
 def _get_tile_lock(map_id: str, q: int, r: int) -> Lock:
     key = (map_id, q, r)
     with _tile_locks_lock:
@@ -55,11 +54,9 @@ def _get_tile_lock(map_id: str, q: int, r: int) -> Lock:
             _tile_locks[key] = Lock()
         return _tile_locks[key]
 
-
 def _invite_code() -> str:
     raw = secrets.token_hex(4)
     return f"{raw[:4]}-{raw[4:8]}"
-
 
 def _normalize_waypoints(waypoints: list) -> list[tuple[int, int]]:
     coords: list[tuple[int, int]] = []
@@ -69,7 +66,6 @@ def _normalize_waypoints(waypoints: list) -> list[tuple[int, int]]:
         coords.append((int(wp[0]), int(wp[1])))
     return coords
 
-
 def _axial_step_direction(start: tuple[int, int], end: tuple[int, int]) -> int | None:
     dq = end[0] - start[0]
     dr = end[1] - start[1]
@@ -78,13 +74,11 @@ def _axial_step_direction(start: tuple[int, int], end: tuple[int, int]) -> int |
             return index
     return None
 
-
 def _segment_key(
     start: tuple[int, int],
     end: tuple[int, int],
 ) -> tuple[tuple[int, int], tuple[int, int]]:
     return (start, end) if start <= end else (end, start)
-
 
 def _map_payload(row, role: str, members: list) -> dict:
     return {
@@ -96,7 +90,6 @@ def _map_payload(row, role: str, members: list) -> dict:
         "viewer_code": row["viewer_code"] if role == "owner" else None,
         "created_at": row["created_at"],
     }
-
 
 def create_map(user_id: str, name: str) -> dict | str:
     name = name.strip()
@@ -111,7 +104,6 @@ def create_map(user_id: str, name: str) -> dict | str:
     add_user_to_map(user_id, map_id, "owner")
     row = get_map_by_id(map_id)
     return _map_payload(row, "owner", [user_id])
-
 
 def join_map(user_id: str, code: str) -> dict | str:
     code = code.strip()
@@ -131,7 +123,6 @@ def join_map(user_id: str, code: str) -> dict | str:
     members = list_members(map_id)
     return _map_payload(row, role, members)
 
-
 def get_maps(user_id: str) -> list[dict]:
     rows = list_maps_for_user(user_id)
     result = []
@@ -139,7 +130,6 @@ def get_maps(user_id: str) -> list[dict]:
         members = list_members(row["id"])
         result.append(_map_payload(row, row["role"], members))
     return result
-
 
 def dissociate_map(user_id: str, map_id: str) -> tuple[str, None] | tuple[None, dict]:
     role = get_role(user_id, map_id)
@@ -158,7 +148,6 @@ def dissociate_map(user_id: str, map_id: str) -> tuple[str, None] | tuple[None, 
         remove_user_from_map(user_id, map_id)
     remaining = list_members(map_id)
     return (None, {"member_count": len(remaining), "new_owner_id": new_owner_id})
-
 
 def get_map_state(user_id: str, map_id: str) -> dict:
     row = get_map_by_id(map_id)
@@ -194,12 +183,10 @@ def get_map_state(user_id: str, map_id: str) -> dict:
         "member_count": len(members),
     }
 
-
 def _row_to_dict(row) -> dict | None:
     if row is None:
         return None
     return row if isinstance(row, dict) else dict(row)
-
 
 def get_cell_details(map_id: str, tile_id: str) -> dict | str:
     tile = _row_to_dict(get_tile_by_id(tile_id))
@@ -251,7 +238,6 @@ def get_cell_details(map_id: str, tile_id: str) -> dict | str:
         "roads": [_resolve_road(road) for road in roads],
     }
 
-
 def set_structure(user_id: str, map_id: str, q: int, r: int, structure_type: str) -> dict | str:
     structure_type = structure_type.strip()
     if not structure_type:
@@ -261,9 +247,7 @@ def set_structure(user_id: str, map_id: str, q: int, r: int, structure_type: str
         upsert_structure(tile_id, structure_type, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "type": structure_type}
 
-
 def add_road(user_id: str, map_id: str, waypoints: list, color: str) -> dict | str:
-    """Add a route as color-unified neighbor segments."""
     color = color.strip()
     if not color or not waypoints or len(waypoints) < 2:
         return "missing_fields"
@@ -292,7 +276,6 @@ def add_road(user_id: str, map_id: str, waypoints: list, color: str) -> dict | s
         return "missing_fields"
     return {"segments": segments}
 
-
 def set_inner_edge(
     user_id: str,
     map_id: str,
@@ -318,7 +301,6 @@ def set_inner_edge(
             "color": color,
         }],
     }
-
 
 def remove_inner_edge(
     user_id: str,
@@ -346,7 +328,6 @@ def remove_inner_edge(
         }],
     }
 
-
 def set_description(user_id: str, map_id: str, q: int, r: int, text: str) -> dict | str:
     text = text.strip()
     if not text:
@@ -356,7 +337,6 @@ def set_description(user_id: str, map_id: str, q: int, r: int, text: str) -> dic
         upsert_description(tile_id, text, user_id)
     return {"tile_id": tile_id, "q": q, "r": r, "text": text}
 
-
 def remove_structure(map_id: str, tile_id: str) -> dict | str:
     tile = get_tile_by_id(tile_id)
     if tile is None or tile["map_id"] != map_id:
@@ -365,14 +345,12 @@ def remove_structure(map_id: str, tile_id: str) -> dict | str:
         db_delete_structure(tile_id)
     return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
 
-
 def remove_road(map_id: str, road_id: str) -> dict | str:
     road = get_road_by_id(road_id)
     if road is None or road["map_id"] != map_id:
         return "not_found"
     db_delete_road(road_id)
     return {"road_id": road_id}
-
 
 def remove_description(map_id: str, tile_id: str) -> dict | str:
     tile = get_tile_by_id(tile_id)
@@ -381,7 +359,6 @@ def remove_description(map_id: str, tile_id: str) -> dict | str:
     with _get_tile_lock(map_id, tile["q"], tile["r"]):
         db_delete_description(tile_id)
     return {"tile_id": tile_id, "q": tile["q"], "r": tile["r"]}
-
 
 def delete_map(user_id: str, map_id: str) -> str | None:
     if get_role(user_id, map_id) != "owner":

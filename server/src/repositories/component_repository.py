@@ -14,7 +14,6 @@ def get_structure(tile_id: str):
         ).fetchone()
 
 def upsert_structure(tile_id: str, structure_type: str, author_id: str) -> None:
-    """One structure per tile (RF12). ON CONFLICT keeps the primary key stable."""
     with get_connection() as connection:
         connection.execute(
             """
@@ -39,7 +38,6 @@ def add_road_segment(
     color: str,
     author_id: str,
 ) -> tuple[str, bool]:
-    """Persist one road segment. Returns (segment id, created?)."""
     a, b = sorted((start, end))
     waypoints_json = json.dumps([[a[0], a[1]], [b[0], b[1]]], separators=(",", ":"))
     with get_connection() as connection:
@@ -70,9 +68,7 @@ def list_roads_for_map(map_id: str):
             (map_id,),
         ).fetchall()
 
-
 def list_roads_at_cell(map_id: str, q: int, r: int) -> list[dict]:
-    """Road segments with an endpoint on (q, r)."""
     cell = (q, r)
     found: list[dict] = []
     for row in list_roads_for_map(map_id):
@@ -86,7 +82,6 @@ def list_roads_at_cell(map_id: str, q: int, r: int) -> list[dict]:
             found.append(row)
     return found
 
-
 def get_road_by_id(road_id: str):
     with get_connection() as connection:
         return connection.execute(
@@ -99,7 +94,6 @@ def delete_road(road_id: str) -> None:
         connection.execute("DELETE FROM road WHERE id = ?", (road_id,))
         connection.commit()
 
-
 def list_inner_edges_for_map(map_id: str):
     with get_connection() as connection:
         return connection.execute(
@@ -111,7 +105,6 @@ def list_inner_edges_for_map(map_id: str):
             (map_id,),
         ).fetchall()
 
-
 def get_inner_edge_cell(map_id: str, q: int, r: int):
     with get_connection() as connection:
         return connection.execute(
@@ -122,7 +115,6 @@ def get_inner_edge_cell(map_id: str, q: int, r: int):
             """,
             (map_id, q, r),
         ).fetchone()
-
 
 def upsert_inner_edge_cell(
     map_id: str,
@@ -147,7 +139,6 @@ def upsert_inner_edge_cell(
         )
         connection.commit()
 
-
 def delete_inner_edge_cell(map_id: str, q: int, r: int) -> None:
     with get_connection() as connection:
         connection.execute(
@@ -155,7 +146,6 @@ def delete_inner_edge_cell(map_id: str, q: int, r: int) -> None:
             (map_id, q, r),
         )
         connection.commit()
-
 
 def update_inner_edge_cell(
     map_id: str,
@@ -169,7 +159,6 @@ def update_inner_edge_cell(
         upsert_inner_edge_cell(map_id, q, r, edges, color, author_id)
         return
     delete_inner_edge_cell(map_id, q, r)
-
 
 def get_description(tile_id: str):
     with get_connection() as connection:

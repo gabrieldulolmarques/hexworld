@@ -4,16 +4,8 @@ from uuid import uuid4
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 
-from repositories.session_repository import (
-    create_session,
-    delete_session_by_token,
-    get_session_by_token,
-)
-from repositories.user_repository import (
-    create_user,
-    get_user_by_id,
-    get_user_by_username,
-)
+from repositories.session_repository import create_session, delete_session_by_token, get_session_by_token
+from repositories.user_repository import create_user, get_user_by_id, get_user_by_username
 
 MIN_USERNAME_LENGTH = 3
 MAX_USERNAME_LENGTH = 16

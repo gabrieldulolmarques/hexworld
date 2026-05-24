@@ -43,9 +43,6 @@ def send_response(sock, response: dict) -> None:
     header = pack(HEADER_FORMAT, len(payload))
     sock.sendall(header + payload)
 
-def send_event(sock, event: dict) -> None:
-    send_response(sock, event)
-
 def recv_request(sock) -> dict | None:
     header = _recv_exact(sock, HEADER_SIZE)
     if not header:

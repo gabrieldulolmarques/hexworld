@@ -40,12 +40,6 @@ def remove_user_from_map(user_id: str, map_id: str) -> None:
         connection.commit()
 
 def transfer_ownership(map_id: str, from_user_id: str, to_user_id: str) -> None:
-    """Promote to_user_id to owner and remove from_user_id, atomically.
-
-    DELETE must run before UPDATE: user_map_one_owner_idx is a UNIQUE partial index
-    and SQLite enforces it per-statement (not at COMMIT), so two 'owner' rows cannot
-    coexist even briefly within the same transaction.
-    """
     with get_connection() as connection:
         try:
             connection.execute("BEGIN IMMEDIATE")
