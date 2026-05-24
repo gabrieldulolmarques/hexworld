@@ -1,15 +1,14 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from controllers.transport_worker import TransportWorker
-from limits import (
-    MAX_PASSWORD_LEN,
-    MAX_USERNAME_LEN,
-    MIN_PASSWORD_LEN,
-    MIN_USERNAME_LEN,
-)
 from models.preferences import Preferences
 from models.session import Session
 from transport.protocol import request
+
+MIN_USERNAME_LENGTH = 3
+MAX_USERNAME_LENGTH = 16
+MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 256
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",
@@ -55,7 +54,7 @@ class AuthController(QObject):
         if not username or not password:
             self.error.emit(_ERROR_MESSAGES["missing_fields"])
             return
-        if len(username) > MAX_USERNAME_LEN:
+        if len(username) > MAX_USERNAME_LENGTH:
             self.error.emit(_ERROR_MESSAGES["username_too_long"])
             return
         self._pending_login_username = username
@@ -71,16 +70,16 @@ class AuthController(QObject):
         if not username or not password or not confirm_password:
             self.error.emit(_ERROR_MESSAGES["missing_fields"])
             return
-        if len(username) < MIN_USERNAME_LEN:
+        if len(username) < MIN_USERNAME_LENGTH:
             self.error.emit(_ERROR_MESSAGES["username_too_short"])
             return
-        if len(username) > MAX_USERNAME_LEN:
+        if len(username) > MAX_USERNAME_LENGTH:
             self.error.emit(_ERROR_MESSAGES["username_too_long"])
             return
-        if len(password) < MIN_PASSWORD_LEN:
+        if len(password) < MIN_PASSWORD_LENGTH:
             self.error.emit(_ERROR_MESSAGES["password_too_short"])
             return
-        if len(password) > MAX_PASSWORD_LEN:
+        if len(password) > MAX_PASSWORD_LENGTH:
             self.error.emit(_ERROR_MESSAGES["password_too_long"])
             return
         if password != confirm_password:

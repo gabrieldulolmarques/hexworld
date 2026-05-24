@@ -1,14 +1,6 @@
-"""Convert server tile payloads (RF09 / RF17) to HexCanvas tile dicts.
-
-Roads are now map-level segments (RF13), not tile-level components.
-tile_from_server only handles structure and description.
-"""
-
-from geometry import Coord
-
+from models.geometry import Coord
 
 def tile_from_server(payload: dict) -> dict | None:
-    """Return canvas tile data, or None if the hex should be cleared."""
     if not payload.get("structure") and not payload.get("description"):
         return None
     tile: dict = {}
@@ -20,9 +12,7 @@ def tile_from_server(payload: dict) -> dict | None:
         tile["description"] = {"text": description.get("text", "")}
     return tile
 
-
 def roads_from_server(roads: list) -> list[dict]:
-    """Normalize the road segment list from get_map_state into canvas dicts."""
     return [
         {
             "id": r.get("id", ""),
@@ -33,9 +23,7 @@ def roads_from_server(roads: list) -> list[dict]:
         if r.get("waypoints") and len(r["waypoints"]) >= 2
     ]
 
-
 def inner_edges_from_server(cells: list) -> list[dict]:
-    """Normalize persisted inner-edge masks from get_map_state."""
     result: list[dict] = []
     for cell in cells:
         q, r = cell.get("q"), cell.get("r")
@@ -50,9 +38,7 @@ def inner_edges_from_server(cells: list) -> list[dict]:
         })
     return result
 
-
 def tiles_from_server(tiles: list[dict]) -> tuple[dict[Coord, dict], dict[Coord, str]]:
-    """Build canvas tiles and coord → tile_id index from get_map_state tiles."""
     canvas_tiles: dict[Coord, dict] = {}
     tile_ids: dict[Coord, str] = {}
     for entry in tiles:
@@ -68,9 +54,7 @@ def tiles_from_server(tiles: list[dict]) -> tuple[dict[Coord, dict], dict[Coord,
             canvas_tiles[coord] = canvas
     return canvas_tiles, tile_ids
 
-
 def map_state_for_view(state: dict) -> dict:
-    """Normalize get_map_state payload for MapView.set_map."""
     return {
         "id": state.get("map_id", ""),
         "name": state.get("name", ""),

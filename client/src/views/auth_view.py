@@ -1,24 +1,12 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
-    QCheckBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 
-from limits import MAX_PASSWORD_LEN, MAX_USERNAME_LEN
+from controllers.auth_controller import MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH
 from styles.ui_constants import CARD_MARGINS, CARD_SPACING
 from views.home.helpers import make_card
 from views.password_edit import PasswordEdit
 from views.ui_buttons import make_form_primary_button
-from views.widgets import (
-    HexLogo,
-    StatusMixin,
-    horizontal_divider,
-)
+from views.widgets import HexLogo, StatusMixin, horizontal_divider
 
 class AuthView(StatusMixin, QWidget):
     request_login = pyqtSignal(str, str, bool)
@@ -59,16 +47,16 @@ class AuthView(StatusMixin, QWidget):
         username_label = QLabel("Username")
         username_label.setObjectName("fieldLabel")
         self.username_input = QLineEdit()
-        self.username_input.setMaxLength(MAX_USERNAME_LEN)
+        self.username_input.setMaxLength(MAX_USERNAME_LENGTH)
         self.username_input.setPlaceholderText("your_username")
 
         password_label = QLabel("Password")
         password_label.setObjectName("fieldLabel")
         self.password_input = PasswordEdit()
-        self.password_input.setMaxLength(MAX_PASSWORD_LEN)
+        self.password_input.setMaxLength(MAX_PASSWORD_LENGTH)
 
         self.confirm_password_input = PasswordEdit(show_visibility_toggle=False)
-        self.confirm_password_input.setMaxLength(MAX_PASSWORD_LEN)
+        self.confirm_password_input.setMaxLength(MAX_PASSWORD_LENGTH)
         self.confirm_password_input.setPlaceholderText("repeat password")
 
         self.show_password_checkbox = QCheckBox("Show password")
