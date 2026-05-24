@@ -10,6 +10,7 @@ from controllers.auth_controller import (
 )
 from controllers.map_controller import (
     handle_add_road,
+    handle_close_map,
     handle_create_map,
     handle_delete_map,
     handle_dissociate_map,
@@ -18,9 +19,11 @@ from controllers.map_controller import (
     handle_get_maps,
     handle_join_map,
     handle_remove_description,
+    handle_remove_inner_edge,
     handle_remove_road,
     handle_remove_structure,
     handle_set_description,
+    handle_set_inner_edge,
     handle_set_structure,
 )
 
@@ -34,10 +37,13 @@ REQUEST_HANDLERS = {
     "get_maps": handle_get_maps,
     "get_cell_details": handle_get_cell_details,
     "get_map_state": handle_get_map_state,
+    "close_map": handle_close_map,
     "dissociate_map": handle_dissociate_map,
     "delete_map": handle_delete_map,
     "set_structure": handle_set_structure,
     "add_road": handle_add_road,
+    "set_inner_edge": handle_set_inner_edge,
+    "remove_inner_edge": handle_remove_inner_edge,
     "set_description": handle_set_description,
     "remove_structure": handle_remove_structure,
     "remove_road": handle_remove_road,
