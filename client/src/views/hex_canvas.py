@@ -1,7 +1,7 @@
 import math
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QPointF, QSize, pyqtSignal
+from PyQt6.QtCore import Qt, QPointF, QSize, pyqtSignal, QRectF
 from PyQt6.QtGui import QColor, QIcon, QImage, QPainter, QPen, QPixmap, QPolygonF
 from PyQt6.QtWidgets import QWidget
 
@@ -20,6 +20,18 @@ from models.path_style import (
     paint_pixel_segments,
     road_style,
 )
+from styles.colors import (
+    GREEN_CANVAS_FILL,
+    GREEN_PRIMARY,
+    GREEN_PRIMARY_RGB,
+    GREEN_TINT,
+    RED_PRIMARY,
+    RED_PRIMARY_RGB,
+)
+
+def _rgba_color(rgb: str, alpha: int) -> QColor:
+    r, g, b = (int(part.strip()) for part in rgb.split(","))
+    return QColor(r, g, b, alpha)
 
 _ICONS_DIR = Path(__file__).resolve().parents[2] / "assets" / "icons"
 _DESC_ICON_CACHE: dict[tuple[int, str], QPixmap] = {}
@@ -47,24 +59,27 @@ _HEX_SIZE_MIN = 20.0
 _HEX_SIZE_MAX = 80.0
 _HEX_SIZE_DEFAULT = 40.0
 _ZOOM_STEP = 4.0
+_EXPORT_HEX_SIZE = _HEX_SIZE_MAX   # full-map export scale (ignores editor zoom)
+_EXPORT_SCALE_MIN = 2.0
 
 _BG                 = QColor("#09090b")
 _EMPTY_FILL         = QColor("#18181b")
 _EMPTY_BORDER       = QColor("#3f3f46")
-_FILLED_FILL        = QColor("#1c2d10")
+_FILLED_FILL        = QColor(GREEN_CANVAS_FILL)
 _FILLED_BORDER      = QColor("#3f3f46")
-_HOVER_FILL         = QColor("#222c18")
-_ERASE_HOVER_FILL   = QColor("#2d1212")
-_ERASE_HOVER_BORDER = QColor("#ef4444")
-_SELECTED_BORDER    = QColor("#d8f999")
+_HOVER_FILL         = _rgba_color(GREEN_PRIMARY_RGB, 38)
+_HOVER_BORDER       = QColor(GREEN_TINT)
+_ERASE_HEX_FILL     = _rgba_color(RED_PRIMARY_RGB, 100)
+_ERASE_HOVER_BORDER = QColor(RED_PRIMARY)
+_SELECTED_BORDER    = QColor(GREEN_TINT)
 _DESC_BADGE_FILL    = QColor("#facc15")
 _DESC_BADGE_BORDER  = QColor("#18181b")
 _DESC_BADGE_ICON    = QColor("#18181b")
 _DESC_BADGE_SHADOW  = QColor(0, 0, 0, 150)
 _DESC_ERASE_ICON    = QColor("#fff7ed")
-_ROAD_HINT_FILL     = QColor(94, 165, 0, 42)
-_ROAD_HINT_BORDER   = QColor("#7ccf00")
-_ROAD_NEXT_FILL     = QColor(94, 165, 0, 22)
+_ROAD_HINT_FILL     = _rgba_color(GREEN_PRIMARY_RGB, 42)
+_ROAD_HINT_BORDER   = QColor(GREEN_TINT)
+_ROAD_NEXT_FILL     = _rgba_color(GREEN_PRIMARY_RGB, 22)
 _INNER_EDGE_INSET_RATIO = 0.84
 
 _STRUCTURE_COLORS: dict[str, QColor] = {
@@ -76,6 +91,17 @@ _STRUCTURE_COLORS: dict[str, QColor] = {
     "tower":    QColor("#f97316"),
 }
 
+# Sampled from each biome's reference tile under client/assets/map/.
+_BIOME_COLORS: dict[str, QColor] = {
+    "deadlands":  QColor("#4f5346"),
+    "drylands":   QColor("#a8866d"),
+    "forest":     QColor("#498b54"),
+    "greenlands": QColor("#8ab55d"),
+    "icelands":   QColor("#ccd8db"),
+    "mountain":   QColor("#6f5c5c"),
+    "sandlands":  QColor("#efd98d"),
+}
+
 
 class HexCanvas(QWidget):
     hex_clicked    = pyqtSignal(int, int)   # q, r — existing tile selected
@@ -85,6 +111,8 @@ class HexCanvas(QWidget):
     road_drawn     = path_drawn             # alias
     inner_edge_painted = pyqtSignal(int, int, int, str)  # q, r, edge_index, color
     current_road_points_changed = pyqtSignal(int)
+    map_changed = pyqtSignal()
+    viewport_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -101,6 +129,7 @@ class HexCanvas(QWidget):
         self._offset = [0.0, 0.0]
         self._hex_size = _HEX_SIZE_DEFAULT
         self._pan_anchor: tuple[float, float, float, float] | None = None
+        self._pan_mode = False
         self._pick_any_hex = False
         self._erase_mode = False
         self._brush_mode = False
@@ -108,7 +137,7 @@ class HexCanvas(QWidget):
         self._brush_seen_targets: set[tuple] = set()
         # Road-draw mode
         self._road_mode = False
-        self._road_color = "#5ea500"
+        self._road_color = GREEN_PRIMARY
         self._road_submode = "curve"
         self._current_road: list[Coord] = []
         # Inner-edge segments are per-cell masks; each cell owns its own color.
@@ -130,10 +159,12 @@ class HexCanvas(QWidget):
             self._hover = None
             self._hover_component = None
         self.update()
+        self.map_changed.emit()
 
     def apply_tile(self, q: int, r: int, data: dict) -> None:
         self._tiles[(q, r)] = data
         self.update()
+        self.map_changed.emit()
 
     def remove_tile(self, q: int, r: int) -> None:
         self._tiles.pop((q, r), None)
@@ -142,6 +173,7 @@ class HexCanvas(QWidget):
         if self._hover == (q, r):
             self._hover_component = None
         self.update()
+        self.map_changed.emit()
 
     def clear(self) -> None:
         self._tiles.clear()
@@ -155,6 +187,7 @@ class HexCanvas(QWidget):
         self._hover_road_id = None
         self._hover_inner_edge = None
         self.update()
+        self.map_changed.emit()
 
     # ------------------------------------------------------------------
     # Public API — roads
@@ -165,6 +198,8 @@ class HexCanvas(QWidget):
         self._roads = list(roads)
         self._rebuild_roads_by_coord()
         self.update()
+        self.map_changed.emit()
+        self.map_changed.emit()
 
     def apply_road(self, road_id: str, waypoints: list, color: str) -> None:
         """Add or update one road segment (called on road_added event)."""
@@ -172,12 +207,14 @@ class HexCanvas(QWidget):
         self._roads.append({"id": road_id, "waypoints": waypoints, "color": color})
         self._rebuild_roads_by_coord()
         self.update()
+        self.map_changed.emit()
 
     def remove_road_by_id(self, road_id: str) -> None:
         """Remove one road by id (called on road_removed event)."""
         self._roads = [r for r in self._roads if r["id"] != road_id]
         self._rebuild_roads_by_coord()
         self.update()
+        self.map_changed.emit()
 
     def road_id_at(self, q: int, r: int) -> str | None:
         """Return the road_id of any road passing through (q, r)."""
@@ -234,6 +271,7 @@ class HexCanvas(QWidget):
                 "color": cell.get("color", "#5ea500"),
             }
         self.update()
+        self.map_changed.emit()
 
     def apply_inner_edge_cell(self, cell: dict) -> None:
         q, r = cell.get("q"), cell.get("r")
@@ -249,6 +287,7 @@ class HexCanvas(QWidget):
         else:
             self._inner_edges.pop(coord, None)
         self.update()
+        self.map_changed.emit()
 
     def inner_edge_cell(self, q: int, r: int) -> dict | None:
         cell = self._inner_edges.get((q, r))
@@ -282,6 +321,18 @@ class HexCanvas(QWidget):
         if not enabled:
             self._brush_active = False
             self._brush_seen_targets.clear()
+
+    def set_pan_mode(self, enabled: bool) -> None:
+        self._pan_mode = enabled
+        if enabled:
+            self._hover = None
+            self._hover_component = None
+            self._hover_road_id = None
+            self._hover_inner_edge = None
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
+        elif self._pan_anchor is None and not self._road_mode:
+            self.unsetCursor()
+        self.update()
 
     def set_pick_any_hex(self, enabled: bool) -> None:
         self._pick_any_hex = enabled
@@ -353,40 +404,131 @@ class HexCanvas(QWidget):
 
     def zoom_in(self) -> None:
         self._hex_size = min(_HEX_SIZE_MAX, self._hex_size + _ZOOM_STEP)
+        self.viewport_changed.emit()
         self.update()
 
     def zoom_out(self) -> None:
         self._hex_size = max(_HEX_SIZE_MIN, self._hex_size - _ZOOM_STEP)
+        self.viewport_changed.emit()
         self.update()
 
     def export_full_map_image(self) -> QImage:
-        """Render the complete persistent map to an offscreen image."""
+        """Render every painted tile at a fixed overview scale (editor zoom ignored)."""
         coords = self._export_coords()
         if not coords:
-            return self.grab().toImage()
-
-        bounds = self._export_bounds(coords, self._hex_size)
-        if bounds is None:
             return QImage()
 
-        min_x, min_y, width, height = bounds
-
-        image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
-        if image.isNull():
-            return image
-        image.fill(_BG)
-
-        painter = QPainter(image)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        export_hex_size = _EXPORT_HEX_SIZE * self._export_scale()
+        saved_hex_size = self._hex_size
+        updates_enabled = self.updatesEnabled()
+        self.setUpdatesEnabled(False)
         try:
-            self._paint_map(
-                painter,
-                origin=(-min_x, -min_y),
-                include_transient=False,
+            self._hex_size = export_hex_size
+            bounds = self._export_bounds(coords, self._hex_size)
+            if bounds is None:
+                return QImage()
+
+            min_x, min_y, width, height = bounds
+            image = QImage(
+                width,
+                height,
+                QImage.Format.Format_ARGB32_Premultiplied,
             )
+            if image.isNull():
+                return image
+            image.fill(_BG)
+
+            painter = QPainter(image)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+            try:
+                self._paint_map(
+                    painter,
+                    origin=(-min_x, -min_y),
+                    include_transient=False,
+                )
+            finally:
+                painter.end()
+            return image
         finally:
-            painter.end()
-        return image
+            self._hex_size = saved_hex_size
+            self.setUpdatesEnabled(updates_enabled)
+
+    def _export_scale(self) -> float:
+        return max(1.0, self.devicePixelRatioF(), _EXPORT_SCALE_MIN)
+
+    def render_minimap_image(
+        self,
+        hex_size: float = 8.0,
+    ) -> tuple[QImage, float, float, float, float] | None:
+        """Offscreen map preview for the minimap overlay."""
+        coords = self._export_coords()
+        if not coords:
+            return None
+
+        saved_hex_size = self._hex_size
+        try:
+            self._hex_size = hex_size
+            bounds = self._export_bounds(coords, hex_size)
+            if bounds is None:
+                return None
+            min_x, min_y, width, height = bounds
+
+            image = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
+            if image.isNull():
+                return None
+            image.fill(_BG)
+
+            painter = QPainter(image)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            try:
+                self._paint_map(
+                    painter,
+                    origin=(-min_x, -min_y),
+                    include_transient=False,
+                    minimap=True,
+                )
+            finally:
+                painter.end()
+            return image, min_x, min_y, float(width), float(height)
+        finally:
+            self._hex_size = saved_hex_size
+
+    def viewport_rect_in_map_image(
+        self,
+        map_hex_size: float,
+        map_min_x: float,
+        map_min_y: float,
+    ) -> QRectF:
+        if self.width() <= 0 or self.height() <= 0:
+            return QRectF()
+        scale = map_hex_size / self._hex_size
+        ox, oy = self._origin()
+        vis_left = (-ox * scale) - map_min_x
+        vis_top = (-oy * scale) - map_min_y
+        vis_w = self.width() * scale
+        vis_h = self.height() * scale
+        return QRectF(vis_left, vis_top, vis_w, vis_h)
+
+    def pan_to_map_image_point(
+        self,
+        image_x: float,
+        image_y: float,
+        map_hex_size: float,
+        map_min_x: float,
+        map_min_y: float,
+    ) -> None:
+        scale = self._hex_size / map_hex_size
+        gx = (image_x + map_min_x) * scale
+        gy = (image_y + map_min_y) * scale
+        self._offset[0] = self.width() / 2 - gx
+        self._offset[1] = self.height() / 2 - gy
+        self.viewport_changed.emit()
+        self.update()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self.viewport_changed.emit()
 
     # ------------------------------------------------------------------
     # Painting
@@ -404,6 +546,7 @@ class HexCanvas(QWidget):
         *,
         origin: tuple[float, float],
         include_transient: bool,
+        minimap: bool = False,
     ) -> None:
         # 1) Hex fills and borders (no structure sprites)
         for (q, r), data in self._tiles.items():
@@ -412,6 +555,7 @@ class HexCanvas(QWidget):
                 origin=origin,
                 overlay=False,
                 include_transient=include_transient,
+                minimap=minimap,
             )
 
         extra_hexes = self._extra_preview_hexes() if include_transient else set()
@@ -422,25 +566,29 @@ class HexCanvas(QWidget):
                     origin=origin,
                     overlay=False,
                     include_transient=include_transient,
+                    minimap=minimap,
                 )
 
         # 2) Structure sprites
-        for (q, r), data in self._tiles.items():
-            self._draw_hex(
-                painter, q, r, data,
-                origin=origin,
-                overlay=True,
-                include_transient=include_transient,
-            )
-
-        for q, r in extra_hexes:
-            if (q, r) not in self._tiles:
+        if not minimap:
+            for (q, r), data in self._tiles.items():
                 self._draw_hex(
-                    painter, q, r, {},
+                    painter, q, r, data,
                     origin=origin,
                     overlay=True,
                     include_transient=include_transient,
                 )
+
+            for q, r in extra_hexes:
+                if (q, r) not in self._tiles:
+                    self._draw_hex(
+                        painter, q, r, {},
+                        origin=origin,
+                        overlay=True,
+                        include_transient=include_transient,
+                    )
+
+            self._draw_hex_highlights(painter, origin, include_transient=include_transient)
 
         # 3) Roads (above tile fills and structure sprites)
         hover_road_id: str | None = None
@@ -454,7 +602,7 @@ class HexCanvas(QWidget):
             hover_segments = self._road_segments_for_id(hover_road_id)
             if hover_segments:
                 self._paint_road_segments(
-                    painter, origin, hover_segments, "#ef4444",
+                    painter, origin, hover_segments, RED_PRIMARY,
                     highlight=True,
                 )
 
@@ -485,14 +633,22 @@ class HexCanvas(QWidget):
             )
 
         # 7) Descriptions stay on the topmost overlay.
-        self._draw_descriptions(
-            painter,
-            origin=origin,
-            include_transient=include_transient,
-        )
+        if not minimap:
+            self._draw_descriptions(
+                painter,
+                origin=origin,
+                include_transient=include_transient,
+            )
 
-    def _origin(self) -> tuple[float, float]:
-        return (self.width() / 2 + self._offset[0], self.height() / 2 + self._offset[1])
+    def _origin(
+        self,
+        *,
+        width: float | None = None,
+        height: float | None = None,
+    ) -> tuple[float, float]:
+        w = self.width() if width is None else width
+        h = self.height() if height is None else height
+        return (w / 2 + self._offset[0], h / 2 + self._offset[1])
 
     def _draw_hex(
         self,
@@ -504,6 +660,7 @@ class HexCanvas(QWidget):
         origin: tuple[float, float],
         overlay: bool,
         include_transient: bool,
+        minimap: bool = False,
     ) -> None:
         ox, oy = origin
         px, py = hex_to_pixel(q, r, self._hex_size)
@@ -523,6 +680,7 @@ class HexCanvas(QWidget):
             self._draw_hex_fill(
                 painter, poly, (q, r), structure, is_selected, is_hover, erase_comp,
                 include_transient=include_transient,
+                minimap=minimap,
             )
             return
 
@@ -542,34 +700,30 @@ class HexCanvas(QWidget):
         erase_comp: str | None,
         *,
         include_transient: bool,
+        minimap: bool = False,
     ) -> None:
         if structure:
-            fill = _STRUCTURE_COLORS.get(structure.get("type", ""), _FILLED_FILL)
-            if erase_comp == "structure":
-                painter.setBrush(_ERASE_HOVER_FILL)
-            elif is_hover and not self._erase_mode:
-                painter.setBrush(fill.lighter(115))
-            else:
-                painter.setBrush(fill)
-        elif erase_comp is not None:
-            # road-only or description-only tile in erase hover — no dark fill
-            painter.setBrush(_EMPTY_FILL)
-        elif is_hover and not self._erase_mode:
-            painter.setBrush(_HOVER_FILL)
+            fill = self._structure_fill_color(structure, minimap=minimap)
+            painter.setBrush(fill)
         else:
             painter.setBrush(_EMPTY_FILL)
 
-        # ---- Border ----
-        if is_selected:
-            painter.setPen(QPen(_SELECTED_BORDER, 2.5))
-        elif erase_comp is not None:
-            painter.setPen(QPen(_ERASE_HOVER_BORDER, 2.0))
-        elif structure:
+        if structure:
             painter.setPen(QPen(_FILLED_BORDER, 1.0))
         else:
             painter.setPen(QPen(_EMPTY_BORDER, 1.0, Qt.PenStyle.DashLine))
 
         painter.drawPolygon(poly)
+
+    @staticmethod
+    def _structure_fill_color(structure: dict, *, minimap: bool) -> QColor:
+        stype = structure.get("type", "")
+        if minimap:
+            info = REGISTRY.tile(stype)
+            if info is not None:
+                return _BIOME_COLORS.get(info.biome, _FILLED_FILL)
+            return _FILLED_FILL
+        return _STRUCTURE_COLORS.get(stype, _FILLED_FILL)
 
     def _draw_hex_overlay(
         self,
@@ -591,14 +745,52 @@ class HexCanvas(QWidget):
             if tile_px is not None:
                 size = round(self._hex_size)
                 painter.drawPixmap(round(cx) - size, round(cy) - size, tile_px)
+
+    def _highlight_coords(self) -> set[Coord]:
+        coords = set(self._tiles.keys())
+        coords.update(self._extra_preview_hexes())
+        return coords
+
+    def _draw_hex_highlights(
+        self,
+        painter: QPainter,
+        origin: tuple[float, float],
+        *,
+        include_transient: bool,
+    ) -> None:
+        if not include_transient:
+            return
+
+        ox, oy = origin
+        for q, r in self._highlight_coords():
+            is_selected = self._selected == (q, r)
+            is_hover = self._hover == (q, r)
+            if not is_selected and not is_hover:
+                continue
+
+            erase_comp = (
+                self._hover_component
+                if is_hover and self._erase_mode
+                else None
+            )
+            px, py = hex_to_pixel(q, r, self._hex_size)
+            poly = self._make_polygon(ox + px, oy + py, self._hex_size - 1.5)
+
+            if (
+                is_hover
+                and self._erase_mode
+                and erase_comp == "structure"
+            ):
+                painter.setBrush(_ERASE_HEX_FILL)
+                painter.setPen(QPen(_ERASE_HOVER_BORDER, 2.5))
+                painter.drawPolygon(poly)
+            elif is_selected:
                 painter.setBrush(Qt.BrushStyle.NoBrush)
-                if erase_comp == "structure":
-                    painter.setPen(QPen(_ERASE_HOVER_BORDER, 2.0))
-                else:
-                    painter.setPen(QPen(
-                        _SELECTED_BORDER if is_selected else _FILLED_BORDER,
-                        2.5 if is_selected else 1.0,
-                    ))
+                painter.setPen(QPen(_SELECTED_BORDER, 2.5))
+                painter.drawPolygon(poly)
+            elif is_hover and not self._erase_mode:
+                painter.setBrush(_HOVER_FILL)
+                painter.setPen(QPen(_HOVER_BORDER, 2.0))
                 painter.drawPolygon(poly)
 
     @staticmethod
@@ -621,6 +813,11 @@ class HexCanvas(QWidget):
         x, y = pos.x(), pos.y()
 
         if event.button() == Qt.MouseButton.LeftButton:
+            if self._pan_mode:
+                self._pan_anchor = (x, y, self._offset[0], self._offset[1])
+                self.setCursor(Qt.CursorShape.ClosedHandCursor)
+                return
+
             if self._road_mode and self._road_submode == "curve":
                 hit = self._pick_hex(x, y)
                 if hit is None:
@@ -707,7 +904,11 @@ class HexCanvas(QWidget):
             x0, y0, ox, oy = self._pan_anchor
             self._offset[0] = ox + (x - x0)
             self._offset[1] = oy + (y - y0)
+            self.viewport_changed.emit()
             self.update()
+            return
+
+        if self._pan_mode:
             return
 
         hit = self._pick_hex(x, y)
@@ -775,6 +976,15 @@ class HexCanvas(QWidget):
         if event.button() == Qt.MouseButton.LeftButton and self._brush_active:
             self._brush_active = False
             self._brush_seen_targets.clear()
+            return
+        if event.button() == Qt.MouseButton.LeftButton and self._pan_anchor is not None:
+            self._pan_anchor = None
+            if self._pan_mode:
+                self.setCursor(Qt.CursorShape.OpenHandCursor)
+            elif self._road_mode:
+                self.setCursor(Qt.CursorShape.CrossCursor)
+            else:
+                self.unsetCursor()
             return
         if event.button() in (Qt.MouseButton.MiddleButton, Qt.MouseButton.RightButton):
             self._pan_anchor = None
