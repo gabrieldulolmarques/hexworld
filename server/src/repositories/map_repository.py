@@ -16,7 +16,6 @@ def get_map_by_id(map_id: str):
         ).fetchone()
 
 def get_map_by_code(code: str) -> tuple[str, str] | None:
-    """Resolve a share code to (map_id, role) where role is 'editor' or 'viewer'."""
     with get_connection() as connection:
         row = connection.execute(
             "SELECT id FROM map WHERE editor_code = ?",
