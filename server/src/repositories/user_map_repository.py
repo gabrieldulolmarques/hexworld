@@ -54,7 +54,11 @@ def transfer_ownership(map_id: str, from_user_id: str, to_user_id: str) -> None:
                 (map_id, from_user_id),
             )
             connection.execute(
-                "UPDATE user_map SET role = 'owner' WHERE map_id = ? AND user_id = ?",
+                """
+                UPDATE user_map
+                SET role = 'owner', updated_at = CURRENT_TIMESTAMP
+                WHERE map_id = ? AND user_id = ?
+                """,
                 (map_id, to_user_id),
             )
             connection.commit()
