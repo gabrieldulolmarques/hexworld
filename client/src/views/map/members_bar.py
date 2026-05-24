@@ -1,4 +1,4 @@
-"""Bottom-left card — collapsible online-members list and Close button."""
+"""Left overlay card for the online-members list and Close button."""
 
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
@@ -62,14 +62,14 @@ class MembersBar(MapPanel):
 
     def __init__(self) -> None:
         super().__init__("mapBottomBar")
-        self._expanded = False
+        self._expanded = True
         self._rows: list[QWidget] = []
         self._row_names: list[tuple[QLabel, QLabel, str]] = []
         self._online = 0
         self._total = 0
-        self._max_panel_height: int | None = None
-        self._max_list_height: int | None = None
+        self._height_budget: int | None = None
         self._last_bar_width = 0
+        self._layout_changing = False
 
         users_icon = QLabel()
         users_icon.setPixmap(tinted_pixmap("users.svg", "#9f9fa9", 18))
@@ -143,14 +143,14 @@ class MembersBar(MapPanel):
         self._body_widget = QWidget()
         body_lay = QVBoxLayout(self._body_widget)
         body_lay.setContentsMargins(0, 0, 0, 0)
-        body_lay.setSpacing(6)
+        body_lay.setSpacing(4)
         body_lay.addWidget(horizontal_divider())
         body_lay.addWidget(self._scroll)
-        self._body_widget.hide()
+        self._body_widget.setVisible(self._expanded)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 9, 16, 9)
+        layout.setSpacing(6)
         layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetFixedSize)
         layout.addWidget(self._header_widget)
         layout.addWidget(self._body_widget)
@@ -172,7 +172,7 @@ class MembersBar(MapPanel):
         self._expand_btn.setIcon(QIcon(tinted_pixmap(chevron, "#9f9fa9", 16)))
         self._update_list_height()
         self._apply_header_width()
-        self.geometry_changed.emit()
+        self._notify_geometry()
 
     def connect_back(self, slot) -> None:
         self._back_btn.clicked.connect(slot)
@@ -198,22 +198,37 @@ class MembersBar(MapPanel):
         self._update_list_height()
         self._apply_row_elides()
 
-    def set_max_panel_height(self, height: int) -> None:
-        """Cap panel growth so it stops below the tool strip (MapBody)."""
-        self._max_panel_height = max(0, height)
-        self._max_list_height = max(0, height - self._chrome_height())
+    def apply_height_budget(self, budget: int) -> int:
+        """Update scroll cap for the viewport and return stable panel height."""
+        self._height_budget = max(0, budget)
         self._update_list_height()
-        if self._max_panel_height > 0:
-            self.setMaximumHeight(self._max_panel_height)
-        else:
-            self.setMaximumHeight(16777215)
+        return self.natural_height()
+
+    def natural_height(self) -> int:
+        """Total panel height from layout (bottom-anchored positioning)."""
+        chrome = self._chrome_height()
+        if not self._expanded:
+            return chrome
+        return chrome + self._scroll.height()
 
     def _chrome_height(self) -> int:
-        margins = 12 + 12
+        margins = 18  # 9 top + 9 bottom
         header = self._header_widget.sizeHint().height()
         if not self._expanded:
             return margins + header
-        return margins + header + 8 + 7
+        body_lay = self._body_widget.layout()
+        extra = body_lay.spacing() + 1 if body_lay is not None else 5
+        return margins + header + extra
+
+    def _max_list_height(self) -> int | None:
+        if self._height_budget is None:
+            return None
+        return max(0, self._height_budget - self._chrome_height())
+
+    def _notify_geometry(self) -> None:
+        if self._layout_changing:
+            return
+        self.geometry_changed.emit()
 
     def _list_content_height(self, count: int) -> int:
         if count <= 0:
@@ -225,12 +240,14 @@ class MembersBar(MapPanel):
             MEMBERS_VISIBLE_ROWS * MEMBERS_ROW_H
             + (MEMBERS_VISIBLE_ROWS - 1) * MEMBERS_ROW_GAP
         )
-        if self._max_list_height is not None:
-            return min(visible, self._max_list_height)
+        cap = self._max_list_height()
+        if cap is not None:
+            return min(visible, cap)
         return visible
 
     def _update_list_height(self) -> None:
         if not self._expanded:
+            self._scroll.setFixedHeight(0)
             return
 
         count = len(self._rows)
@@ -243,11 +260,16 @@ class MembersBar(MapPanel):
             list_h = min(content_h, self._scroll_viewport_cap())
             scroll_policy = Qt.ScrollBarPolicy.ScrollBarAsNeeded
 
-        if self._max_list_height is not None:
-            list_h = min(list_h, self._max_list_height)
+        cap = self._max_list_height()
+        if cap is not None:
+            list_h = min(list_h, cap)
 
-        self._scroll.setFixedHeight(list_h)
-        self._scroll.setVerticalScrollBarPolicy(scroll_policy)
+        self._layout_changing = True
+        try:
+            self._scroll.setFixedHeight(list_h)
+            self._scroll.setVerticalScrollBarPolicy(scroll_policy)
+        finally:
+            self._layout_changing = False
         self._apply_row_elides()
 
     def _refresh_count(self) -> None:
@@ -278,7 +300,7 @@ class MembersBar(MapPanel):
             self.adjustSize()
             notify = True
         if notify:
-            self.geometry_changed.emit()
+            self._notify_geometry()
 
     def _inner_width(self) -> int:
         inner = self.width() - 32
