@@ -43,15 +43,15 @@ QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:unchecked {
 
 QWidget#authScreen QCheckBox#rememberCheckbox::indicator:checked,
 QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:checked {
-    background-color: #5ea500;
-    border-color: #5ea500;
+    background-color: __GREEN_PRIMARY__;
+    border-color: __GREEN_PRIMARY__;
     image: url(__CHECK_ICON__);
 }
 
 QWidget#authScreen QCheckBox#rememberCheckbox::indicator:checked:hover,
 QWidget#authScreen QCheckBox#showPasswordCheckbox::indicator:checked:hover {
-    background-color: #497d00;
-    border-color: #497d00;
+    background-color: __GREEN_HOVER__;
+    border-color: __GREEN_HOVER__;
     image: url(__CHECK_ICON__);
 }
 

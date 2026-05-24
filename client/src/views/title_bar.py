@@ -2,13 +2,14 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, QPen
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
+from styles.colors import RED_PRIMARY
 from views.widgets import HexLogo
 
 
 class _CtrlButton(QPushButton):
     BG_NORMAL = QColor("#09090b")
     BG_HOVER = QColor("#27272a")
-    BG_CLOSE_HOVER = QColor("#e7000b")
+    BG_CLOSE_HOVER = QColor(RED_PRIMARY)
 
     def __init__(self, kind: str) -> None:
         super().__init__()
