@@ -12,6 +12,7 @@ class Connection:
         self._client_address = client_address
         self._send_lock = Lock()
         self._subscribed_maps: set[str] = set()
+        self._presence_maps: set[str] = set()
         self._user_id: str | None = None
         self._username: str | None = None
 
@@ -41,6 +42,22 @@ class Connection:
     def unsubscribe(self, map_id: str) -> None:
         broadcaster.unsubscribe(map_id, self)
         self._subscribed_maps.discard(map_id)
+        self._presence_maps.discard(map_id)
+
+    def enter_presence(self, map_id: str) -> bool:
+        if map_id in self._presence_maps:
+            return False
+        self._presence_maps.add(map_id)
+        return True
+
+    def leave_presence(self, map_id: str) -> bool:
+        if map_id not in self._presence_maps:
+            return False
+        self._presence_maps.remove(map_id)
+        return True
+
+    def is_present_in(self, map_id: str) -> bool:
+        return map_id in self._presence_maps
 
     def start(self) -> None:
         print(f"Client {self._client_address[0]}:{self._client_address[1]} connected")
@@ -60,20 +77,12 @@ class Connection:
     def stop(self) -> None:
         from services.presence_service import broadcast_presence
 
+        presence_maps = list(self._presence_maps)
+        self._presence_maps.clear()
         for map_id in list(self._subscribed_maps):
-            user_id = self._user_id
-            is_last = (
-                user_id
-                and sum(
-                    1
-                    for c in broadcaster.connections_for(map_id)
-                    if c.user_id == user_id
-                )
-                == 1
-            )
             broadcaster.unsubscribe(map_id, self)
-            if is_last:
-                broadcast_presence(map_id, "map_user_offline")
+        for map_id in presence_maps:
+            broadcast_presence(map_id, "map_user_offline")
         self._subscribed_maps.clear()
         with self._send_lock:
             if self._client_socket:
