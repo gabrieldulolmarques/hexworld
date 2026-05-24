@@ -20,11 +20,6 @@ def get_database_path() -> Path:
 
 @contextmanager
 def get_connection():
-    """Borrow a connection from the pool for the duration of a `with` block.
-
-    Connections are safe to share across threads (`check_same_thread=False`) but
-    each handler must hold one for its whole unit of work. Always use `with`.
-    """
     _ensure_pool()
     connection = _pool.get()
     try:
@@ -36,7 +31,6 @@ def get_connection():
         _pool.put(connection)
 
 def close_pool() -> None:
-    """Drain and close every pooled connection. Call from Server.stop()."""
     global _pool_ready
     with _pool_lock:
         if not _pool_ready:
