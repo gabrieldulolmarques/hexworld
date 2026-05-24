@@ -1,6 +1,3 @@
-"""HexWorld UI color tokens — shared by QSS placeholders and Python paint code."""
-
-# --- Greens ---
 GREEN_PRIMARY = "#5ea500"
 GREEN_PRIMARY_RGB = "94, 165, 0"
 GREEN_HOVER = "#497d00"
@@ -11,29 +8,23 @@ GREEN_TINT_RGB = "124, 207, 0"
 GREEN_SOFT_TEXT = "#ecfccb"
 GREEN_SURFACE = "#1f3d0a"
 GREEN_CANVAS_FILL = "#1c2d10"
-GREEN_CANVAS_HOVER = "#222c18"
 
 GREEN_ACTIVE_BG = f"rgba({GREEN_PRIMARY_RGB}, 0.14)"
 GREEN_SELECTION_BG = f"rgba({GREEN_PRIMARY_RGB}, 0.35)"
 GREEN_HOVER_BG = f"rgba({GREEN_PRIMARY_RGB}, 0.10)"
 GREEN_HOVER_BORDER = f"rgba({GREEN_PRIMARY_RGB}, 0.45)"
-GREEN_VIEWPORT_FILL = f"rgba({GREEN_PRIMARY_RGB}, 0.22)"
 
-# --- Reds ---
 RED_PRIMARY = "#ef4444"
 RED_PRIMARY_RGB = "239, 68, 68"
 RED_TEXT = "#f87171"
 RED_TEXT_BRIGHT = "#fca5a5"
 RED_BORDER_DARK = "#7f1d1d"
-RED_CANVAS_HOVER = "#2d1212"
 
 RED_ACTIVE_BG = f"rgba({RED_PRIMARY_RGB}, 0.12)"
 RED_ACTIVE_BG_STRONG = f"rgba({RED_PRIMARY_RGB}, 0.20)"
 RED_HOVER_BG = f"rgba({RED_PRIMARY_RGB}, 0.10)"
 RED_HOVER_BORDER = f"rgba({RED_PRIMARY_RGB}, 0.45)"
-RED_CANVAS_HOVER_FILL = f"rgba({RED_PRIMARY_RGB}, 0.16)"
 
-# Placeholders expanded in theme.py when loading QSS.
 QSS_REPLACE: dict[str, str] = {
     "__GREEN_PRIMARY__": GREEN_PRIMARY,
     "__GREEN_PRIMARY_RGB__": GREEN_PRIMARY_RGB,

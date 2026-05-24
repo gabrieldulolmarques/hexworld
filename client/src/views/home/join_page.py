@@ -1,22 +1,13 @@
-"""Join-map form."""
-
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from styles.ui_constants import CARD_MARGINS, CARD_SPACING
 from views.home.helpers import centered, make_card, set_form_status
 from views.ui_buttons import make_form_ghost_button, make_form_primary_button
 from views.widgets import HexLogo
 
-
 class JoinPage(QWidget):
-    submit_join = pyqtSignal(str)   # invite code
+    submit_join = pyqtSignal(str)
     cancel      = pyqtSignal()
 
     def __init__(self) -> None:
@@ -82,10 +73,6 @@ class JoinPage(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(centered(card))
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def focus(self) -> None:
         self.code_input.clear()
         self.status_label.setText("")
@@ -100,10 +87,6 @@ class JoinPage(QWidget):
     def show_error(self, message: str) -> None:
         set_form_status(self.status_label, message, "error")
         self.set_loading(False)
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _submit(self) -> None:
         code = self.code_input.text().strip()

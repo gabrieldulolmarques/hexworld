@@ -30,7 +30,6 @@ class HexLogo(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         _paint_hex_logo(painter, self._size)
 
-
 def hex_logo_pixmap(size: int) -> QPixmap:
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.GlobalColor.transparent)
@@ -40,13 +39,11 @@ def hex_logo_pixmap(size: int) -> QPixmap:
     painter.end()
     return pixmap
 
-
 def hex_logo_icon() -> QIcon:
     icon = QIcon()
     for size in (16, 24, 32, 48, 64, 128, 256):
         icon.addPixmap(hex_logo_pixmap(size))
     return icon
-
 
 def _paint_hex_logo(painter: QPainter, size: int) -> None:
     cx = size / 2
@@ -66,9 +63,8 @@ def _paint_hex_logo(painter: QPainter, size: int) -> None:
     painter.setBrush(QColor(GREEN_TINT))
     painter.drawPolygon(core_hex)
 
-
 def _hexagon(cx: float, cy: float, radius: float) -> QPolygonF:
-    # flat-top: 0° offset → flat edge at top/bottom, vertex on sides
+
     polygon = QPolygonF()
     for i in range(6):
         angle = radians(60 * i)
@@ -76,9 +72,7 @@ def _hexagon(cx: float, cy: float, radius: float) -> QPolygonF:
     return polygon
 
 def apply_panel_style(widget: QWidget) -> None:
-    """Enable QSS background/border on panel widgets (#card, #heroCard)."""
     widget.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-
 
 def make_card_shadow() -> QGraphicsDropShadowEffect:
     shadow = QGraphicsDropShadowEffect()

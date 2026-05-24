@@ -1,24 +1,9 @@
-"""Floating overlay for editing a tile description (markdown source).
-
-Hosted as a child of :class:`views.map.body.MapBody` and covers its full area
-with a translucent backdrop and a centered card. Emits ``submitted(q, r, text)``
-when the user saves; the backdrop is clickable but does not dismiss (cancel is
-explicit via the Cancel button or Esc).
-"""
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QTextEdit, QVBoxLayout, QWidget
 
 from views.map.panel import styled
 from views.ui_buttons import make_form_ghost_button, make_form_primary_button
-
 
 class DescriptionEditor(QWidget):
     submitted = pyqtSignal(int, int, str)
@@ -93,10 +78,6 @@ class DescriptionEditor(QWidget):
         save.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         save.activated.connect(self._on_save)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def open_for(self, q: int, r: int, current_text: str = "") -> None:
         self._q = q
         self._r = r
@@ -104,7 +85,7 @@ class DescriptionEditor(QWidget):
         self._editor.blockSignals(True)
         self._editor.setPlainText(current_text)
         self._editor.blockSignals(False)
-        self._on_text_changed()  # sync save button state
+        self._on_text_changed()
         if self.parentWidget() is not None:
             self.setGeometry(self.parentWidget().rect())
         self.raise_()
@@ -119,10 +100,6 @@ class DescriptionEditor(QWidget):
         self._editor.clear()
         self._editor.blockSignals(False)
         self.hide()
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _on_text_changed(self) -> None:
         self._save_btn.setEnabled(bool(self._editor.toPlainText().strip()))

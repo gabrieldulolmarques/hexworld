@@ -10,7 +10,6 @@ _CHECK_ICON_PATH = (
 )
 _CHECK_ICON_URL = _CHECK_ICON_PATH.resolve().as_posix().replace("\\", "/")
 
-
 def _load_stylesheet() -> str:
     parts = [
         (_STYLES_DIR / name).read_text(encoding="utf-8")
@@ -20,6 +19,5 @@ def _load_stylesheet() -> str:
     for token, value in QSS_REPLACE.items():
         sheet = sheet.replace(token, value)
     return sheet
-
 
 STYLESHEET = _load_stylesheet()

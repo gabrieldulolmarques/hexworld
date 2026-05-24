@@ -1,11 +1,12 @@
 import math
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QPointF, QSize, pyqtSignal, QRectF
+from PyQt6.QtCore import QPointF, QRectF, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QIcon, QImage, QPainter, QPen, QPixmap, QPolygonF
 from PyQt6.QtWidgets import QWidget
 
-from geometry import (
+from models.asset_registry import REGISTRY
+from models.geometry import (
     Coord,
     axial_step_direction,
     distance_to_polyline,
@@ -14,20 +15,8 @@ from geometry import (
     hex_vertices,
     pixel_to_hex,
 )
-from models.asset_registry import REGISTRY
-from models.path_style import (
-    PathStyle,
-    paint_pixel_segments,
-    road_style,
-)
-from styles.colors import (
-    GREEN_CANVAS_FILL,
-    GREEN_PRIMARY,
-    GREEN_PRIMARY_RGB,
-    GREEN_TINT,
-    RED_PRIMARY,
-    RED_PRIMARY_RGB,
-)
+from models.path_style import PathStyle, paint_pixel_segments, road_style
+from styles.colors import GREEN_CANVAS_FILL, GREEN_PRIMARY, GREEN_PRIMARY_RGB, GREEN_TINT, RED_PRIMARY, RED_PRIMARY_RGB
 
 def _rgba_color(rgb: str, alpha: int) -> QColor:
     r, g, b = (int(part.strip()) for part in rgb.split(","))
@@ -35,7 +24,6 @@ def _rgba_color(rgb: str, alpha: int) -> QColor:
 
 _ICONS_DIR = Path(__file__).resolve().parents[2] / "assets" / "icons"
 _DESC_ICON_CACHE: dict[tuple[int, str], QPixmap] = {}
-
 
 def _desc_icon(size: int, color: QColor) -> QPixmap:
     key = (size, color.name())
@@ -54,12 +42,11 @@ def _desc_icon(size: int, color: QColor) -> QPixmap:
         _DESC_ICON_CACHE[key] = tinted
     return _DESC_ICON_CACHE[key]
 
-
 _HEX_SIZE_MIN = 20.0
 _HEX_SIZE_MAX = 80.0
 _HEX_SIZE_DEFAULT = 40.0
 _ZOOM_STEP = 4.0
-_EXPORT_HEX_SIZE = _HEX_SIZE_MAX   # full-map export scale (ignores editor zoom)
+_EXPORT_HEX_SIZE = _HEX_SIZE_MAX
 _EXPORT_SCALE_MIN = 2.0
 
 _BG                 = QColor("#09090b")
@@ -91,7 +78,6 @@ _STRUCTURE_COLORS: dict[str, QColor] = {
     "tower":    QColor("#f97316"),
 }
 
-# Sampled from each biome's reference tile under client/assets/map/.
 _BIOME_COLORS: dict[str, QColor] = {
     "deadlands":  QColor("#4f5346"),
     "drylands":   QColor("#a8866d"),
@@ -102,29 +88,28 @@ _BIOME_COLORS: dict[str, QColor] = {
     "sandlands":  QColor("#efd98d"),
 }
 
-
 class HexCanvas(QWidget):
-    hex_clicked    = pyqtSignal(int, int)   # q, r — existing tile selected
+    hex_clicked    = pyqtSignal(int, int)
     hex_deselected = pyqtSignal()
-    hex_hovered    = pyqtSignal(int, int)   # q, r
-    path_drawn     = pyqtSignal(list, str)  # waypoints, color
-    road_drawn     = path_drawn             # alias
-    inner_edge_painted = pyqtSignal(int, int, int, str)  # q, r, edge_index, color
+    hex_hovered    = pyqtSignal(int, int)
+    path_drawn     = pyqtSignal(list, str)
+    road_drawn     = path_drawn
+    inner_edge_painted = pyqtSignal(int, int, int, str)
     current_road_points_changed = pyqtSignal(int)
     map_changed = pyqtSignal()
     viewport_changed = pyqtSignal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        # Tile data (structure + description per coord)
+
         self._tiles: dict[Coord, dict] = {}
-        # Road segments (map-level; same color forms a unified network)
+
         self._roads: list[dict] = []
         self._roads_by_coord: dict[Coord, str] = {}
-        # Interaction state
+
         self._selected: Coord | None = None
         self._hover: Coord | None = None
-        self._hover_component: str | None = None   # "structure"|"road"|"description"
+        self._hover_component: str | None = None
         self._hover_road_id: str | None = None
         self._offset = [0.0, 0.0]
         self._hex_size = _HEX_SIZE_DEFAULT
@@ -135,21 +120,17 @@ class HexCanvas(QWidget):
         self._brush_mode = False
         self._brush_active = False
         self._brush_seen_targets: set[tuple] = set()
-        # Road-draw mode
+
         self._road_mode = False
         self._road_color = GREEN_PRIMARY
-        self._road_submode = "curve"
+        self._road_submode = "road"
         self._current_road: list[Coord] = []
-        # Inner-edge segments are per-cell masks; each cell owns its own color.
+
         self._inner_edges: dict[Coord, dict] = {}
         self._hover_inner_edge: tuple[Coord, int] | None = None
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMinimumSize(400, 300)
-
-    # ------------------------------------------------------------------
-    # Public API — tiles
-    # ------------------------------------------------------------------
 
     def set_tiles(self, tiles: dict[Coord, dict]) -> None:
         self._tiles = dict(tiles)
@@ -189,12 +170,7 @@ class HexCanvas(QWidget):
         self.update()
         self.map_changed.emit()
 
-    # ------------------------------------------------------------------
-    # Public API — roads
-    # ------------------------------------------------------------------
-
     def set_roads(self, roads: list[dict]) -> None:
-        """Replace road segments (map state load)."""
         self._roads = list(roads)
         self._rebuild_roads_by_coord()
         self.update()
@@ -202,7 +178,6 @@ class HexCanvas(QWidget):
         self.map_changed.emit()
 
     def apply_road(self, road_id: str, waypoints: list, color: str) -> None:
-        """Add or update one road segment (called on road_added event)."""
         self._roads = [r for r in self._roads if r["id"] != road_id]
         self._roads.append({"id": road_id, "waypoints": waypoints, "color": color})
         self._rebuild_roads_by_coord()
@@ -210,25 +185,12 @@ class HexCanvas(QWidget):
         self.map_changed.emit()
 
     def remove_road_by_id(self, road_id: str) -> None:
-        """Remove one road by id (called on road_removed event)."""
         self._roads = [r for r in self._roads if r["id"] != road_id]
         self._rebuild_roads_by_coord()
         self.update()
         self.map_changed.emit()
 
-    def road_id_at(self, q: int, r: int) -> str | None:
-        """Return the road_id of any road passing through (q, r)."""
-        return self._roads_by_coord.get((q, r))
-
-    def road_at(self, q: int, r: int) -> dict | None:
-        """Return the path dict at (q, r), if any."""
-        rid = self.road_id_at(q, r)
-        if rid is None:
-            return None
-        return self.road_by_id(rid)
-
     def road_segments_at(self, q: int, r: int) -> list[dict]:
-        """Road segments that start or end on this hex (for inspector)."""
         coord = (q, r)
         found: list[dict] = []
         for road in self._roads:
@@ -245,19 +207,13 @@ class HexCanvas(QWidget):
         return found
 
     def road_by_id(self, road_id: str) -> dict | None:
-        """Return the road dict by id, if present."""
         for road in self._roads:
             if road["id"] == road_id:
                 return road
         return None
 
     def road_ids(self) -> set[str]:
-        """Return the current road ids."""
         return {road["id"] for road in self._roads if road.get("id")}
-
-    # ------------------------------------------------------------------
-    # Public API — inner edges
-    # ------------------------------------------------------------------
 
     def set_inner_edges(self, cells: list[dict]) -> None:
         self._inner_edges = {}
@@ -292,14 +248,6 @@ class HexCanvas(QWidget):
     def inner_edge_cell(self, q: int, r: int) -> dict | None:
         cell = self._inner_edges.get((q, r))
         return dict(cell) if cell else None
-
-    # ------------------------------------------------------------------
-    # Public API — interaction modes
-    # ------------------------------------------------------------------
-
-    def set_selected(self, coord: Coord | None) -> None:
-        self._selected = coord
-        self.update()
 
     def clear_selection(self) -> None:
         if self._selected is None:
@@ -354,7 +302,7 @@ class HexCanvas(QWidget):
         self.update()
 
     def set_road_submode(self, submode: str) -> None:
-        if submode not in ("curve", "inner_edge"):
+        if submode not in ("road", "inner_edge"):
             return
         self._road_submode = submode
         if submode != "inner_edge":
@@ -363,9 +311,6 @@ class HexCanvas(QWidget):
 
     def set_road_color(self, color: str) -> None:
         self._road_color = color
-
-    def start_new_road(self) -> None:
-        self._clear_current_road()
 
     def undo_current_road_point(self) -> None:
         if not self._current_road:
@@ -413,7 +358,6 @@ class HexCanvas(QWidget):
         self.update()
 
     def export_full_map_image(self) -> QImage:
-        """Render every painted tile at a fixed overview scale (editor zoom ignored)."""
         coords = self._export_coords()
         if not coords:
             return QImage()
@@ -461,7 +405,6 @@ class HexCanvas(QWidget):
         self,
         hex_size: float = 8.0,
     ) -> tuple[QImage, float, float, float, float] | None:
-        """Offscreen map preview for the minimap overlay."""
         coords = self._export_coords()
         if not coords:
             return None
@@ -530,10 +473,6 @@ class HexCanvas(QWidget):
         super().resizeEvent(event)
         self.viewport_changed.emit()
 
-    # ------------------------------------------------------------------
-    # Painting
-    # ------------------------------------------------------------------
-
     def paintEvent(self, _event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -548,7 +487,7 @@ class HexCanvas(QWidget):
         include_transient: bool,
         minimap: bool = False,
     ) -> None:
-        # 1) Hex fills and borders (no structure sprites)
+
         for (q, r), data in self._tiles.items():
             self._draw_hex(
                 painter, q, r, data,
@@ -569,7 +508,6 @@ class HexCanvas(QWidget):
                     minimap=minimap,
                 )
 
-        # 2) Structure sprites
         if not minimap:
             for (q, r), data in self._tiles.items():
                 self._draw_hex(
@@ -590,7 +528,6 @@ class HexCanvas(QWidget):
 
             self._draw_hex_highlights(painter, origin, include_transient=include_transient)
 
-        # 3) Roads (above tile fills and structure sprites)
         hover_road_id: str | None = None
         if include_transient and self._erase_mode and self._hover_component == "road":
             hover_road_id = self._hover_road_id
@@ -606,23 +543,20 @@ class HexCanvas(QWidget):
                     highlight=True,
                 )
 
-        # 4) Inner edges
         self._draw_inner_edges(
             painter,
             origin=origin,
             include_transient=include_transient,
         )
 
-        # 5) Road draw hover hints above painted hexes.
         if include_transient:
             self._draw_road_hint_overlay(painter, origin)
 
-        # 6) Current road preview
         preview_coords = self._current_road_preview() if include_transient else []
         if (
             include_transient
             and self._road_mode
-            and self._road_submode == "curve"
+            and self._road_submode == "road"
             and len(preview_coords) >= 2
         ):
             self._paint_road_segments(
@@ -632,7 +566,6 @@ class HexCanvas(QWidget):
                 preview=True,
             )
 
-        # 7) Descriptions stay on the topmost overlay.
         if not minimap:
             self._draw_descriptions(
                 painter,
@@ -797,10 +730,6 @@ class HexCanvas(QWidget):
     def _make_polygon(cx: float, cy: float, size: float) -> QPolygonF:
         return QPolygonF([QPointF(x, y) for x, y in hex_vertices(cx, cy, size)])
 
-    # ------------------------------------------------------------------
-    # Mouse events
-    # ------------------------------------------------------------------
-
     def wheelEvent(self, event) -> None:
         delta = event.angleDelta().y()
         step = _ZOOM_STEP if delta > 0 else -_ZOOM_STEP
@@ -818,7 +747,7 @@ class HexCanvas(QWidget):
                 self.setCursor(Qt.CursorShape.ClosedHandCursor)
                 return
 
-            if self._road_mode and self._road_submode == "curve":
+            if self._road_mode and self._road_submode == "road":
                 hit = self._pick_hex(x, y)
                 if hit is None:
                     return
@@ -844,7 +773,6 @@ class HexCanvas(QWidget):
                 self._apply_brush_at(x, y)
                 return
 
-            # Normal click — select or paint
             desc_hit = self._pick_description_at_point(x, y) if self._erase_mode else None
             road_hit = self._pick_road_id_at_point(x, y) if self._erase_mode else None
             inner_hit = self._pick_painted_inner_edge(x, y) if self._erase_mode else None
@@ -925,7 +853,6 @@ class HexCanvas(QWidget):
             self._hover = hit
             needs_update = True
 
-        # In erase mode, update the sub-component even on intra-hex movement.
         if self._erase_mode:
             desc_hit = self._pick_description_at_point(x, y)
             road_id = None
@@ -1005,16 +932,11 @@ class HexCanvas(QWidget):
             self._hover_inner_edge = None
             self.update()
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
     def _canvas_to_hex(self, cx: float, cy: float) -> Coord:
         ox, oy = self._origin()
         return pixel_to_hex(cx - ox, cy - oy, self._hex_size)
 
     def _pick_hex(self, cx: float, cy: float) -> Coord | None:
-        """Hex under cursor. In erase mode also picks road-only hexes."""
         q, r = self._canvas_to_hex(cx, cy)
         loose = self._pick_any_hex or self._road_mode
         if not loose:
@@ -1144,7 +1066,7 @@ class HexCanvas(QWidget):
         self.current_road_points_changed.emit(len(self._current_road))
 
     def _can_continue_road_at(self, coord: Coord) -> bool:
-        if not (self._road_mode and self._road_submode == "curve" and self._current_road):
+        if not (self._road_mode and self._road_submode == "road" and self._current_road):
             return False
         last = self._current_road[-1]
         if coord == last:
@@ -1155,7 +1077,7 @@ class HexCanvas(QWidget):
         coords: set[Coord] = set()
         if self._pick_any_hex and self._hover is not None:
             coords.add(self._hover)
-        if self._road_mode and self._road_submode == "curve":
+        if self._road_mode and self._road_submode == "road":
             coords.update(self._current_road)
             if self._current_road:
                 for coord in hex_neighbors(*self._current_road[-1]):
@@ -1181,7 +1103,6 @@ class HexCanvas(QWidget):
         }
 
     def _current_road_direction_mask(self, coord: Coord) -> int:
-        """Six-bit Catlike-style road mask for the in-progress route at coord."""
         mask = 0
         for start, end in zip(self._current_road, self._current_road[1:]):
             if start == coord:
@@ -1215,7 +1136,7 @@ class HexCanvas(QWidget):
         painter: QPainter,
         origin: tuple[float, float],
     ) -> None:
-        if not (self._road_mode and self._road_submode == "curve"):
+        if not (self._road_mode and self._road_submode == "road"):
             return
 
         current = set(self._current_road)
@@ -1460,7 +1381,6 @@ class HexCanvas(QWidget):
         return best[1] if best else None
 
     def _pick_erase_component(self, cx: float, cy: float, q: int, r: int) -> str | None:
-        """Which component is under the cursor within hex (q, r) when in erase mode."""
         tile = self._tiles.get((q, r))
         has_structure = bool(tile.get("structure")) if tile else False
         has_desc      = bool(tile.get("description")) if tile else False
@@ -1504,7 +1424,6 @@ class HexCanvas(QWidget):
         return min_x, min_y, width, height
 
     def _rebuild_roads_by_coord(self) -> None:
-        """Rebuild the coord→road_id lookup after any road list change."""
         self._roads_by_coord = {}
         for road in self._roads:
             for wp in road["waypoints"]:

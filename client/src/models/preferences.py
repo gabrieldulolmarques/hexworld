@@ -5,7 +5,6 @@ _SETTINGS_APP = "HexWorld"
 _USERNAME_KEY = "login/username"
 _REMEMBER_KEY = "login/remember"
 
-
 class Preferences:
     def __init__(self) -> None:
         self._settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
@@ -27,4 +26,3 @@ class Preferences:
     def clear(self) -> None:
         self._settings.remove(_USERNAME_KEY)
         self._settings.setValue(_REMEMBER_KEY, False)
-

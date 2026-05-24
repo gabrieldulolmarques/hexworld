@@ -1,5 +1,3 @@
-"""Palette panel — biome tabs + tile grid (structure tool)."""
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
@@ -16,12 +14,7 @@ from PyQt6.QtWidgets import (
 )
 
 from models.asset_registry import REGISTRY
-from views.map.constants import (
-    SIDE_PANEL_W,
-    TOOL_DESCRIPTION,
-    TOOL_SELECT,
-    TOOL_STRUCTURE,
-)
+from views.map.constants import SIDE_PANEL_W, TOOL_DESCRIPTION, TOOL_SELECT, TOOL_STRUCTURE
 from views.map.panel import MapPanel, styled
 
 _BIOMES_WITH_EMPTY = frozenset({
@@ -45,14 +38,13 @@ _BIOME_LABELS: dict[str, str] = {
     "sandlands":  "Sand",
 }
 
-_THUMB_SIZE = 44        # pixmap = 2*44 = 88×88
-_TILE_BTN_H = 150       # 8 + 88 + 6 + 40(text 2-line) + 8
+_THUMB_SIZE = 44
+_TILE_BTN_H = 150
 
 _PANEL_HEADINGS: dict[str, str] = {
     TOOL_STRUCTURE: "STRUCTURE",
     TOOL_DESCRIPTION: "DESCRIPTION",
 }
-
 
 class TileButton(QWidget):
     clicked_signal = pyqtSignal()
@@ -109,13 +101,12 @@ class TileButton(QWidget):
             self.clicked_signal.emit()
         super().mousePressEvent(event)
 
-
 class PalettePanel(MapPanel):
     structure_selected = pyqtSignal(str)
     tool_changed = pyqtSignal(str)
 
     _PANEL_PAD    = 24
-    _SCROLL_GUTTER = 16     # scrollbar groove (10px) + scrollbar margins (6px)
+    _SCROLL_GUTTER = 16
     _COLS    = 2
     _GRID_GAP = 10
     _BTN_W = (
@@ -123,7 +114,7 @@ class PalettePanel(MapPanel):
         - 2 * _PANEL_PAD
         - _SCROLL_GUTTER
         - (_COLS - 1) * _GRID_GAP
-    ) // _COLS               # (400-48-16-10)//2 = 163
+    ) // _COLS
 
     _BIOME_COLS = 4
     _STRIP_PAD  = 6
@@ -131,7 +122,7 @@ class PalettePanel(MapPanel):
     _TAB_H      = 36
     _TAB_W      = (
         SIDE_PANEL_W - 2 * _PANEL_PAD - 2 * _STRIP_PAD - (_BIOME_COLS - 1) * _TAB_HGAP
-    ) // _BIOME_COLS             # (400-48-12-18)//4 = 80
+    ) // _BIOME_COLS
 
     def __init__(self) -> None:
         super().__init__("mapPalette")

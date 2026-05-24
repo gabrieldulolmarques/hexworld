@@ -2,9 +2,9 @@ from os import getenv
 from socket import (
     AF_INET,
     IPPROTO_TCP,
+    SO_KEEPALIVE,
     SOCK_STREAM,
     SOL_SOCKET,
-    SO_KEEPALIVE,
     TCP_KEEPCNT,
     TCP_KEEPIDLE,
     TCP_KEEPINTVL,
@@ -51,7 +51,6 @@ class Client:
                 raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
 
     def recv_response(self) -> dict | None:
-        """Read the next server frame (kind response or event)."""
         with self._io_lock:
             if not self.is_connected():
                 return None

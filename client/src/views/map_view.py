@@ -1,24 +1,10 @@
-"""Map editor top-level view.
-
-This module is a thin facade that composes the floating panels defined
-under :mod:`views.map` into the user-facing ``MapView`` widget. All Qt
-signals exposed here are wired to the underlying sub-widgets.
-"""
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from views.hex_canvas import HexCanvas
 from views.map.body import MapBody
-from views.map.constants import (
-    TOOL_DESCRIPTION,
-    TOOL_ERASE,
-    TOOL_PAN,
-    TOOL_ROAD,
-    TOOL_SELECT,
-    TOOL_STRUCTURE,
-)
+from views.map.constants import TOOL_DESCRIPTION, TOOL_ERASE, TOOL_PAN, TOOL_ROAD, TOOL_SELECT, TOOL_STRUCTURE
 from views.map.description_editor import DescriptionEditor
 from views.map.export_dialog import ExportDialog
 from views.map.members_bar import MembersBar
@@ -30,8 +16,6 @@ from views.map.select_panel import SelectPanel
 from views.map.tool_strip import ToolStrip
 from views.map.toolbar import MapToolbar
 
-# Re-exported tool IDs (kept for backwards compatibility with callers
-# that previously imported them from ``views.map_view``).
 __all__ = [
     "MapView",
     "TOOL_SELECT",
@@ -42,18 +26,17 @@ __all__ = [
     "TOOL_PAN",
 ]
 
-
 class MapView(QWidget):
     request_back        = pyqtSignal()
     hex_selected        = pyqtSignal(int, int)
     hex_paint_clicked   = pyqtSignal(int, int)
     structure_selected   = pyqtSignal(str)
     road_color_selected  = pyqtSignal(str)
-    path_drawn           = pyqtSignal(list, str)         # waypoints, color
-    road_drawn           = path_drawn                   # alias
-    inner_edge_painted   = pyqtSignal(int, int, int, str)  # q, r, edge_index, color
+    path_drawn           = pyqtSignal(list, str)
+    road_drawn           = path_drawn
+    inner_edge_painted   = pyqtSignal(int, int, int, str)
     tool_changed         = pyqtSignal(str)
-    description_submitted = pyqtSignal(int, int, str)  # q, r, text
+    description_submitted = pyqtSignal(int, int, str)
     zoom_in_requested    = pyqtSignal()
     zoom_out_requested   = pyqtSignal()
     undo_requested       = pyqtSignal()
@@ -125,10 +108,6 @@ class MapView(QWidget):
         root.addWidget(self._body, 1)
         self._body.sync_panels(TOOL_SELECT)
 
-    # ------------------------------------------------------------------
-    # Internal signal handlers
-    # ------------------------------------------------------------------
-
     def _on_hex_clicked(self, q: int, r: int) -> None:
         self._select_panel.set_coord(q, r)
         if self._active_tool == TOOL_SELECT:
@@ -136,7 +115,7 @@ class MapView(QWidget):
             self.hex_selected.emit(q, r)
             self._body.sync_panels(TOOL_SELECT)
         elif self._active_tool in (TOOL_STRUCTURE, TOOL_DESCRIPTION, TOOL_ERASE):
-            # TOOL_ROAD is handled directly by HexCanvas.
+
             self.hex_paint_clicked.emit(q, r)
 
     def _on_hex_deselected(self) -> None:
@@ -176,13 +155,6 @@ class MapView(QWidget):
         self.canvas.zoom_out()
         self.zoom_out_requested.emit()
 
-    # ------------------------------------------------------------------
-    # Public API (controller)
-    # ------------------------------------------------------------------
-
-    def selected_road_color(self) -> str:
-        return self._road_panel.selected_color()
-
     def set_map(self, data: dict) -> None:
         self._active_tool = TOOL_SELECT
         self._description_editor.close_editor()
@@ -220,7 +192,6 @@ class MapView(QWidget):
         self.canvas.apply_tile(q, r, data)
 
     def refresh_inspector(self, q: int, r: int) -> None:
-        """Update inspector from current canvas state."""
         self._select_panel.set_inspection(
             tile=self.canvas.tile_at(q, r),
             road_segments=self.canvas.road_segments_at(q, r),
@@ -236,7 +207,6 @@ class MapView(QWidget):
         self._select_panel.set_server_details(details, error=error)
 
     def apply_server_tile(self, q: int, r: int, payload: dict) -> None:
-        """RF17: apply full server tile snapshot (or clear hex if empty)."""
         from models.tile_format import tile_from_server
 
         tile = tile_from_server(payload)
@@ -248,9 +218,6 @@ class MapView(QWidget):
     def prompt_description(self, q: int, r: int) -> None:
         current = self.canvas.description_text(q, r)
         self._description_editor.open_for(q, r, current)
-
-    def close_description_editor(self) -> None:
-        self._description_editor.close_editor()
 
     def open_export_dialog(self, default_path: str) -> None:
         self._export_dialog.open_for(default_path)

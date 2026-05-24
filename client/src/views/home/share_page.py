@@ -1,21 +1,11 @@
-"""Share-map page — shows editor / viewer invite codes."""
-
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QGuiApplication
-from PyQt6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 
 from styles.ui_constants import CARD_MARGINS, CARD_SPACING
 from views.home.helpers import centered, make_card, set_form_status
 from views.ui_buttons import make_compact_button, make_form_ghost_button
 from views.widgets import HexLogo
-
 
 class SharePage(QWidget):
     cancel = pyqtSignal()
@@ -53,12 +43,12 @@ class SharePage(QWidget):
         (
             self.editor_section,
             self.editor_input,
-            self.editor_copy,
+            _,
         ) = self._make_code_section("Editor invite")
         (
             self.viewer_section,
             self.viewer_input,
-            self.viewer_copy,
+            _,
         ) = self._make_code_section("Viewer invite")
 
         self.status_label = QLabel("")
@@ -117,10 +107,6 @@ class SharePage(QWidget):
         layout.addLayout(row)
         return section, code_input, copy_btn
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def populate(self, data: dict) -> None:
         self.subtitle.setText(data["name"])
         editor_code = data.get("editor_code")
@@ -146,10 +132,6 @@ class SharePage(QWidget):
                 "You do not have permission to view share codes for this map.",
                 "info",
             )
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     @staticmethod
     def _copy_code(code_input: QLineEdit, button: QPushButton) -> None:

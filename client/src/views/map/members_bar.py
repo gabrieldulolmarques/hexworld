@@ -1,17 +1,6 @@
-"""Left overlay card for the online-members list and Close button."""
-
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QScrollArea,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from styles.ui_constants import BTN_ACCENT, LABEL_CLOSE_MAP
 from views.map.constants import (
@@ -25,7 +14,6 @@ from views.map.icons import tinted_pixmap
 from views.map.panel import MapPanel
 from views.ui_buttons import make_toolbar_button
 from views.widgets import horizontal_divider
-
 
 def _make_user_row(username: str, role: str) -> tuple[QWidget, QLabel, QLabel]:
     row = QWidget()
@@ -54,7 +42,6 @@ def _make_user_row(username: str, role: str) -> tuple[QWidget, QLabel, QLabel]:
     layout.addWidget(name_lbl, 1)
     layout.addWidget(role_lbl, 0)
     return row, name_lbl, role_lbl
-
 
 class MembersBar(MapPanel):
     toggled = pyqtSignal()
@@ -199,20 +186,18 @@ class MembersBar(MapPanel):
         self._apply_row_elides()
 
     def apply_height_budget(self, budget: int) -> int:
-        """Update scroll cap for the viewport and return stable panel height."""
         self._height_budget = max(0, budget)
         self._update_list_height()
         return self.natural_height()
 
     def natural_height(self) -> int:
-        """Total panel height from layout (bottom-anchored positioning)."""
         chrome = self._chrome_height()
         if not self._expanded:
             return chrome
         return chrome + self._scroll.height()
 
     def _chrome_height(self) -> int:
-        margins = 18  # 9 top + 9 bottom
+        margins = 18
         header = self._header_widget.sizeHint().height()
         if not self._expanded:
             return margins + header
@@ -289,7 +274,6 @@ class MembersBar(MapPanel):
         self._apply_header_width(notify=True)
 
     def _apply_header_width(self, *, notify: bool = False) -> None:
-        """Reflow width after counts change so Close never overlaps the ratio."""
         self._header_widget.adjustSize()
         margins = 32
         header_w = self._header_widget.sizeHint().width()

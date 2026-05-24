@@ -1,27 +1,11 @@
-"""Right floating card — hex inspector when a cell is selected."""
-
 from __future__ import annotations
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
-from PyQt6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QScrollArea,
-    QSizePolicy,
-    QTextBrowser,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QTextBrowser, QVBoxLayout, QWidget
 
 from models.asset_registry import REGISTRY
-from models.inspector_format import (
-    format_editor_meta,
-    format_tile_record_lines,
-    inner_edge_summary,
-    structure_display,
-)
+from models.inspector_format import format_editor_meta, format_tile_record_lines, inner_edge_summary, structure_display
 from styles.colors import GREEN_PRIMARY
 from views.map.constants import SIDE_PANEL_W
 from views.map.panel import MapPanel
@@ -57,7 +41,6 @@ blockquote {{
 a {{ color: #bbf7d0; text-decoration: none; }}
 strong, b {{ color: #ffffff; font-weight: 600; }}
 """
-
 
 class SelectPanel(MapPanel):
     def __init__(self) -> None:

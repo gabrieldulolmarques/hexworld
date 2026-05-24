@@ -1,9 +1,3 @@
-"""Home top-level view.
-
-Thin facade that composes the top bar, the maps grid and the auxiliary
-form pages (create / join / share) defined under :mod:`views.home`.
-"""
-
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QStackedWidget, QVBoxLayout, QWidget
 
@@ -18,24 +12,19 @@ _PAGE_CREATE = 1
 _PAGE_JOIN   = 2
 _PAGE_SHARE  = 3
 
-
 class HomeView(QWidget):
     request_logout         = pyqtSignal()
-    request_create_map     = pyqtSignal(str)   # name
-    request_join_map       = pyqtSignal(str)   # invite_code
-    request_open_map       = pyqtSignal(str)   # map_id
-    request_dissociate_map = pyqtSignal(str)   # map_id
-    request_delete_map     = pyqtSignal(str)   # map_id
+    request_create_map     = pyqtSignal(str)
+    request_join_map       = pyqtSignal(str)
+    request_open_map       = pyqtSignal(str)
+    request_dissociate_map = pyqtSignal(str)
+    request_delete_map     = pyqtSignal(str)
 
     def __init__(self) -> None:
         super().__init__()
         self.setObjectName("root")
         self._setup_ui()
         self._wire_signals()
-
-    # ------------------------------------------------------------------
-    # Build
-    # ------------------------------------------------------------------
 
     def _setup_ui(self) -> None:
         self._top_bar     = HomeTopBar()
@@ -45,10 +34,10 @@ class HomeView(QWidget):
         self._share_page  = SharePage()
 
         self._body = QStackedWidget()
-        self._body.addWidget(self._map_grid)     # _PAGE_HOME
-        self._body.addWidget(self._create_page)  # _PAGE_CREATE
-        self._body.addWidget(self._join_page)    # _PAGE_JOIN
-        self._body.addWidget(self._share_page)   # _PAGE_SHARE
+        self._body.addWidget(self._map_grid)
+        self._body.addWidget(self._create_page)
+        self._body.addWidget(self._join_page)
+        self._body.addWidget(self._share_page)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -57,27 +46,21 @@ class HomeView(QWidget):
         root.addWidget(self._body, 1)
 
     def _wire_signals(self) -> None:
-        # Top bar
+
         self._top_bar.logout_clicked.connect(self.request_logout)
         self._top_bar.create_clicked.connect(self._show_create_page)
         self._top_bar.join_clicked.connect(self._show_join_page)
 
-        # Map grid
         self._map_grid.open_clicked.connect(self.request_open_map)
         self._map_grid.share_clicked.connect(self._open_share_page)
         self._map_grid.dissociate_clicked.connect(self.request_dissociate_map)
         self._map_grid.delete_clicked.connect(self.request_delete_map)
 
-        # Forms
         self._create_page.submit_create.connect(self.request_create_map)
         self._create_page.cancel.connect(self._show_home_page)
         self._join_page.submit_join.connect(self.request_join_map)
         self._join_page.cancel.connect(self._show_home_page)
         self._share_page.cancel.connect(self._show_home_page)
-
-    # ------------------------------------------------------------------
-    # Public API (controller)
-    # ------------------------------------------------------------------
 
     def set_user(self, username: str) -> None:
         self._top_bar.set_user(username)
@@ -121,10 +104,6 @@ class HomeView(QWidget):
 
     def show_message(self, message: str, level: str = "info") -> None:
         self._map_grid.show_message(message, level)
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _go(self, page: int) -> None:
         self._body.setCurrentIndex(page)

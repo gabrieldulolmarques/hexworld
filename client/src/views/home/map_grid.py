@@ -1,35 +1,16 @@
-"""Maps grid + empty state + status label.
-
-The empty state shows the HexWorld logo card while the grid view appears
-once the user has at least one map.
-"""
-
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QScrollArea,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QSizePolicy, QVBoxLayout, QWidget
 
 from styles.ui_constants import CARD_WIDTH
 from views.home.helpers import make_card
 from views.map_card import MapCard
-from views.widgets import (
-    HexLogo,
-    StatusMixin,
-)
+from views.widgets import HexLogo, StatusMixin
 
 _GRID_COLS = 3
 _GRID_GAP = 14
 _GRID_MARGIN_H = 64
 
-
 class MapGrid(StatusMixin, QWidget):
-    """Scrollable grid of MapCards; falls back to a friendly empty state."""
 
     open_clicked       = pyqtSignal(str)
     share_clicked      = pyqtSignal(str)
@@ -128,10 +109,6 @@ class MapGrid(StatusMixin, QWidget):
         wlayout.addStretch(1)
         return wrapper
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def maps(self) -> list[dict]:
         return self._maps_data
 
@@ -166,10 +143,6 @@ class MapGrid(StatusMixin, QWidget):
                 m["role"] = role
                 break
         self._rebuild_cards()
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _connect_card(self, card: MapCard) -> None:
         card.open_clicked.connect(self.open_clicked)

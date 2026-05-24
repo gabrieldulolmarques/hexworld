@@ -2,14 +2,7 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics
-from PyQt6.QtWidgets import (
-    QFrame,
-    QHBoxLayout,
-    QLabel,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 from styles.ui_constants import (
     BTN_MAP_CARD_DANGER,
@@ -25,14 +18,12 @@ from views.ui_buttons import make_map_card_button
 CARD_WIDTH = MAP_CARD_WIDTH
 CARD_HEIGHT = 200
 
-
 def _format_date(raw: str) -> str:
     try:
         dt = datetime.strptime(raw, "%Y-%m-%d %H:%M:%S")
         return dt.strftime("%b %d, %Y")
     except Exception:
         return raw
-
 
 class MapCard(QFrame):
     open_clicked       = pyqtSignal(str)

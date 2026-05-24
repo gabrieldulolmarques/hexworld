@@ -29,7 +29,6 @@ class TransportWorker(QThread):
         return True
 
     def reset(self) -> None:
-        """Prepare for a fresh start() after a previous run ended. Drains stale queue."""
         while not self._outgoing.empty():
             try:
                 self._outgoing.get_nowait()

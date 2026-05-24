@@ -1,16 +1,7 @@
-"""MapBody — hosts the canvas and positions all overlay panels."""
-
 from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from views.hex_canvas import HexCanvas
-from views.map.constants import (
-    PANEL_MARGIN,
-    PANEL_MIN_H,
-    RIGHT_COLUMN_GAP,
-    TOOL_ROAD,
-    TOOL_SELECT,
-    TOOL_STRUCTURE,
-)
+from views.map.constants import PANEL_MARGIN, PANEL_MIN_H, RIGHT_COLUMN_GAP, TOOL_ROAD, TOOL_SELECT, TOOL_STRUCTURE
 from views.map.description_editor import DescriptionEditor
 from views.map.export_dialog import ExportDialog
 from views.map.members_bar import MembersBar
@@ -22,9 +13,7 @@ from views.map.select_panel import SelectPanel
 from views.map.tool_strip import ToolStrip
 from views.map.toolbar import MapToolbar
 
-
 class MapBody(QWidget):
-    """Canvas with all floating panels as overlays."""
 
     def __init__(
         self,
@@ -86,7 +75,6 @@ class MapBody(QWidget):
         self._reposition_panels()
 
     def reposition_panels(self) -> None:
-        """Public alias for code outside the package."""
         self._reposition_panels()
 
     def _reposition_panels(self) -> None:
@@ -133,7 +121,6 @@ class MapBody(QWidget):
         self._export_dialog.setGeometry(self.rect())
 
     def _place_members_bar(self) -> None:
-        """Anchor members bar to the bottom-left without shifting other panels."""
         m = PANEL_MARGIN
         h = self.height()
         mb = self._members_bar

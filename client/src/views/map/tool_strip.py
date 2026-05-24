@@ -1,26 +1,15 @@
-"""Vertical strip of mode (checkable) + action (one-shot) tool buttons."""
-
-from PyQt6.QtCore import QSize, Qt, pyqtSignal, QEvent
+from PyQt6.QtCore import QEvent, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QButtonGroup, QToolButton, QVBoxLayout
 
 from styles.colors import GREEN_PRIMARY, GREEN_TINT, RED_PRIMARY, RED_TEXT
-
-from views.map.constants import (
-    TOOL_DESCRIPTION,
-    TOOL_ERASE,
-    TOOL_PAN,
-    TOOL_ROAD,
-    TOOL_SELECT,
-    TOOL_STRUCTURE,
-)
+from views.map.constants import TOOL_DESCRIPTION, TOOL_ERASE, TOOL_PAN, TOOL_ROAD, TOOL_SELECT, TOOL_STRUCTURE
 from views.map.icons import tinted_pixmap
 from views.map.panel import MapPanel
 from views.widgets import horizontal_divider
 
 _TOOL_BTN_SIZE = 44
 
-# Mode tools — checkable, exclusive (id, icon file, tooltip).
 _TOOLS: tuple[tuple[str, str, str], ...] = (
     (TOOL_SELECT,      "tool-select.svg",      "Select"),
     (TOOL_PAN,         "tool-pan.svg",         "Pan"),
@@ -30,7 +19,6 @@ _TOOLS: tuple[tuple[str, str, str], ...] = (
     (TOOL_ERASE,       "tool-erase.svg",       "Erase"),
 )
 
-# Action buttons — one-shot, not checkable.
 _ACTIONS: tuple[tuple[str, str, str], ...] = (
     ("zoom_in",  "tool-zoom-in.svg",  "Zoom in"),
     ("zoom_out", "tool-zoom-out.svg", "Zoom out"),
@@ -38,7 +26,6 @@ _ACTIONS: tuple[tuple[str, str, str], ...] = (
     ("redo",     "tool-redo.svg",     "Redo"),
     ("export",   "tool-export.svg",   "Export"),
 )
-
 
 class ToolStrip(MapPanel):
     tool_changed     = pyqtSignal(str)
