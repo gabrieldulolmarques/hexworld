@@ -13,7 +13,7 @@ _MINIMAP_W = SIDE_PANEL_W
 _MINIMAP_H = MINIMAP_H
 _MINIMAP_PAD = 14
 _MINIMAP_RADIUS = 12.0
-_MINIMAP_HEX_SIZE = 10.0
+_MINIMAP_HEX_SIZE_MIN = 8.0
 
 def _viewport_fill() -> QColor:
     r, g, b = (int(part.strip()) for part in GREEN_PRIMARY_RGB.split(","))
@@ -27,6 +27,8 @@ class MinimapWidget(MapPanel):
         super().__init__("mapMinimap", parent)
         self._canvas = canvas
         self._pixmap = None
+        self._map_hex_size = _MINIMAP_HEX_SIZE_MIN
+        self._cached_dpr = 1.0
         self._map_min_x = 0.0
         self._map_min_y = 0.0
         self._map_w = 0.0
@@ -46,10 +48,24 @@ class MinimapWidget(MapPanel):
         self.update()
 
     def _ensure_cache(self) -> None:
-        if not self._cache_dirty:
+        dpr = max(1.0, self.devicePixelRatioF())
+        if not self._cache_dirty and dpr == self._cached_dpr:
             return
         self._cache_dirty = False
-        rendered = self._canvas.render_minimap_image(_MINIMAP_HEX_SIZE)
+        self._cached_dpr = dpr
+
+        inner_w = max(1.0, self.width() - 2 * _MINIMAP_PAD)
+        inner_h = max(1.0, self.height() - 2 * _MINIMAP_PAD)
+        target_w = inner_w * dpr
+        target_h = inner_h * dpr
+        hex_size = self._canvas.minimap_hex_size_for(
+            target_w,
+            target_h,
+            min_hex=_MINIMAP_HEX_SIZE_MIN,
+        )
+        self._map_hex_size = hex_size
+
+        rendered = self._canvas.render_minimap_image(hex_size)
         if rendered is None:
             self._pixmap = None
             self._map_w = 0.0
@@ -89,6 +105,7 @@ class MinimapWidget(MapPanel):
 
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
 
         outer = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
         painter.setClipPath(self._rounded_path(outer, _MINIMAP_RADIUS))
@@ -114,7 +131,7 @@ class MinimapWidget(MapPanel):
         painter.drawPixmap(target, self._pixmap)
 
         viewport = self._canvas.viewport_rect_in_map_image(
-            _MINIMAP_HEX_SIZE,
+            self._map_hex_size,
             self._map_min_x,
             self._map_min_y,
         )
@@ -153,7 +170,7 @@ class MinimapWidget(MapPanel):
         self._canvas.pan_to_map_image_point(
             image_x,
             image_y,
-            _MINIMAP_HEX_SIZE,
+            self._map_hex_size,
             self._map_min_x,
             self._map_min_y,
         )

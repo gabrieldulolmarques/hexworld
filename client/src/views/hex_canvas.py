@@ -401,6 +401,34 @@ class HexCanvas(QWidget):
     def _export_scale(self) -> float:
         return max(1.0, self.devicePixelRatioF(), _EXPORT_SCALE_MIN)
 
+    def minimap_hex_size_for(
+        self,
+        target_w: float,
+        target_h: float,
+        *,
+        min_hex: float = 8.0,
+    ) -> float:
+        coords = self._export_coords()
+        if not coords or target_w <= 0 or target_h <= 0:
+            return min_hex
+
+        lo = min_hex
+        hi = max(min_hex, target_w, target_h) * 2.0
+        result = hi
+        for _ in range(32):
+            mid = (lo + hi) / 2.0
+            bounds = self._export_bounds(coords, mid)
+            if bounds is None:
+                hi = mid
+                continue
+            _min_x, _min_y, width, height = bounds
+            if width >= target_w and height >= target_h:
+                result = mid
+                hi = mid
+            else:
+                lo = mid
+        return max(min_hex, result)
+
     def render_minimap_image(
         self,
         hex_size: float = 8.0,
@@ -424,6 +452,7 @@ class HexCanvas(QWidget):
 
             painter = QPainter(image)
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
             try:
                 self._paint_map(
                     painter,
