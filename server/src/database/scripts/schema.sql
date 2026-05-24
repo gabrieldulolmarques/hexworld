@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS user (
     id TEXT PRIMARY KEY NOT NULL,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS session (
@@ -10,7 +11,8 @@ CREATE TABLE IF NOT EXISTS session (
     user_id TEXT NOT NULL REFERENCES user (id) ON DELETE CASCADE,
     token TEXT UNIQUE NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    expires_at TEXT NOT NULL
+    expires_at TEXT NOT NULL,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS map (
@@ -18,7 +20,8 @@ CREATE TABLE IF NOT EXISTS map (
     name TEXT NOT NULL,
     editor_code TEXT UNIQUE NOT NULL,
     viewer_code TEXT UNIQUE NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS user_map (
@@ -28,6 +31,7 @@ CREATE TABLE IF NOT EXISTS user_map (
         role IN ('owner', 'editor', 'viewer')
     ) DEFAULT 'viewer',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, map_id)
 );
 
@@ -43,6 +47,7 @@ CREATE TABLE IF NOT EXISTS tile (
     q INTEGER NOT NULL,
     r INTEGER NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (map_id, q, r)
 );
 
@@ -50,20 +55,39 @@ CREATE TABLE IF NOT EXISTS structure (
     tile_id TEXT PRIMARY KEY REFERENCES tile (id) ON DELETE CASCADE,
     type TEXT NOT NULL,
     author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS road (
     id TEXT PRIMARY KEY NOT NULL,
-    tile_id TEXT NOT NULL REFERENCES tile (id) ON DELETE CASCADE,
+    map_id TEXT NOT NULL REFERENCES map (id) ON DELETE CASCADE,
+    waypoints TEXT NOT NULL,  -- JSON segment [[q1,r1],[q2,r2]]
     color TEXT NOT NULL,
     author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS road_map_color_idx
+    ON road (map_id, color);
+
+CREATE TABLE IF NOT EXISTS hex_inner_edge (
+    map_id TEXT NOT NULL REFERENCES map (id) ON DELETE CASCADE,
+    q INTEGER NOT NULL,
+    r INTEGER NOT NULL,
+    edges INTEGER NOT NULL CHECK (edges >= 0 AND edges <= 63),
+    color TEXT NOT NULL,
+    author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (map_id, q, r)
 );
 
 CREATE TABLE IF NOT EXISTS description (
     tile_id TEXT PRIMARY KEY REFERENCES tile (id) ON DELETE CASCADE,
     text TEXT NOT NULL,
     author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
