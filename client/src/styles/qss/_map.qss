@@ -88,6 +88,7 @@ QWidget#mapBottomBar {
 QWidget#mapSelectPanel QLabel#title {
     font-size: 20px;
     font-weight: 600;
+    qproperty-alignment: AlignCenter;
 }
 
 QTextBrowser#tileInfoBrowser {
@@ -132,9 +133,150 @@ QWidget#biomeTabStrip {
     border-radius: 10px;
 }
 
+QScrollArea#inspectorScroll {
+    background: transparent;
+    border: none;
+}
+
+QWidget#inspectorBody {
+    background: transparent;
+}
+
+QFrame#inspectorSection,
+QFrame#inspectorConnectionsSection {
+    background-color: #141416;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+}
+
+QFrame#inspectorStructureHeader {
+    background-color: #141416;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+}
+
+QLabel#inspectorStructureName {
+    color: #f4f4f5;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+QLabel#inspectorStructureBiome {
+    color: #a1a1aa;
+    font-size: 13px;
+}
+
+QFrame#inspectorFooter,
+QFrame#inspectorTileRecord {
+    background-color: #1a1a1e;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+}
+
+QLabel#inspectorFooterNote {
+    color: #71717a;
+    font-size: 12px;
+    padding: 6px 4px;
+}
+
+QLabel#inspectorDescMeta {
+    color: #a1a1aa;
+    font-size: 12px;
+}
+
+QFrame#inspectorDescSection {
+    background-color: #141416;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+}
+
+QWidget#inspectorDescHost {
+    background: transparent;
+}
+
+QLabel#inspectorValue {
+    color: #e4e4e7;
+    font-size: 14px;
+}
+
+QLabel#inspectorTileRecordTitle {
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+}
+
+QLabel#inspectorTileRecordLine {
+    color: #d4d4d8;
+    font-size: 13px;
+}
+
+QTextBrowser#inspectorDescBrowser {
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+    selection-background-color: rgba(94, 165, 0, 0.35);
+    selection-color: #ffffff;
+}
+
+QTextBrowser#inspectorDescBrowser QScrollBar:vertical {
+    background-color: transparent;
+    width: 8px;
+    margin: 2px 0;
+}
+
+QTextBrowser#inspectorDescBrowser QScrollBar::handle:vertical {
+    background-color: #3f3f46;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QLabel#inspectorMetaLine {
+    color: #a1a1aa;
+    font-size: 12px;
+    padding-top: 2px;
+}
+
+QLabel#inspectorBanner {
+    color: #a1a1aa;
+    font-size: 13px;
+    padding: 10px 8px;
+}
+
+QLabel#inspectorBanner[level="error"] {
+    color: #f87171;
+}
+
+QLabel#inspectorBanner[level="info"] {
+    color: #9f9fa9;
+}
+
+QWidget#inspectorPreview {
+    background: transparent;
+    border: none;
+}
+
+QScrollArea#inspectorScroll QScrollBar:vertical {
+    background: transparent;
+    width: 8px;
+    margin: 2px 0;
+}
+
+QScrollArea#inspectorScroll QScrollBar::handle:vertical {
+    background-color: #3f3f46;
+    border-radius: 4px;
+    min-height: 24px;
+}
+
+QScrollArea#inspectorScroll QScrollBar::add-line:vertical,
+QScrollArea#inspectorScroll QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
 QWidget#mapSelectPanel QLabel#fieldLabel,
 QWidget#mapBottomBar QLabel#fieldLabel,
-QWidget#mapPalette QLabel#fieldLabel {
+QWidget#mapPalette QLabel#fieldLabel,
+QWidget#mapRoadPanel QLabel#fieldLabel {
     color: #9f9fa9;
     font-size: 13px;
     font-weight: 600;
@@ -265,6 +407,30 @@ QWidget#mapRoadPanel QLineEdit:focus {
     border-color: #5ea500;
 }
 
+QWidget#mapRoadPanel QRadioButton {
+    color: #d4d4d8;
+    font-size: 14px;
+    font-weight: 600;
+    spacing: 8px;
+}
+
+QWidget#mapRoadPanel QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+QWidget#mapRoadPanel QRadioButton::indicator:unchecked {
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    background-color: #09090b;
+}
+
+QWidget#mapRoadPanel QRadioButton::indicator:checked {
+    border: 4px solid #5ea500;
+    border-radius: 8px;
+    background-color: #d8f999;
+}
+
 QWidget#roadSavedRow {
     background: transparent;
 }
@@ -277,7 +443,12 @@ QWidget#descriptionEditorBackdrop {
     background-color: rgba(9, 9, 11, 0.72);
 }
 
-QWidget#descriptionEditorCard {
+QWidget#exportDialogBackdrop {
+    background-color: rgba(9, 9, 11, 0.72);
+}
+
+QWidget#descriptionEditorCard,
+QWidget#exportDialogCard {
     background-color: #18181b;
     border: 1px solid #3f3f46;
     border-radius: 12px;
@@ -302,6 +473,25 @@ QTextEdit#descriptionEditorInput {
 
 QTextEdit#descriptionEditorInput:focus {
     border-color: #5ea500;
+}
+
+QLineEdit#exportDialogPath {
+    background-color: #09090b;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    color: #e4e4e7;
+    padding: 12px 16px;
+    font-size: 15px;
+    selection-background-color: rgba(94, 165, 0, 0.35);
+}
+
+QLineEdit#exportDialogPath:focus {
+    border-color: #5ea500;
+}
+
+QLineEdit#exportDialogPath:disabled {
+    color: #71717b;
+    background-color: #141416;
 }
 
 QTextEdit#descriptionEditorInput QScrollBar:vertical {
