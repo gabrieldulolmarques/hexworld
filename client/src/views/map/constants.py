@@ -10,10 +10,9 @@ TOOL_DESCRIPTION = "description"
 TOOL_ERASE       = "erase"
 TOOL_PAN         = "pan"
 
-# Members bar (bottom-left): scroll from N users; cap growth at tool strip
+# Members bar: scroll from N users; cap growth inside the left overlay column
 MEMBERS_SCROLL_THRESHOLD = 5
 MEMBERS_VISIBLE_ROWS = 4
-MEMBERS_ROW_H = 28
-MEMBERS_ROW_GAP = 6
-MEMBERS_PANEL_GAP = 8   # min space between members card top and tool strip bottom
+MEMBERS_ROW_H = 26
+MEMBERS_ROW_GAP = 5
 MEMBERS_BAR_MAX_W = 400   # cap horizontal growth (align with side panels)
