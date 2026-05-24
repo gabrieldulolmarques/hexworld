@@ -3,7 +3,10 @@ Asset registry for map tiles.
 
 Directory layout: assets/map/{biome}/{biome}_{nn}_{key}.png
 structure.type in the DB = filename stem = '{biome}_{nn}_{key}'
-  e.g. 'greenlands_11_village', 'forest_14_village', 'deadlands_18_ruins'
+  e.g. 'greenlands_11_village', 'forest_14_village', 'deadlands_00_empty'
+
+Each terrain biome (except forest and mountain) includes a biome-tinted
+``{biome}_00_empty`` tile. There is no shared empty biome folder.
 
 Access: REGISTRY.pixmap('greenlands_11_village', hex_size) → flat-top QPixmap
 """
@@ -17,6 +20,16 @@ from PyQt6.QtGui import QPainter, QPainterPath, QPixmap
 from geometry import hex_vertices
 
 _ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets" / "map"
+
+_BIOME_ORDER = (
+    "deadlands",
+    "drylands",
+    "forest",
+    "greenlands",
+    "icelands",
+    "mountain",
+    "sandlands",
+)
 
 
 @dataclass(frozen=True)
@@ -41,7 +54,9 @@ class AssetRegistry:
     # ------------------------------------------------------------------
 
     def biomes(self) -> list[str]:
-        return sorted(self._by_biome)
+        ordered = [b for b in _BIOME_ORDER if b in self._by_biome]
+        extra = sorted(b for b in self._by_biome if b not in _BIOME_ORDER)
+        return ordered + extra
 
     def tiles(self, biome: str) -> list[TileInfo]:
         return self._by_biome.get(biome, [])
