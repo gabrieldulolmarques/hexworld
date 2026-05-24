@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 )
 
 from views.title_bar import WindowTitleBar
+from views.widgets import hex_logo_icon
 
 class MainView(QMainWindow):
     SHADOW_MARGIN = 10
@@ -17,6 +18,7 @@ class MainView(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("HexWorld")
+        self.setWindowIcon(hex_logo_icon())
         self.setObjectName("mainView")
         self.setMinimumSize(960, 600)
         self.resize(1280, 800)
