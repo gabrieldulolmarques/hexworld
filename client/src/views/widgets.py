@@ -1,8 +1,10 @@
 from math import cos, radians, sin
 
 from PyQt6.QtCore import QPointF, QSize, Qt
-from PyQt6.QtGui import QColor, QPainter, QPaintEvent, QPolygonF
+from PyQt6.QtGui import QColor, QIcon, QPainter, QPaintEvent, QPixmap, QPolygonF
 from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QLabel, QWidget
+
+from styles.colors import GREEN_PRIMARY, GREEN_TINT
 
 class StatusMixin:
     status_label: QLabel
@@ -26,32 +28,52 @@ class HexLogo(QWidget):
     def paintEvent(self, _event: QPaintEvent) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        _paint_hex_logo(painter, self._size)
 
-        cx = self._size / 2
-        cy = self._size / 2
-        outer = self._size / 2 - 4
 
-        outer_hex = self._hexagon(cx, cy, outer)
-        painter.setBrush(QColor("#5ea500"))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawPolygon(outer_hex)
+def hex_logo_pixmap(size: int) -> QPixmap:
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    _paint_hex_logo(painter, size)
+    painter.end()
+    return pixmap
 
-        inner_hex = self._hexagon(cx, cy, outer * 0.62)
-        painter.setBrush(QColor("#09090b"))
-        painter.drawPolygon(inner_hex)
 
-        core_hex = self._hexagon(cx, cy, outer * 0.32)
-        painter.setBrush(QColor("#d8f999"))
-        painter.drawPolygon(core_hex)
+def hex_logo_icon() -> QIcon:
+    icon = QIcon()
+    for size in (16, 24, 32, 48, 64, 128, 256):
+        icon.addPixmap(hex_logo_pixmap(size))
+    return icon
 
-    @staticmethod
-    def _hexagon(cx: float, cy: float, radius: float) -> QPolygonF:
-        # flat-top: 0° offset → flat edge at top/bottom, vertex on sides
-        polygon = QPolygonF()
-        for i in range(6):
-            angle = radians(60 * i)
-            polygon.append(QPointF(cx + radius * cos(angle), cy + radius * sin(angle)))
-        return polygon
+
+def _paint_hex_logo(painter: QPainter, size: int) -> None:
+    cx = size / 2
+    cy = size / 2
+    outer = size / 2 - min(4, size / 4)
+
+    outer_hex = _hexagon(cx, cy, outer)
+    painter.setBrush(QColor(GREEN_PRIMARY))
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.drawPolygon(outer_hex)
+
+    inner_hex = _hexagon(cx, cy, outer * 0.62)
+    painter.setBrush(QColor("#09090b"))
+    painter.drawPolygon(inner_hex)
+
+    core_hex = _hexagon(cx, cy, outer * 0.32)
+    painter.setBrush(QColor(GREEN_TINT))
+    painter.drawPolygon(core_hex)
+
+
+def _hexagon(cx: float, cy: float, radius: float) -> QPolygonF:
+    # flat-top: 0° offset → flat edge at top/bottom, vertex on sides
+    polygon = QPolygonF()
+    for i in range(6):
+        angle = radians(60 * i)
+        polygon.append(QPointF(cx + radius * cos(angle), cy + radius * sin(angle)))
+    return polygon
 
 def apply_panel_style(widget: QWidget) -> None:
     """Enable QSS background/border on panel widgets (#card, #heroCard)."""
