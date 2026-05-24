@@ -1,18 +1,9 @@
-"""Floating overlay for exporting the current map to PNG."""
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QKeySequence, QShortcut
-from PyQt6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from views.map.panel import styled
 from views.ui_buttons import make_form_ghost_button, make_form_primary_button
-
 
 class ExportDialog(QWidget):
     submitted = pyqtSignal(str)
@@ -87,10 +78,6 @@ class ExportDialog(QWidget):
         save.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         save.activated.connect(self._on_export)
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def open_for(self, default_path: str) -> None:
         self._path_input.setText(default_path)
         self._set_status("", "info")
@@ -115,10 +102,6 @@ class ExportDialog(QWidget):
     def show_error(self, message: str) -> None:
         self.set_busy(False)
         self._set_status(message, "error")
-
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
 
     def _sync_export_enabled(self) -> None:
         self._export_btn.setEnabled(bool(self._path_input.text().strip()))

@@ -1,13 +1,6 @@
 from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (
-    QFrame,
-    QGraphicsDropShadowEffect,
-    QMainWindow,
-    QStackedWidget,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QMainWindow, QStackedWidget, QVBoxLayout, QWidget
 
 from views.title_bar import WindowTitleBar
 from views.widgets import hex_logo_icon

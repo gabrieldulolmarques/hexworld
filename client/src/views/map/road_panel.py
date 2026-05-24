@@ -1,16 +1,6 @@
-"""Road panel — submode controls, curve actions, color picker and swatches."""
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (
-    QButtonGroup,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QRadioButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QButtonGroup, QHBoxLayout, QLabel, QLineEdit, QRadioButton, QVBoxLayout, QWidget
 
 from views.map.constants import SIDE_PANEL_W
 from views.map.hex_wheel import HexWheel
@@ -19,14 +9,13 @@ from views.widgets import horizontal_divider
 
 _ROAD_COLOR_DEFAULT = "#5ea500"
 _SAVED_COLS = 7
-_MAX_SAVED_COLORS = _SAVED_COLS * 2   # 2 linhas × 7 colunas = 14
+_MAX_SAVED_COLORS = _SAVED_COLS * 2
 _SAVED_SWATCH = 42
 _SAVED_GAP = 6
 
-
 class RoadColorPanel(MapPanel):
     road_color_selected = pyqtSignal(str)
-    road_submode_changed = pyqtSignal(str)  # "curve" | "inner_edge"
+    road_submode_changed = pyqtSignal(str)
 
     def __init__(self) -> None:
         super().__init__("mapRoadPanel")
@@ -41,21 +30,21 @@ class RoadColorPanel(MapPanel):
         submode_label.setObjectName("fieldLabel")
         submode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self._curve_radio = QRadioButton("Curve road")
+        self._road_radio = QRadioButton("Road")
         self._inner_radio = QRadioButton("Inner edge")
-        self._curve_radio.setChecked(True)
+        self._road_radio.setChecked(True)
         self._submode_group = QButtonGroup(self)
         self._submode_group.setExclusive(True)
-        self._submode_group.addButton(self._curve_radio)
+        self._submode_group.addButton(self._road_radio)
         self._submode_group.addButton(self._inner_radio)
-        self._curve_radio.toggled.connect(self._on_submode_toggled)
+        self._road_radio.toggled.connect(self._on_submode_toggled)
         self._inner_radio.toggled.connect(self._on_submode_toggled)
 
         submode_row = QHBoxLayout()
         submode_row.setContentsMargins(0, 0, 0, 0)
         submode_row.setSpacing(32)
         submode_row.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        submode_row.addWidget(self._curve_radio)
+        submode_row.addWidget(self._road_radio)
         submode_row.addWidget(self._inner_radio)
 
         self._wheel = HexWheel()
@@ -86,7 +75,7 @@ class RoadColorPanel(MapPanel):
         self._saved_wrap = QWidget()
         styled(self._saved_wrap)
         self._saved_wrap.setObjectName("roadSavedRow")
-        # tamanho fixo para 2 linhas × _SAVED_COLS colunas — nunca expande
+
         self._saved_wrap.setFixedSize(
             _SAVED_COLS * _SAVED_SWATCH + (_SAVED_COLS - 1) * _SAVED_GAP,
             2 * _SAVED_SWATCH + _SAVED_GAP,
@@ -144,10 +133,10 @@ class RoadColorPanel(MapPanel):
 
     def _add_saved(self, hex_str: str) -> None:
         if hex_str in self._saved:
-            return  # já salva, não duplicar nem mover
-        self._saved.append(hex_str)          # nova cor vai para a direita
+            return
+        self._saved.append(hex_str)
         if len(self._saved) > _MAX_SAVED_COLORS:
-            self._saved.pop(0)               # remove a mais antiga (esquerda)
+            self._saved.pop(0)
         self._rebuild_saved()
 
     def _rebuild_saved(self) -> None:
@@ -155,7 +144,7 @@ class RoadColorPanel(MapPanel):
             item = self._saved_rows_layout.takeAt(0)
             w = item.widget()
             if w:
-                w.setParent(None)  # type: ignore[arg-type]
+                w.setParent(None)
 
         for start in range(0, len(self._saved), _SAVED_COLS):
             chunk = self._saved[start : start + _SAVED_COLS]
@@ -174,7 +163,7 @@ class RoadColorPanel(MapPanel):
                 )
                 swatch.setToolTip(color)
                 swatch.setCursor(Qt.CursorShape.PointingHandCursor)
-                swatch.mousePressEvent = lambda e, c=color: self._on_saved_click(c)  # type: ignore[assignment]
+                swatch.mousePressEvent = lambda e, c=color: self._on_saved_click(c)
                 row_layout.addWidget(swatch)
             self._saved_rows_layout.addWidget(
                 row_widget,
@@ -189,4 +178,4 @@ class RoadColorPanel(MapPanel):
         return self._hex_input.text() or _ROAD_COLOR_DEFAULT
 
     def selected_submode(self) -> str:
-        return "inner_edge" if self._inner_radio.isChecked() else "curve"
+        return "inner_edge" if self._inner_radio.isChecked() else "road"

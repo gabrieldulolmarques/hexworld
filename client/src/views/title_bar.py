@@ -1,10 +1,9 @@
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter, QPen
+from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QWidget
 
 from styles.colors import RED_PRIMARY
 from views.widgets import HexLogo
-
 
 class _CtrlButton(QPushButton):
     BG_NORMAL = QColor("#09090b")

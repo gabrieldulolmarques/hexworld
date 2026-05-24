@@ -1,26 +1,22 @@
-"""Hex color wheel used by the road-color picker."""
-
 import math
 
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter, QPen, QPolygonF
 from PyQt6.QtWidgets import QWidget
 
-
 class HexWheel(QWidget):
-    """Hex color wheel matching the reference image style."""
 
     color_picked = pyqtSignal(str)
 
     _RADIUS = 5
-    _CELL = 15   # pixel radius of each hex cell
+    _CELL = 15
 
     def __init__(self) -> None:
         super().__init__()
         self._selected: tuple[int, int] | None = None
         self._hovered:  tuple[int, int] | None = None
         self._cells: list[tuple[int, int, QColor]] = self._build()
-        # flat-top hex grid bounding box:  w = s*(3R+2),  h = sqrt(3)*s*(2R+1)
+
         w = int(self._CELL * (3 * self._RADIUS + 2)) + 8
         h = int(math.sqrt(3) * self._CELL * (2 * self._RADIUS + 1)) + 8
         self.setFixedSize(w, h)
@@ -38,7 +34,7 @@ class HexWheel(QWidget):
                 if d == 0:
                     color = QColor("#ffffff")
                 else:
-                    # flat-top layout angle (hue mapping)
+
                     x = q * 1.5
                     y = math.sqrt(3) * (r + q * 0.5)
                     angle = math.degrees(math.atan2(y, x)) % 360
@@ -59,7 +55,7 @@ class HexWheel(QWidget):
         return cells
 
     def _center(self, q: int, r: int) -> QPointF:
-        # flat-top layout: x = 1.5*s*q,  y = sqrt(3)*s*(r + q/2)
+
         s = self._CELL
         cx = self.width() / 2
         cy = self.height() / 2
@@ -69,7 +65,7 @@ class HexWheel(QWidget):
         )
 
     def _polygon(self, cx: float, cy: float) -> QPolygonF:
-        # flat-top cell: offset 0° → flat edge at top/bottom, vertex at sides
+
         s = self._CELL - 1.0
         pts = [
             QPointF(cx + s * math.cos(math.radians(60 * i)),
@@ -132,7 +128,6 @@ class HexWheel(QWidget):
                 self.color_picked.emit(color.name())
 
     def select_color(self, hex_str: str) -> None:
-        """Highlight the cell closest to the given hex color."""
         target = QColor(hex_str)
         if not target.isValid():
             return

@@ -1,13 +1,11 @@
-"""Small map preview overlay with viewport indicator."""
-
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, QRectF
-from PyQt6.QtGui import QColor, QPainter, QPaintEvent, QPainterPath, QPen, QPixmap
+from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPaintEvent, QPen, QPixmap
 from PyQt6.QtWidgets import QSizePolicy
 
-from views.hex_canvas import HexCanvas
 from styles.colors import GREEN_PRIMARY_RGB, GREEN_TINT
+from views.hex_canvas import HexCanvas
 from views.map.constants import MINIMAP_H, SIDE_PANEL_W
 from views.map.panel import MapPanel
 
@@ -17,15 +15,12 @@ _MINIMAP_PAD = 14
 _MINIMAP_RADIUS = 12.0
 _MINIMAP_HEX_SIZE = 10.0
 
-
 def _viewport_fill() -> QColor:
     r, g, b = (int(part.strip()) for part in GREEN_PRIMARY_RGB.split(","))
     return QColor(r, g, b, 56)
 
-
 _VIEWPORT_FILL = _viewport_fill()
 _VIEWPORT_BORDER = QColor(GREEN_TINT)
-
 
 class MinimapWidget(MapPanel):
     def __init__(self, canvas: HexCanvas, parent=None) -> None:

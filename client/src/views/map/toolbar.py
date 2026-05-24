@@ -1,14 +1,11 @@
-"""Top-center toolbar — shows the active map name."""
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QFontMetrics
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QSizePolicy
 
 from views.map.panel import MapPanel
 
-_HPAD = 40   # layout margins 20 + 20
-_VPAD = 28   # layout margins 14 + 14
-
+_HPAD = 40
+_VPAD = 28
 
 class MapToolbar(MapPanel):
     def __init__(self) -> None:

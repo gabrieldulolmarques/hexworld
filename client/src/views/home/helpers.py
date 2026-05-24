@@ -1,14 +1,10 @@
-"""Small helpers shared across the home sub-pages."""
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 from styles.ui_constants import CARD_WIDTH
 from views.widgets import apply_panel_style, make_card_shadow
 
-
 def make_card(width: int = CARD_WIDTH) -> QWidget:
-    """Return a styled #card widget used by the auxiliary form pages."""
     card = QWidget()
     card.setObjectName("card")
     apply_panel_style(card)
@@ -17,9 +13,7 @@ def make_card(width: int = CARD_WIDTH) -> QWidget:
     card.setGraphicsEffect(make_card_shadow())
     return card
 
-
 def centered(widget: QWidget) -> QWidget:
-    """Wrap a widget so it stays vertically centered with side padding."""
     body = QWidget()
     layout = QVBoxLayout(body)
     layout.setContentsMargins(16, 12, 16, 16)
@@ -29,9 +23,7 @@ def centered(widget: QWidget) -> QWidget:
     layout.addStretch(1)
     return body
 
-
 def set_form_status(label: QLabel, text: str, level: str) -> None:
-    """Update a status QLabel and re-polish so QSS picks up the level property."""
     label.setText(text)
     label.setProperty("level", level)
     label.style().unpolish(label)

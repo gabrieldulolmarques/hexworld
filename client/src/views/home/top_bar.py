@@ -1,16 +1,12 @@
-"""Top bar with Create / Join / user badge / Sign out controls."""
-
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from limits import MAX_USERNAME_LEN
 from styles.ui_constants import BTN_DANGER, BTN_PRIMARY, BTN_SECONDARY
 from views.layout_utils import relayout_after_content_change
 from views.ui_buttons import make_toolbar_button
 
-_BADGE_MAX_PX = 160   # badge should not push the buttons off screen
-
+_BADGE_MAX_PX = 160
 
 class HomeTopBar(QWidget):
     create_clicked = pyqtSignal()
