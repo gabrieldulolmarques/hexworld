@@ -5,12 +5,15 @@ from transport.broadcaster import broadcaster
 
 
 def list_online_users(map_id: str) -> list[dict]:
-    """Users with an active TCP subscription to this map (deduped by user_id)."""
     seen: set[str] = set()
     users: list[dict] = []
     for connection in broadcaster.connections_for(map_id):
         user_id = connection.user_id
-        if not user_id or user_id in seen:
+        if (
+            not user_id
+            or user_id in seen
+            or not connection.is_present_in(map_id)
+        ):
             continue
         seen.add(user_id)
         role = get_role(user_id, map_id) or "viewer"
