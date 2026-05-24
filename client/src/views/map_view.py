@@ -22,6 +22,7 @@ from views.map.constants import (
 from views.map.description_editor import DescriptionEditor
 from views.map.export_dialog import ExportDialog
 from views.map.members_bar import MembersBar
+from views.map.minimap import MinimapWidget
 from views.map.palette_panel import PalettePanel
 from views.map.panel import styled
 from views.map.road_panel import RoadColorPanel
@@ -81,6 +82,7 @@ class MapView(QWidget):
         self._road_panel          = RoadColorPanel()
         self._description_editor  = DescriptionEditor()
         self._export_dialog       = ExportDialog()
+        self._minimap             = MinimapWidget(self.canvas)
 
         self._members_bar.connect_back(self.request_back)
         self._palette.structure_selected.connect(self.structure_selected)
@@ -114,6 +116,7 @@ class MapView(QWidget):
             self._road_panel,
             self._description_editor,
             self._export_dialog,
+            self._minimap,
         )
 
         root = QVBoxLayout(self)
@@ -153,6 +156,7 @@ class MapView(QWidget):
         )
         self.canvas.set_erase_mode(tool_id == TOOL_ERASE)
         self.canvas.set_brush_mode(tool_id in (TOOL_STRUCTURE, TOOL_ERASE))
+        self.canvas.set_pan_mode(tool_id == TOOL_PAN)
         self.canvas.set_road_mode(
             tool_id == TOOL_ROAD, self._road_panel.selected_color(),
         )
@@ -191,6 +195,7 @@ class MapView(QWidget):
         self.canvas.set_road_submode(self._road_panel.selected_submode())
         self.canvas.set_pick_any_hex(False)
         self.canvas.set_brush_mode(False)
+        self.canvas.set_pan_mode(False)
         self._tool_strip.set_active_tool(TOOL_SELECT)
         self._palette.apply_tool(TOOL_SELECT)
         self._toolbar.set_map_name(data.get("name", ""))
