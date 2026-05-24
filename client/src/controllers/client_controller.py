@@ -91,7 +91,7 @@ class ClientController:
         self.maps.map_removed.connect(self.home_view.remove_map)
         self.maps.create_error.connect(self.home_view.show_create_error)
         self.maps.join_error.connect(self.home_view.show_join_error)
-        self.maps.error.connect(lambda msg: self.home_view.show_message(msg, level="error"))
+        self.maps.error.connect(self._on_maps_error)
         self.maps.session_error.connect(self._show_auth)
         self.maps.loading.connect(self._on_map_loading)
         self.maps.map_member_count_changed.connect(self.home_view.update_map_member_count)
@@ -162,6 +162,9 @@ class ClientController:
     def _on_map_loading(self, loading: bool) -> None:
         self.home_view.set_create_loading(loading)
         self.home_view.set_join_loading(loading)
+
+    def _on_maps_error(self, message: str) -> None:
+        self.home_view.show_message(message, level="error")
 
     def _on_map_created(self, data: dict) -> None:
         self.home_view.add_map(data)
