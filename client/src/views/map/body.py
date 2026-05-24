@@ -4,13 +4,13 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget
 
 from views.hex_canvas import HexCanvas
 from views.map.constants import (
-    MEMBERS_PANEL_GAP,
     PANEL_MARGIN,
     TOOL_ROAD,
     TOOL_SELECT,
     TOOL_STRUCTURE,
 )
 from views.map.description_editor import DescriptionEditor
+from views.map.export_dialog import ExportDialog
 from views.map.members_bar import MembersBar
 from views.map.palette_panel import PalettePanel
 from views.map.panel import styled
@@ -33,6 +33,7 @@ class MapBody(QWidget):
         palette: PalettePanel,
         road_panel: RoadColorPanel,
         description_editor: DescriptionEditor,
+        export_dialog: ExportDialog,
     ) -> None:
         super().__init__()
         self.setObjectName("mapCanvasArea")
@@ -44,6 +45,7 @@ class MapBody(QWidget):
         self._palette = palette
         self._road_panel = road_panel
         self._description_editor = description_editor
+        self._export_dialog = export_dialog
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -55,13 +57,16 @@ class MapBody(QWidget):
 
         description_editor.setParent(self)
         description_editor.hide()
+        export_dialog.setParent(self)
+        export_dialog.hide()
 
         select_panel.hide()
         road_panel.hide()
         palette.hide()
 
-        members_bar.toggled.connect(self._reposition_panels)
-        members_bar.geometry_changed.connect(self._reposition_panels)
+        members_bar.toggled.connect(self._place_members_bar)
+        members_bar.geometry_changed.connect(self._place_members_bar)
+        self._repositioning = False
         self.sync_panels(TOOL_SELECT)
 
     def sync_panels(self, tool_id: str) -> None:
@@ -80,6 +85,15 @@ class MapBody(QWidget):
         self._reposition_panels()
 
     def _reposition_panels(self) -> None:
+        if self._repositioning:
+            return
+        self._repositioning = True
+        try:
+            self._reposition_panels_impl()
+        finally:
+            self._repositioning = False
+
+    def _reposition_panels_impl(self) -> None:
         m = PANEL_MARGIN
         w = self.width()
         h = self.height()
@@ -96,10 +110,7 @@ class MapBody(QWidget):
         sp.setFixedHeight(max(200, h - 2 * m))
         sp.move(w - sp.width() - m, m)
 
-        mb = self._members_bar
-        mb_max_h = h - 2 * m - ts.height() - MEMBERS_PANEL_GAP
-        mb.set_max_panel_height(mb_max_h)
-        mb.move(m, h - mb.height() - m)
+        self._place_members_bar()
 
         pal = self._palette
         pal.setFixedHeight(max(200, h - 2 * m))
@@ -110,3 +121,14 @@ class MapBody(QWidget):
         rp.move(w - rp.width() - m, m)
 
         self._description_editor.setGeometry(self.rect())
+        self._export_dialog.setGeometry(self.rect())
+
+    def _place_members_bar(self) -> None:
+        """Anchor members bar to the bottom-left without shifting other panels."""
+        m = PANEL_MARGIN
+        h = self.height()
+        mb = self._members_bar
+        budget = max(0, h - 2 * m)
+        bar_h = mb.apply_height_budget(budget)
+        mb.resize(mb.width(), bar_h)
+        mb.move(m, max(m, h - bar_h - m))
