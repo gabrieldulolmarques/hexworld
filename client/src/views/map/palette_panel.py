@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QScrollArea,
+    QSizePolicy,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -23,7 +24,16 @@ from views.map.constants import (
 )
 from views.map.panel import MapPanel, styled
 
-_EMPTY_CAT = "empty"     # sentinel for the "all-empty tiles" synthetic category
+_BIOMES_WITH_EMPTY = frozenset({
+    "deadlands",
+    "drylands",
+    "greenlands",
+    "icelands",
+    "sandlands",
+})
+
+_EMPTY_CAT = "empty"
+
 _BIOME_LABELS: dict[str, str] = {
     _EMPTY_CAT:   "Empty",
     "deadlands":  "Dead",
@@ -191,17 +201,26 @@ class PalettePanel(MapPanel):
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setViewportMargins(0, 0, 2, 0)
+        scroll.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
+        )
         styled(scroll)
         scroll.viewport().setStyleSheet("background-color: #18181b;")
+        self._scroll = scroll
 
         self._structure_area = QWidget()
         self._structure_area.setObjectName("mapStructureArea")
+        self._structure_area.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Expanding,
+        )
         styled(self._structure_area)
         structure_lay = QVBoxLayout(self._structure_area)
         structure_lay.setContentsMargins(0, 0, 0, 0)
         structure_lay.setSpacing(8)
         structure_lay.addWidget(self._tab_strip)
-        structure_lay.addWidget(scroll, 1)
+        structure_lay.addWidget(self._scroll, 1)
 
         self._heading = QLabel("STRUCTURE")
         self._heading.setObjectName("panelTitle")
@@ -210,6 +229,7 @@ class PalettePanel(MapPanel):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(10)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(self._heading)
         layout.addWidget(self._structure_area, 1)
 
@@ -233,13 +253,17 @@ class PalettePanel(MapPanel):
         biome = self._biome_list[index]
         if biome == _EMPTY_CAT:
             entries = [
-                (info, info.biome.capitalize())
-                for b in REGISTRY.biomes()
+                (info, _BIOME_LABELS.get(info.biome, info.biome.capitalize()))
+                for b in _BIOMES_WITH_EMPTY
                 for info in REGISTRY.tiles(b)
                 if info.key == "empty"
             ]
         else:
-            entries = [(info, info.label) for info in REGISTRY.tiles(biome)]
+            entries = [
+                (info, info.label)
+                for info in REGISTRY.tiles(biome)
+                if info.key != "empty"
+            ]
 
         for i, (info, label) in enumerate(entries):
             pixmap = REGISTRY.pixmap(info.stem, _THUMB_SIZE)
@@ -249,6 +273,34 @@ class PalettePanel(MapPanel):
                 lambda stem=info.stem, b=btn: self._on_tile_clicked(b, stem),
             )
             self._grid_layout.addWidget(btn, i // self._COLS, i % self._COLS)
+
+        self._sync_scroll_to_grid()
+        self._notify_layout_changed()
+
+    def _grid_content_height(self, tile_count: int) -> int:
+        if tile_count <= 0:
+            return 0
+        rows = (tile_count + self._COLS - 1) // self._COLS
+        return (
+            rows * _TILE_BTN_H
+            + max(0, rows - 1) * self._GRID_GAP
+            + self._grid_layout.contentsMargins().top()
+            + self._grid_layout.contentsMargins().bottom()
+        )
+
+    def _sync_scroll_to_grid(self) -> None:
+        count = self._grid_layout.count()
+        self._grid_widget.setMinimumHeight(self._grid_content_height(count))
+
+    def apply_height_budget(self, max_h: int) -> int:
+        self.setFixedHeight(max_h)
+        return max_h
+
+    def _notify_layout_changed(self) -> None:
+        self.adjustSize()
+        parent = self.parent()
+        if parent is not None and hasattr(parent, "reposition_panels"):
+            parent.reposition_panels()
 
     def apply_tool(self, tool_id: str) -> None:
         self._apply_tool(tool_id)
@@ -264,6 +316,7 @@ class PalettePanel(MapPanel):
 
         if emit and changed:
             self.tool_changed.emit(tool_id)
+        self._notify_layout_changed()
 
     def active_tool(self) -> str:
         return self._active_tool
