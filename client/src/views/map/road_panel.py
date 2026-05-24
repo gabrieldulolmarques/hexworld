@@ -1,11 +1,13 @@
-"""Road-color picker — hex wheel + hex input + saved swatches."""
+"""Road panel — submode controls, curve actions, color picker and swatches."""
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
+    QButtonGroup,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QRadioButton,
     QVBoxLayout,
     QWidget,
 )
@@ -24,6 +26,7 @@ _SAVED_GAP = 6
 
 class RoadColorPanel(MapPanel):
     road_color_selected = pyqtSignal(str)
+    road_submode_changed = pyqtSignal(str)  # "curve" | "inner_edge"
 
     def __init__(self) -> None:
         super().__init__("mapRoadPanel")
@@ -33,6 +36,27 @@ class RoadColorPanel(MapPanel):
         heading = QLabel("ROAD COLOR")
         heading.setObjectName("panelTitle")
         heading.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        submode_label = QLabel("ROAD MODE")
+        submode_label.setObjectName("fieldLabel")
+        submode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self._curve_radio = QRadioButton("Curve road")
+        self._inner_radio = QRadioButton("Inner edge")
+        self._curve_radio.setChecked(True)
+        self._submode_group = QButtonGroup(self)
+        self._submode_group.setExclusive(True)
+        self._submode_group.addButton(self._curve_radio)
+        self._submode_group.addButton(self._inner_radio)
+        self._curve_radio.toggled.connect(self._on_submode_toggled)
+        self._inner_radio.toggled.connect(self._on_submode_toggled)
+
+        submode_row = QHBoxLayout()
+        submode_row.setContentsMargins(0, 0, 0, 0)
+        submode_row.setSpacing(32)
+        submode_row.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        submode_row.addWidget(self._curve_radio)
+        submode_row.addWidget(self._inner_radio)
 
         self._wheel = HexWheel()
         self._wheel.color_picked.connect(self._on_wheel_pick)
@@ -73,6 +97,9 @@ class RoadColorPanel(MapPanel):
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(12)
         layout.addWidget(heading)
+        layout.addWidget(submode_label)
+        layout.addLayout(submode_row)
+        layout.addWidget(horizontal_divider())
         layout.addWidget(self._wheel, 0, Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(horizontal_divider())
         layout.addLayout(current_row)
@@ -80,6 +107,11 @@ class RoadColorPanel(MapPanel):
         layout.addWidget(self._saved_wrap, 0, Qt.AlignmentFlag.AlignHCenter)
 
         self._apply_color(_ROAD_COLOR_DEFAULT, emit=False)
+
+    def _on_submode_toggled(self, checked: bool) -> None:
+        if not checked:
+            return
+        self.road_submode_changed.emit(self.selected_submode())
 
     def _on_wheel_pick(self, hex_str: str) -> None:
         self._apply_color(hex_str)
@@ -149,3 +181,6 @@ class RoadColorPanel(MapPanel):
 
     def selected_color(self) -> str:
         return self._hex_input.text() or _ROAD_COLOR_DEFAULT
+
+    def selected_submode(self) -> str:
+        return "inner_edge" if self._inner_radio.isChecked() else "curve"
