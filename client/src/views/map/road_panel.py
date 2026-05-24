@@ -96,6 +96,7 @@ class RoadColorPanel(MapPanel):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
         layout.setSpacing(12)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(heading)
         layout.addWidget(submode_label)
         layout.addLayout(submode_row)
@@ -105,8 +106,13 @@ class RoadColorPanel(MapPanel):
         layout.addLayout(current_row)
         layout.addWidget(saved_label)
         layout.addWidget(self._saved_wrap, 0, Qt.AlignmentFlag.AlignHCenter)
+        layout.addStretch(1)
 
         self._apply_color(_ROAD_COLOR_DEFAULT, emit=False)
+
+    def apply_height_budget(self, max_h: int) -> int:
+        self.setFixedHeight(max_h)
+        return max_h
 
     def _on_submode_toggled(self, checked: bool) -> None:
         if not checked:
