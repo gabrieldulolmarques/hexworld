@@ -9,11 +9,14 @@ Pixel convention (origin at canvas centre):
   x grows right, y grows down (screen coordinates).
   hex_to_pixel / pixel_to_hex are exact inverses (up to floating-point rounding).
 """
+from __future__ import annotations
+
 import math
 
 _SQRT3 = math.sqrt(3)
 
 Coord = tuple[int, int]
+PixelPoint = tuple[float, float]
 
 _AXIAL_DIRECTIONS: list[Coord] = [
     (1, 0), (0, 1), (-1, 1),
@@ -99,3 +102,158 @@ def _cube_round(x: float, y: float, z: float) -> tuple[int, int, int]:
     else:
         rz = -rx - ry
     return (int(rx), int(ry), int(rz))
+
+
+def axial_step_direction(q0: int, r0: int, q1: int, r1: int) -> int | None:
+    """Index in _AXIAL_DIRECTIONS for a single hex step, or None if not neighbors."""
+    dq, dr = q1 - q0, r1 - r0
+    for i, (ddq, ddr) in enumerate(_AXIAL_DIRECTIONS):
+        if dq == ddq and dr == ddr:
+            return i
+    return None
+
+
+def _segment_key(start: Coord, end: Coord) -> tuple[Coord, Coord]:
+    return (start, end) if start <= end else (end, start)
+
+
+def _normalize_waypoints(waypoints: list) -> list[Coord]:
+    out: list[Coord] = []
+    for wp in waypoints:
+        out.append((int(wp[0]), int(wp[1])))
+    return out
+
+
+def _path_pixel_points_free(waypoints: list[Coord], hex_size: float) -> list[tuple[float, float]]:
+    return [hex_to_pixel(q, r, hex_size) for q, r in waypoints]
+
+
+def path_pixel_points(waypoints: list, hex_size: float) -> list[tuple[float, float]]:
+    """Project hex waypoints to pixel offsets (relative to canvas origin)."""
+    wps = _normalize_waypoints(waypoints)
+    return _path_pixel_points_free(wps, hex_size)
+
+
+def _quadratic_point(
+    start: PixelPoint,
+    control: PixelPoint,
+    end: PixelPoint,
+    t: float,
+) -> PixelPoint:
+    inv = 1.0 - t
+    x = inv * inv * start[0] + 2 * inv * t * control[0] + t * t * end[0]
+    y = inv * inv * start[1] + 2 * inv * t * control[1] + t * t * end[1]
+    return (x, y)
+
+
+def _append_quadratic_samples(
+    out: list[PixelPoint],
+    start: PixelPoint,
+    control: PixelPoint,
+    end: PixelPoint,
+    samples: int,
+) -> None:
+    steps = max(1, samples)
+    for step in range(1, steps + 1):
+        out.append(_quadratic_point(start, control, end, step / steps))
+
+
+def smooth_path_points(
+    points: list[PixelPoint],
+    curve: float = 1.0,
+    *,
+    samples_per_curve: int = 12,
+) -> list[PixelPoint]:
+    """Sample the JSX smoothPath Q/T curve as plain pixel points.
+
+    The prototype treats ``curve`` as a threshold: values near zero render a
+    straight first-to-last segment, while larger values use chained quadratic
+    curves through the intermediate points.
+    """
+    pts = [(float(x), float(y)) for x, y in points]
+    if len(pts) < 2:
+        return pts
+    if len(pts) == 2 or curve <= 0.05:
+        return [pts[0], pts[-1]]
+
+    out: list[PixelPoint] = [pts[0]]
+    start = pts[0]
+    last_control: PixelPoint | None = None
+    for i in range(1, len(pts) - 1):
+        control = pts[i]
+        next_pt = pts[i + 1]
+        end = (
+            control[0] + (next_pt[0] - control[0]) * 0.5,
+            control[1] + (next_pt[1] - control[1]) * 0.5,
+        )
+        _append_quadratic_samples(out, start, control, end, samples_per_curve)
+        start = end
+        last_control = control
+
+    if last_control is not None:
+        smooth_control = (
+            start[0] * 2.0 - last_control[0],
+            start[1] * 2.0 - last_control[1],
+        )
+        _append_quadratic_samples(out, start, smooth_control, pts[-1], samples_per_curve)
+    return out
+
+
+def smooth_path_pixel_points(
+    waypoints: list,
+    hex_size: float,
+    curve: float = 1.0,
+    *,
+    samples_per_curve: int = 12,
+) -> list[PixelPoint]:
+    points = path_pixel_points(waypoints, hex_size)
+    return smooth_path_points(points, curve, samples_per_curve=samples_per_curve)
+
+
+def distance_point_to_segment(
+    px: float,
+    py: float,
+    ax: float,
+    ay: float,
+    bx: float,
+    by: float,
+) -> float:
+    dx = bx - ax
+    dy = by - ay
+    if dx == 0 and dy == 0:
+        return math.hypot(px - ax, py - ay)
+    t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)
+    t = max(0.0, min(1.0, t))
+    cx = ax + t * dx
+    cy = ay + t * dy
+    return math.hypot(px - cx, py - cy)
+
+
+def distance_to_polyline(px: float, py: float, points: list[PixelPoint]) -> float | None:
+    if len(points) < 2:
+        return None
+    return min(
+        distance_point_to_segment(px, py, ax, ay, bx, by)
+        for (ax, ay), (bx, by) in zip(points, points[1:])
+    )
+
+
+def is_valid_polyline(waypoints: list) -> bool:
+    """At least two points; each undirected neighbor segment may appear once."""
+    wps = _normalize_waypoints(waypoints)
+    if len(wps) < 2:
+        return False
+    seen_segments: set[tuple[Coord, Coord]] = set()
+    for i in range(1, len(wps)):
+        if axial_step_direction(
+            wps[i - 1][0],
+            wps[i - 1][1],
+            wps[i][0],
+            wps[i][1],
+        ) is None:
+            return False
+        key = _segment_key(wps[i - 1], wps[i])
+        if key in seen_segments:
+            return False
+        seen_segments.add(key)
+    return True
