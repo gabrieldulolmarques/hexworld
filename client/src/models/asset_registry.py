@@ -5,8 +5,9 @@ Directory layout: assets/map/{biome}/{biome}_{nn}_{key}.png
 structure.type in the DB = filename stem = '{biome}_{nn}_{key}'
   e.g. 'greenlands_11_village', 'forest_14_village', 'deadlands_18_ruins'
 
-Access: REGISTRY.pixmap('greenlands_11_village', hex_size) → clipped QPixmap
+Access: REGISTRY.pixmap('greenlands_11_village', hex_size) → flat-top QPixmap
 """
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -56,7 +57,7 @@ class AssetRegistry:
         size = round(hex_size)
         cache_key = (structure_type, size)
         if cache_key not in self._cache:
-            self._cache[cache_key] = _hex_clipped_pixmap(QPixmap(str(info.path)), size)
+            self._cache[cache_key] = _hex_fitted_pixmap(QPixmap(str(info.path)), size)
         return self._cache[cache_key]
 
     # ------------------------------------------------------------------
@@ -100,19 +101,34 @@ def _parse_tile(biome: str, path: Path) -> TileInfo | None:
     )
 
 
-def _hex_clipped_pixmap(source: QPixmap, hex_size: int) -> QPixmap:
+def _hex_fitted_pixmap(source: QPixmap, hex_size: int) -> QPixmap:
     diam = hex_size * 2
+    if source.isNull():
+        empty = QPixmap(diam, diam)
+        empty.fill(Qt.GlobalColor.transparent)
+        return empty
+
+    short_axis = round(math.sqrt(3) * hex_size)
+    target_w = diam
+    target_h = short_axis
+    ratio_mode = (
+        Qt.AspectRatioMode.KeepAspectRatio
+        if source.width() >= source.height()
+        else Qt.AspectRatioMode.KeepAspectRatioByExpanding
+    )
+
     scaled = source.scaled(
-        diam, diam,
-        Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+        target_w, target_h,
+        ratio_mode,
         Qt.TransformationMode.SmoothTransformation,
     )
-    ox = (scaled.width()  - diam) // 2
-    oy = (scaled.height() - diam) // 2
-    scaled = scaled.copy(ox, oy, diam, diam)
+    if scaled.width() != target_w or scaled.height() != target_h:
+        ox = max(0, (scaled.width() - target_w) // 2)
+        oy = max(0, (scaled.height() - target_h) // 2)
+        scaled = scaled.copy(ox, oy, min(target_w, scaled.width()), min(target_h, scaled.height()))
 
     path = QPainterPath()
-    verts = hex_vertices(diam / 2, diam / 2, hex_size - 1.5)
+    verts = hex_vertices(diam / 2, diam / 2, hex_size)
     path.moveTo(*verts[0])
     for x, y in verts[1:]:
         path.lineTo(x, y)
@@ -123,7 +139,11 @@ def _hex_clipped_pixmap(source: QPixmap, hex_size: int) -> QPixmap:
     painter = QPainter(result)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     painter.setClipPath(path)
-    painter.drawPixmap(0, 0, scaled)
+    painter.drawPixmap(
+        (diam - scaled.width()) // 2,
+        (diam - scaled.height()) // 2,
+        scaled,
+    )
     painter.end()
     return result
 
