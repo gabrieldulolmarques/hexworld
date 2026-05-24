@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from styles.colors import QSS_REPLACE
+
 _STYLES_DIR = Path(__file__).resolve().parent / "qss"
 _QSS_FILES = ("_base.qss", "_window.qss", "_auth.qss", "_home.qss", "_map.qss")
 
@@ -14,7 +16,10 @@ def _load_stylesheet() -> str:
         (_STYLES_DIR / name).read_text(encoding="utf-8")
         for name in _QSS_FILES
     ]
-    return "\n".join(parts).replace("__CHECK_ICON__", _CHECK_ICON_URL)
+    sheet = "\n".join(parts).replace("__CHECK_ICON__", _CHECK_ICON_URL)
+    for token, value in QSS_REPLACE.items():
+        sheet = sheet.replace(token, value)
+    return sheet
 
 
 STYLESHEET = _load_stylesheet()

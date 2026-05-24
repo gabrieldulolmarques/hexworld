@@ -9,7 +9,6 @@ QWidget#mapTopBar {
     background-color: #18181b;
     border: 1px solid #3f3f46;
     border-radius: 12px;
-    max-width: 16777215px;
 }
 
 QWidget#mapTopBar QLabel#subtitle {
@@ -22,7 +21,6 @@ QWidget#mapTopBar QLabel#title {
     font-weight: 700;
     padding: 0;
     min-width: 0;
-    max-width: 16777215px;
 }
 
 QWidget#mapWorkspace,
@@ -70,7 +68,12 @@ QPushButton#onlinePanelCollapse:hover {
     border-radius: 8px;
 }
 
-QWidget#mapTopBar,
+QWidget#mapMinimap {
+    background-color: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 12px;
+}
+
 QWidget#mapSelectPanel,
 QWidget#mapBottomBar,
 QWidget#mapPalette,
@@ -96,7 +99,7 @@ QTextBrowser#tileInfoBrowser {
     border: none;
     color: #d4d4d8;
     font-size: 14px;
-    selection-background-color: rgba(94, 165, 0, 0.35);
+    selection-background-color: __GREEN_SELECTION_BG__;
 }
 
 QTextBrowser#tileInfoBrowser QScrollBar:vertical {
@@ -215,7 +218,7 @@ QTextBrowser#inspectorDescBrowser {
     background-color: transparent;
     border: none;
     color: #ffffff;
-    selection-background-color: rgba(94, 165, 0, 0.35);
+    selection-background-color: __GREEN_SELECTION_BG__;
     selection-color: #ffffff;
 }
 
@@ -244,7 +247,7 @@ QLabel#inspectorBanner {
 }
 
 QLabel#inspectorBanner[level="error"] {
-    color: #f87171;
+    color: __RED_TEXT__;
 }
 
 QLabel#inspectorBanner[level="info"] {
@@ -299,8 +302,8 @@ QToolButton#biomeTab:hover {
 }
 
 QToolButton#biomeTab:checked {
-    background-color: rgba(94, 165, 0, 0.14);
-    color: #7ccf00;
+    background-color: __GREEN_ACTIVE_BG__;
+    color: __GREEN_TINT__;
 }
 
 QWidget#tileBtn {
@@ -315,8 +318,8 @@ QWidget#tileBtn[hovered="true"] {
 }
 
 QWidget#tileBtn[checked="true"] {
-    background-color: rgba(94, 165, 0, 0.14);
-    border-color: #5ea500;
+    background-color: __GREEN_ACTIVE_BG__;
+    border-color: __GREEN_PRIMARY__;
 }
 
 QWidget#tileBtn QLabel {
@@ -330,7 +333,7 @@ QLabel#tileBtnLabel {
 }
 
 QWidget#tileBtn[checked="true"] QLabel#tileBtnLabel {
-    color: #d8f999;
+    color: __GREEN_TINT__;
 }
 
 QScrollArea#paletteScroll {
@@ -380,18 +383,23 @@ QToolButton#mapToolBtn {
 }
 
 QToolButton#mapToolBtn:hover {
-    background-color: #27272a;
-    border-color: #3f3f46;
+    background-color: __GREEN_HOVER_BG__;
+    border-color: __GREEN_HOVER_BORDER__;
+}
+
+QToolButton#mapToolBtn[toolId="erase"]:hover {
+    background-color: __RED_HOVER_BG__;
+    border-color: __RED_HOVER_BORDER__;
 }
 
 QToolButton#mapToolBtn[active="true"] {
-    background-color: rgba(94, 165, 0, 0.14);
-    border-color: #5ea500;
+    background-color: __GREEN_ACTIVE_BG__;
+    border-color: __GREEN_PRIMARY__;
 }
 
 QToolButton#mapToolBtn[toolId="erase"][active="true"] {
-    background-color: rgba(239, 68, 68, 0.12);
-    border-color: #ef4444;
+    background-color: __RED_ACTIVE_BG__;
+    border-color: __RED_PRIMARY__;
 }
 
 QWidget#mapRoadPanel QLineEdit {
@@ -404,7 +412,7 @@ QWidget#mapRoadPanel QLineEdit {
 }
 
 QWidget#mapRoadPanel QLineEdit:focus {
-    border-color: #5ea500;
+    border-color: __GREEN_PRIMARY__;
 }
 
 QWidget#mapRoadPanel QRadioButton {
@@ -426,9 +434,9 @@ QWidget#mapRoadPanel QRadioButton::indicator:unchecked {
 }
 
 QWidget#mapRoadPanel QRadioButton::indicator:checked {
-    border: 4px solid #5ea500;
+    border: 4px solid __GREEN_PRIMARY__;
     border-radius: 8px;
-    background-color: #d8f999;
+    background-color: __GREEN_TINT__;
 }
 
 QWidget#roadSavedRow {
@@ -468,11 +476,11 @@ QTextEdit#descriptionEditorInput {
     color: #e4e4e7;
     padding: 12px;
     font-size: 15px;
-    selection-background-color: rgba(94, 165, 0, 0.35);
+    selection-background-color: __GREEN_SELECTION_BG__;
 }
 
 QTextEdit#descriptionEditorInput:focus {
-    border-color: #5ea500;
+    border-color: __GREEN_PRIMARY__;
 }
 
 QLineEdit#exportDialogPath {
@@ -482,11 +490,11 @@ QLineEdit#exportDialogPath {
     color: #e4e4e7;
     padding: 12px 16px;
     font-size: 15px;
-    selection-background-color: rgba(94, 165, 0, 0.35);
+    selection-background-color: __GREEN_SELECTION_BG__;
 }
 
 QLineEdit#exportDialogPath:focus {
-    border-color: #5ea500;
+    border-color: __GREEN_PRIMARY__;
 }
 
 QLineEdit#exportDialogPath:disabled {
@@ -538,7 +546,7 @@ QLabel#mapRole {
 }
 
 QLabel#mapRole[role="owner"] {
-    color: #7ccf00;
+    color: __GREEN_TINT__;
 }
 
 QLabel#mapRole[role="editor"] {

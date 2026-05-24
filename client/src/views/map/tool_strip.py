@@ -1,8 +1,10 @@
 """Vertical strip of mode (checkable) + action (one-shot) tool buttons."""
 
-from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QSize, Qt, pyqtSignal, QEvent
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QButtonGroup, QToolButton, QVBoxLayout
+
+from styles.colors import GREEN_PRIMARY, GREEN_TINT, RED_PRIMARY, RED_TEXT
 
 from views.map.constants import (
     TOOL_DESCRIPTION,
@@ -57,6 +59,8 @@ class ToolStrip(MapPanel):
     def __init__(self) -> None:
         super().__init__("mapToolStrip")
         self._tool_ids: list[str] = []
+        self._active_tool = TOOL_SELECT
+        self._hovered_tool: str | None = None
         self._btn_group = QButtonGroup(self)
         self._btn_group.setExclusive(True)
 
@@ -74,6 +78,7 @@ class ToolStrip(MapPanel):
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setIcon(QIcon(tinted_pixmap(icon_file, "#9f9fa9", 20)))
             btn.setIconSize(QSize(20, 20))
+            btn.installEventFilter(self)
             self._btn_group.addButton(btn, index)
             self._tool_ids.append(tool_id)
             col.addWidget(btn)
@@ -90,6 +95,7 @@ class ToolStrip(MapPanel):
             btn.setProperty("toolId", action_id)
             btn.setIcon(QIcon(tinted_pixmap(icon_file, "#9f9fa9", 20)))
             btn.setIconSize(QSize(20, 20))
+            btn.installEventFilter(self)
             signal_name = self._ACTION_SIGNALS[action_id]
             btn.clicked.connect(getattr(self, signal_name))
             col.addWidget(btn)
@@ -100,6 +106,44 @@ class ToolStrip(MapPanel):
         if first:
             first.setChecked(True)
         self._sync_buttons(TOOL_SELECT)
+
+    def eventFilter(self, obj, event) -> bool:
+        if (
+            isinstance(obj, QToolButton)
+            and obj.objectName() == "mapToolBtn"
+            and event.type() in (QEvent.Type.Enter, QEvent.Type.Leave)
+        ):
+            tool_id = obj.property("toolId")
+            if event.type() == QEvent.Type.Enter:
+                self._hovered_tool = tool_id
+            elif self._hovered_tool == tool_id:
+                self._hovered_tool = None
+            self._update_button_icon(obj)
+            return False
+        return super().eventFilter(obj, event)
+
+    def _icon_color(self, tool_id: str, *, active: bool) -> str:
+        if active:
+            return RED_PRIMARY if tool_id == TOOL_ERASE else GREEN_PRIMARY
+        if self._hovered_tool == tool_id:
+            return RED_TEXT if tool_id == TOOL_ERASE else GREEN_TINT
+        return "#9f9fa9"
+
+    def _update_button_icon(self, btn: QToolButton) -> None:
+        tool_id = btn.property("toolId")
+        if tool_id not in self._tool_ids:
+            icon_file = next(
+                (icon for aid, icon, _ in _ACTIONS if aid == tool_id),
+                None,
+            )
+            if icon_file is None:
+                return
+            active = False
+        else:
+            icon_file = _TOOLS[self._tool_ids.index(tool_id)][1]
+            active = tool_id == self._active_tool
+        color = self._icon_color(tool_id, active=active)
+        btn.setIcon(QIcon(tinted_pixmap(icon_file, color, 20)))
 
     def _on_clicked(self, index: int) -> None:
         if 0 <= index < len(self._tool_ids):
@@ -116,14 +160,18 @@ class ToolStrip(MapPanel):
         self._sync_buttons(tool_id)
 
     def _sync_buttons(self, active_id: str) -> None:
+        self._active_tool = active_id
         for btn in self._btn_group.buttons():
             tid = btn.property("toolId")
             is_active = tid == active_id
-            color = "#ef4444" if (tid == TOOL_ERASE and is_active) else (
-                "#5ea500" if is_active else "#9f9fa9"
-            )
-            icon_file = _TOOLS[self._tool_ids.index(tid)][1]
-            btn.setIcon(QIcon(tinted_pixmap(icon_file, color, 20)))
             btn.setProperty("active", "true" if is_active else "false")
             btn.style().unpolish(btn)
             btn.style().polish(btn)
+            self._update_button_icon(btn)
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i)
+            if item is None:
+                continue
+            widget = item.widget()
+            if isinstance(widget, QToolButton) and widget.objectName() == "mapToolBtn":
+                self._update_button_icon(widget)
