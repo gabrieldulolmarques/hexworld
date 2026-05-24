@@ -29,7 +29,6 @@ def get_tile_by_id(tile_id: str):
             (tile_id,),
         ).fetchone()
 
-
 def touch_tile(tile_id: str) -> None:
     with get_connection() as connection:
         connection.execute(
@@ -38,20 +37,12 @@ def touch_tile(tile_id: str) -> None:
         )
         connection.commit()
 
-
 def get_tile_at(map_id: str, q: int, r: int):
     with get_connection() as connection:
         return connection.execute(
             "SELECT id, map_id, q, r FROM tile WHERE map_id = ? AND q = ? AND r = ?",
             (map_id, q, r),
         ).fetchone()
-
-
-def delete_tile(tile_id: str) -> None:
-    with get_connection() as connection:
-        connection.execute("DELETE FROM tile WHERE id = ?", (tile_id,))
-        connection.commit()
-
 
 def list_tiles_with_components(map_id: str) -> list[dict]:
     with get_connection() as connection:
@@ -98,7 +89,6 @@ def list_tiles_with_components(map_id: str) -> list[dict]:
                 "description": description,
             })
         return result
-
 
 def serialize_tile(map_id: str, q: int, r: int) -> dict:
     tile = get_tile_at(map_id, q, r)

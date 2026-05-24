@@ -2,10 +2,10 @@ from os import getenv
 from socket import (
     AF_INET,
     IPPROTO_TCP,
-    SOCK_STREAM,
-    SOL_SOCKET,
     SO_KEEPALIVE,
     SO_REUSEADDR,
+    SOCK_STREAM,
+    SOL_SOCKET,
     TCP_KEEPCNT,
     TCP_KEEPIDLE,
     TCP_KEEPINTVL,
@@ -46,7 +46,7 @@ class Server:
             print("Server stopped by keyboard interrupt")
         finally:
             self.stop()
-    
+
     def stop(self) -> None:
         if self._server_socket:
             self._server_socket.close()

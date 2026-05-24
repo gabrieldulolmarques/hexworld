@@ -1,4 +1,5 @@
 from controllers.auth_middleware import authenticated, require_role
+from repositories.tile_repository import serialize_tile
 from services.map_service import (
     add_road,
     create_map,
@@ -16,15 +17,12 @@ from services.map_service import (
     set_inner_edge,
     set_structure,
 )
-from repositories.tile_repository import serialize_tile
 from services.presence_service import broadcast_presence, list_online_users
 from transport.broadcaster import broadcaster
 from transport.protocol import error_response, event, success_response
 
-
 def _broadcast_tile(map_id: str, event_type: str, q: int, r: int) -> None:
     broadcaster.broadcast(map_id, event(event_type, serialize_tile(map_id, q, r)))
-
 
 @authenticated
 def handle_create_map(request: dict, connection, auth: dict) -> dict:
@@ -34,7 +32,6 @@ def handle_create_map(request: dict, connection, auth: dict) -> dict:
         return error_response(request, result)
     connection.subscribe(result["id"])
     return success_response(request, {"map": result})
-
 
 @authenticated
 def handle_join_map(request: dict, connection, auth: dict) -> dict:
@@ -50,14 +47,12 @@ def handle_join_map(request: dict, connection, auth: dict) -> dict:
     connection.subscribe(map_id)
     return success_response(request, {"map": result})
 
-
 @authenticated
 def handle_get_maps(request: dict, connection, auth: dict) -> dict:
     maps = get_maps(auth["user_id"])
     for m in maps:
         connection.subscribe(m["id"])
     return success_response(request, {"maps": maps})
-
 
 @authenticated
 def handle_dissociate_map(request: dict, connection, auth: dict) -> dict:
@@ -83,7 +78,6 @@ def handle_dissociate_map(request: dict, connection, auth: dict) -> dict:
         )
     return success_response(request, {"map_id": map_id})
 
-
 @authenticated
 @require_role("viewer")
 def handle_get_cell_details(request: dict, connection, auth: dict) -> dict:
@@ -97,7 +91,6 @@ def handle_get_cell_details(request: dict, connection, auth: dict) -> dict:
         return error_response(request, result)
     return success_response(request, result)
 
-
 @authenticated
 @require_role("viewer")
 def handle_get_map_state(request: dict, connection, auth: dict) -> dict:
@@ -110,7 +103,6 @@ def handle_get_map_state(request: dict, connection, auth: dict) -> dict:
         broadcast_presence(map_id, "map_user_online")
     return success_response(request, result)
 
-
 @authenticated
 def handle_close_map(request: dict, connection, auth: dict) -> dict:
     map_id = (request.get("data") or {}).get("map_id", "")
@@ -119,7 +111,6 @@ def handle_close_map(request: dict, connection, auth: dict) -> dict:
     if connection.leave_presence(map_id):
         broadcast_presence(map_id, "map_user_offline")
     return success_response(request, {"map_id": map_id})
-
 
 @authenticated
 @require_role("editor")
@@ -137,7 +128,6 @@ def handle_set_structure(request: dict, connection, auth: dict) -> dict:
     _broadcast_tile(map_id, "structure_set", result["q"], result["r"])
     return success_response(request, result)
 
-
 @authenticated
 @require_role("editor")
 def handle_add_road(request: dict, connection, auth: dict) -> dict:
@@ -152,7 +142,6 @@ def handle_add_road(request: dict, connection, auth: dict) -> dict:
         return error_response(request, result)
     broadcaster.broadcast(map_id, event("road_added", result))
     return success_response(request, result)
-
 
 @authenticated
 @require_role("editor")
@@ -178,7 +167,6 @@ def handle_set_inner_edge(request: dict, connection, auth: dict) -> dict:
     broadcaster.broadcast(map_id, event("inner_edge_changed", result))
     return success_response(request, result)
 
-
 @authenticated
 @require_role("editor")
 def handle_remove_inner_edge(request: dict, connection, auth: dict) -> dict:
@@ -197,7 +185,6 @@ def handle_remove_inner_edge(request: dict, connection, auth: dict) -> dict:
     broadcaster.broadcast(map_id, event("inner_edge_changed", result))
     return success_response(request, result)
 
-
 @authenticated
 @require_role("editor")
 def handle_set_description(request: dict, connection, auth: dict) -> dict:
@@ -214,7 +201,6 @@ def handle_set_description(request: dict, connection, auth: dict) -> dict:
     _broadcast_tile(map_id, "description_set", result["q"], result["r"])
     return success_response(request, result)
 
-
 @authenticated
 @require_role("editor")
 def handle_remove_structure(request: dict, connection, auth: dict) -> dict:
@@ -228,7 +214,6 @@ def handle_remove_structure(request: dict, connection, auth: dict) -> dict:
         return error_response(request, result)
     _broadcast_tile(map_id, "structure_removed", result["q"], result["r"])
     return success_response(request, result)
-
 
 @authenticated
 @require_role("editor")
@@ -247,7 +232,6 @@ def handle_remove_road(request: dict, connection, auth: dict) -> dict:
     )
     return success_response(request, result)
 
-
 @authenticated
 @require_role("editor")
 def handle_remove_description(request: dict, connection, auth: dict) -> dict:
@@ -261,7 +245,6 @@ def handle_remove_description(request: dict, connection, auth: dict) -> dict:
         return error_response(request, result)
     _broadcast_tile(map_id, "description_removed", result["q"], result["r"])
     return success_response(request, result)
-
 
 @authenticated
 def handle_delete_map(request: dict, connection, auth: dict) -> dict:

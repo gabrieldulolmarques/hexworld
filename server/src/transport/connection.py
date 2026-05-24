@@ -29,7 +29,6 @@ class Connection:
         self._username = username
 
     def send(self, payload: dict) -> None:
-        """Serialize response/event writes on this socket (response and event must not interleave)."""
         with self._send_lock:
             if self._client_socket is None:
                 return

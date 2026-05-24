@@ -1,13 +1,6 @@
 from traceback import format_exc
 
-from transport.protocol import error_response
-
-from controllers.auth_controller import (
-    handle_login,
-    handle_logout,
-    handle_register,
-    handle_validate_session,
-)
+from controllers.auth_controller import handle_login, handle_logout, handle_register, handle_validate_session
 from controllers.map_controller import (
     handle_add_road,
     handle_close_map,
@@ -26,6 +19,7 @@ from controllers.map_controller import (
     handle_set_inner_edge,
     handle_set_structure,
 )
+from transport.protocol import error_response
 
 REQUEST_HANDLERS = {
     "register": handle_register,
