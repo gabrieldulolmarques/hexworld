@@ -4,8 +4,8 @@ from socket import socket
 from threading import Lock
 
 from transport.broadcaster import Broadcaster
-from transport.presence_registry import PresenceRegistry
-from transport.protocol import recv_request, send_response
+from transport.presence import Presence
+from transport.sockets.protocol import recv_request, send_response
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +21,14 @@ class Connection:
         handle_request: RequestHandlerFn,
         broadcast_presence: BroadcastPresenceFn,
         broadcaster: Broadcaster,
-        presence_registry: PresenceRegistry,
+        presence: Presence,
     ) -> None:
         self._client_socket = client_socket
         self._client_address = client_address
         self._handle_request = handle_request
         self._broadcast_presence = broadcast_presence
         self._broadcaster = broadcaster
-        self._presence_registry = presence_registry
+        self._presence = presence
         self._send_lock = Lock()
         self._subscribed_maps: set[str] = set()
         self._user_id: str | None = None
@@ -61,13 +61,13 @@ class Connection:
         self._subscribed_maps.discard(map_id)
 
     def enter_presence(self, map_id: str) -> bool:
-        return self._presence_registry.enter(map_id, self)
+        return self._presence.enter(map_id, self)
 
     def leave_presence(self, map_id: str) -> bool:
-        return self._presence_registry.leave(map_id, self)
+        return self._presence.leave(map_id, self)
 
     def is_present_in(self, map_id: str) -> bool:
-        return self._presence_registry.is_present(map_id, self)
+        return self._presence.is_present(map_id, self)
 
     def start(self) -> None:
         logger.info("Client %s:%s connected", *self._client_address)
@@ -86,7 +86,7 @@ class Connection:
             self.stop()
 
     def stop(self) -> None:
-        presence_maps = self._presence_registry.leave_all(self)
+        presence_maps = self._presence.leave_all(self)
         for map_id in list(self._subscribed_maps):
             self._broadcaster.unsubscribe(map_id, self)
         self._subscribed_maps.clear()

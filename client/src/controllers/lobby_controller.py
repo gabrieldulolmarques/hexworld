@@ -2,8 +2,9 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.limits import MAX_MAP_MEMBERS, MAX_MAP_NAME_LENGTH
 from models.session import Session
-from transport.protocol import STATUS_ERROR, request
-from transport.transport_worker import TransportWorker
+from transport.messages import STATUS_ERROR
+from transport.sockets.protocol import request
+from transport.sockets.transport_worker import TransportWorker
 
 _ERROR_MESSAGES = {
     "missing_fields": "Missing fields.",

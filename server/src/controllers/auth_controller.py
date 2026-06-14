@@ -1,5 +1,5 @@
 from services.auth_service import AuthService
-from transport.protocol import error_response, success_response
+from transport.messages import error_response, success_response
 
 class AuthController:
     def __init__(self, auth_service: AuthService) -> None:

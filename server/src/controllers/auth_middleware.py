@@ -2,7 +2,7 @@ from collections.abc import Callable
 from functools import wraps
 
 from services.auth_service import AuthService
-from transport.protocol import error_response
+from transport.messages import error_response
 from utils.roles import has_role
 
 Handler = Callable[[dict, object, dict], dict]

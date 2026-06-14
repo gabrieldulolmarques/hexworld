@@ -1,6 +1,6 @@
 from controllers.map_event_publisher import MapEventPublisher
 from services.map_service import MapService
-from transport.protocol import error_response, success_response
+from transport.messages import error_response, success_response
 
 class MapLifecycleController:
     def __init__(self, map_service: MapService, publisher: MapEventPublisher) -> None:

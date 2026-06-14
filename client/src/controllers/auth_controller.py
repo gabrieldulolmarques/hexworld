@@ -8,8 +8,9 @@ from models.limits import (
 )
 from models.preferences import Preferences
 from models.session import Session
-from transport.transport_worker import TransportWorker
-from transport.protocol import STATUS_ERROR, request
+from transport.sockets.transport_worker import TransportWorker
+from transport.messages import STATUS_ERROR
+from transport.sockets.protocol import request
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",

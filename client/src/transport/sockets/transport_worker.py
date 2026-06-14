@@ -6,8 +6,8 @@ from traceback import format_exc
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
-from transport.client import Client
-from transport.protocol import KIND_EVENT, KIND_RESPONSE
+from transport.messages import KIND_EVENT, KIND_RESPONSE
+from transport.sockets.client import Client
 
 logger = logging.getLogger(__name__)
 

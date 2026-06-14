@@ -9,8 +9,8 @@ from socket import (
 )
 from threading import Lock
 
-from transport.protocol import recv_response as read_response
-from transport.protocol import send_request
+from transport.sockets.protocol import recv_response as read_response
+from transport.sockets.protocol import send_request
 
 DEFAULT_SERVER_ADDRESS = "127.0.0.1:5000"
 CONNECT_TIMEOUT_SECONDS = 5.0

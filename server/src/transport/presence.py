@@ -1,6 +1,6 @@
 from threading import Lock
 
-class PresenceRegistry:
+class Presence:
     def __init__(self) -> None:
         self._map_connections: dict[str, set] = {}
         self._lock = Lock()

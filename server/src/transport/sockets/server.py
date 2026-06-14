@@ -16,8 +16,8 @@ from threading import Thread
 
 from database.connection import close_pool
 from transport.broadcaster import Broadcaster
-from transport.connection import BroadcastPresenceFn, Connection, RequestHandlerFn
-from transport.presence_registry import PresenceRegistry
+from transport.presence import Presence
+from transport.sockets.connection import BroadcastPresenceFn, Connection, RequestHandlerFn
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +30,14 @@ class Server:
         broadcast_presence: BroadcastPresenceFn,
         *,
         broadcaster: Broadcaster,
-        presence_registry: PresenceRegistry,
+        presence: Presence,
     ) -> None:
         self._server_socket = None
         self._server_address = _resolve_server_address()
         self._handle_request = handle_request
         self._broadcast_presence = broadcast_presence
         self._broadcaster = broadcaster
-        self._presence_registry = presence_registry
+        self._presence = presence
 
     def start(self) -> None:
         try:
@@ -60,7 +60,7 @@ class Server:
                     handle_request=self._handle_request,
                     broadcast_presence=self._broadcast_presence,
                     broadcaster=self._broadcaster,
-                    presence_registry=self._presence_registry,
+                    presence=self._presence,
                 )
                 Thread(target=client_connection.start, daemon=True).start()
         except KeyboardInterrupt:

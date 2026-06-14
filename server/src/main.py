@@ -4,7 +4,7 @@ import app as _app
 from database.connection import get_connection, get_database_path
 from database.schema import create_schema
 from database.seed import seed_users
-from transport.server import Server
+from transport.sockets.server import Server
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +24,7 @@ def start_server() -> None:
         _app.request_controller.handle_request,
         _app.publisher.presence_changed,
         broadcaster=_app.broadcaster,
-        presence_registry=_app.presence_registry,
+        presence=_app.presence,
     )
     server.start()
 

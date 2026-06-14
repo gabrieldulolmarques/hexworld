@@ -1,6 +1,6 @@
 from services.presence_service import PresenceService
 from transport.broadcaster import Broadcaster
-from transport.protocol import event
+from transport.messages import event
 
 class MapEventPublisher:
     def __init__(self, broadcaster: Broadcaster, presence_service: PresenceService) -> None:

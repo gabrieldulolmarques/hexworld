@@ -2,7 +2,7 @@ from controllers.map_event_publisher import MapEventPublisher
 from services.edge_service import EdgeService
 from services.path_service import PathService
 from services.tile_service import TileService
-from transport.protocol import error_response, success_response
+from transport.messages import error_response, success_response
 
 class MapEditController:
     def __init__(

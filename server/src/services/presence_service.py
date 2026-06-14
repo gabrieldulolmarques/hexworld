@@ -1,17 +1,17 @@
 from repositories.user_map_repository import UserMapRepository
-from transport.presence_registry import PresenceRegistry
+from transport.presence import Presence
 
 class PresenceService:
     def __init__(
-        self, presence_registry: PresenceRegistry, user_map_repository: UserMapRepository
+        self, presence: Presence, user_map_repository: UserMapRepository
     ) -> None:
-        self._presence_registry = presence_registry
+        self._presence = presence
         self._user_map_repository = user_map_repository
 
     def list_online_users(self, map_id: str) -> list[dict]:
         seen: set[str] = set()
         users: list[dict] = []
-        for connection in self._presence_registry.connections_for(map_id):
+        for connection in self._presence.connections_for(map_id):
             user_id = connection.user_id
             if not user_id or user_id in seen:
                 continue

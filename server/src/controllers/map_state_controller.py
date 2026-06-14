@@ -1,7 +1,7 @@
 from controllers.map_event_publisher import MapEventPublisher
 from services.map_service import MapService
 from services.tile_service import TileService
-from transport.protocol import error_response, success_response
+from transport.messages import error_response, success_response
 
 class MapStateController:
     def __init__(
