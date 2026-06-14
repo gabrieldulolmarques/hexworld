@@ -2,6 +2,7 @@ from controllers.map_event_publisher import MapEventPublisher
 from services.map_service import MapService
 from services.tile_service import TileService
 from transport.messages import error_response, success_response
+from transport.session import ClientSession
 
 class MapStateController:
     def __init__(
@@ -15,7 +16,7 @@ class MapStateController:
         self._publisher = publisher
 
     def handle_get_map_state(
-        self, request: dict, connection: object, auth: dict
+        self, request: dict, connection: ClientSession, auth: dict
     ) -> dict:
         map_id = (request.get("data") or {}).get("map_id", "")
         connection.subscribe(map_id)
@@ -27,7 +28,7 @@ class MapStateController:
         return success_response(request, result)
 
     def handle_get_tile_details(
-        self, request: dict, connection: object, auth: dict
+        self, request: dict, connection: ClientSession, auth: dict
     ) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")

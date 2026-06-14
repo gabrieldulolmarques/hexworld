@@ -8,7 +8,7 @@ from models.limits import (
 )
 from models.preferences import Preferences
 from models.session import Session
-from transport.sockets.transport_worker import TransportWorker
+from transport.sockets.worker import Worker
 from transport.messages import STATUS_ERROR
 from transport.sockets.protocol import request
 
@@ -36,19 +36,19 @@ class AuthController(QObject):
 
     def __init__(
         self,
-        transport_worker: TransportWorker,
+        worker: Worker,
         session: Session,
         preferences: Preferences,
     ) -> None:
         super().__init__()
-        self._transport_worker = transport_worker
+        self._worker = worker
         self.session = session
         self.preferences = preferences
         self._pending: set[str] = set()
         self._pending_login_username = ""
         self._pending_remember = False
 
-        transport_worker.response.connect(self._on_response)
+        worker.response.connect(self._on_response)
 
     def login(self, username: str, password: str, remember_me: bool = False) -> None:
         username = username.strip()
@@ -118,7 +118,7 @@ class AuthController(QObject):
         self._pending.add(request["request_id"])
         if len(self._pending) == 1:
             self.loading.emit(True)
-        if not self._transport_worker.submit(request):
+        if not self._worker.submit(request):
             self._pending.discard(request["request_id"])
             if not self._pending:
                 self.loading.emit(False)

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 _STOP = object()
 RECONNECT_DELAY_S = 2.0
 
-class TransportWorker(QThread):
+class Worker(QThread):
     connected = pyqtSignal()
     disconnected = pyqtSignal()
     response = pyqtSignal(dict)

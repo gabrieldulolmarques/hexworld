@@ -16,7 +16,7 @@ from models.map.tile_format import (
 )
 from services.export import default_filename, normalize_path, save_image
 from transport.sockets.client import Client
-from transport.sockets.transport_worker import TransportWorker
+from transport.sockets.worker import Worker
 from views.auth_view import AuthView
 from views.lobby.lobby_view import LobbyView
 from views.shell.main_view import MainView
@@ -39,8 +39,8 @@ class ClientApp:
         main_view.stack.addWidget(self.map_view)
 
         self.client = Client()
-        self.transport_worker = TransportWorker(self.client)
-        self.transport_worker.start()
+        self.worker = Worker(self.client)
+        self.worker.start()
         main_view.show_connection_status(_CONNECT_MESSAGE)
 
         self.session = Session()
@@ -53,10 +53,10 @@ class ClientApp:
         self._restore_preferences()
 
         self.auth = AuthController(
-            self.transport_worker, self.session, self.preferences
+            self.worker, self.session, self.preferences
         )
-        self.lobby = LobbyController(self.transport_worker, self.session)
-        self.map_sync = MapSyncController(self.transport_worker, self.session)
+        self.lobby = LobbyController(self.worker, self.session)
+        self.map_sync = MapSyncController(self.worker, self.session)
         self.map_session = MapSessionController(
             self.map_sync,
             self.history,
@@ -125,8 +125,8 @@ class ClientApp:
         self.map_sync.tile_details_loaded.connect(self._on_tile_details_loaded)
         self.map_sync.tile_details_error.connect(self._on_tile_details_error)
 
-        self.transport_worker.connected.connect(self._on_transport_connected)
-        self.transport_worker.disconnected.connect(self._on_transport_disconnected)
+        self.worker.connected.connect(self._on_transport_connected)
+        self.worker.disconnected.connect(self._on_transport_disconnected)
 
     def _on_auth_loading(self, loading: bool) -> None:
         if self.main_view.stack.currentWidget() is self.lobby_view:
@@ -299,5 +299,5 @@ class ClientApp:
 
     def stop(self) -> None:
         self._stopping = True
-        self.transport_worker.stop()
+        self.worker.stop()
         self.client.stop()

@@ -3,9 +3,10 @@ from functools import wraps
 
 from services.auth_service import AuthService
 from transport.messages import error_response
+from transport.session import ClientSession
 from utils.roles import has_role
 
-Handler = Callable[[dict, object, dict], dict]
+Handler = Callable[[dict, ClientSession, dict], dict]
 
 _ROLE_ERRORS: dict[str, str] = {"editor": "not_editor", "owner": "not_owner"}
 
@@ -14,9 +15,9 @@ class AuthMiddleware:
         self._auth_service = auth_service
 
     def require_role(self, min_role: str) -> Callable:
-        def decorator(handler: Handler) -> Callable[[dict, object, dict], dict]:
+        def decorator(handler: Handler) -> Callable[[dict, ClientSession, dict], dict]:
             @wraps(handler)
-            def wrapper(request: dict, connection, auth: dict) -> dict:
+            def wrapper(request: dict, connection: ClientSession, auth: dict) -> dict:
                 map_id = (request.get("data") or {}).get("map_id")
                 if not map_id:
                     return error_response(request, "missing_fields")
@@ -30,9 +31,9 @@ class AuthMiddleware:
 
         return decorator
 
-    def authenticated(self, handler: Handler) -> Callable[[dict, object], dict]:
+    def authenticated(self, handler: Handler) -> Callable[[dict, ClientSession], dict]:
         @wraps(handler)
-        def wrapper(request: dict, connection) -> dict:
+        def wrapper(request: dict, connection: ClientSession) -> dict:
             token = _extract_token(request)
             if not token:
                 return error_response(request, "missing_fields")

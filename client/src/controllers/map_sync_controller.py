@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.session import Session
-from transport.sockets.transport_worker import TransportWorker
+from transport.sockets.worker import Worker
 from transport.messages import STATUS_ERROR
 from transport.sockets.protocol import request
 
@@ -25,17 +25,17 @@ class MapSyncController(QObject):
     tile_details_error = pyqtSignal(int, int, str)
     session_error = pyqtSignal()
 
-    def __init__(self, transport_worker: TransportWorker, session: Session) -> None:
+    def __init__(self, worker: Worker, session: Session) -> None:
         super().__init__()
-        self._worker = transport_worker
+        self._worker = worker
         self._session = session
         self._pending: set[str] = set()
         self._details_pending: dict[str, tuple[int, int]] = {}
         self._open_map_id: str | None = None
         self._tile_ids: dict[tuple[int, int], str] = {}
         self._map_role: str = "viewer"
-        transport_worker.response.connect(self._on_response)
-        transport_worker.event.connect(self._on_event)
+        worker.response.connect(self._on_response)
+        worker.event.connect(self._on_event)
 
     def open_map(self, map_id: str) -> None:
         self._open_map_id = map_id

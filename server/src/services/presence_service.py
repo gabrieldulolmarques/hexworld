@@ -1,5 +1,6 @@
 from repositories.user_map_repository import UserMapRepository
 from transport.presence import Presence
+from transport.session import ClientSession
 
 class PresenceService:
     def __init__(
@@ -11,12 +12,12 @@ class PresenceService:
     def list_online_users(self, map_id: str) -> list[dict]:
         seen: set[str] = set()
         users: list[dict] = []
-        for connection in self._presence.connections_for(map_id):
-            user_id = connection.user_id
+        for session in self._presence.connections_for(map_id):
+            user_id = session.user_id
             if not user_id or user_id in seen:
                 continue
             seen.add(user_id)
             role = self._user_map_repository.get_role(user_id, map_id) or "viewer"
-            users.append({"username": connection.username or "unknown", "role": role})
+            users.append({"username": session.username or "unknown", "role": role})
         users.sort(key=lambda entry: entry["username"].lower())
         return users

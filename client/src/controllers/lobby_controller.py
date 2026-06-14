@@ -4,7 +4,7 @@ from models.limits import MAX_MAP_MEMBERS, MAX_MAP_NAME_LENGTH
 from models.session import Session
 from transport.messages import STATUS_ERROR
 from transport.sockets.protocol import request
-from transport.sockets.transport_worker import TransportWorker
+from transport.sockets.worker import Worker
 
 _ERROR_MESSAGES = {
     "missing_fields": "Missing fields.",
@@ -32,13 +32,13 @@ class LobbyController(QObject):
     map_role_changed = pyqtSignal(str, str)
     session_error = pyqtSignal()
 
-    def __init__(self, transport_worker: TransportWorker, session: Session) -> None:
+    def __init__(self, worker: Worker, session: Session) -> None:
         super().__init__()
-        self._worker = transport_worker
+        self._worker = worker
         self._session = session
         self._pending: set[str] = set()
-        transport_worker.response.connect(self._on_response)
-        transport_worker.event.connect(self._on_event)
+        worker.response.connect(self._on_response)
+        worker.event.connect(self._on_event)
 
     def get_maps(self) -> None:
         self._send(request("get_maps", {"token": self._session.token}))

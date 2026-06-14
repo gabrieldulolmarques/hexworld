@@ -6,6 +6,7 @@ from controllers.map_edit_controller import MapEditController
 from controllers.map_lifecycle_controller import MapLifecycleController
 from controllers.map_state_controller import MapStateController
 from transport.messages import error_response
+from transport.session import ClientSession
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class RequestController:
             ),
         }
 
-    def handle_request(self, request: dict, connection) -> dict:
+    def handle_request(self, request: dict, connection: ClientSession) -> dict:
         request_type = request.get("type") or "unknown"
         handler = self._handlers.get(request_type)
         if handler is None:

@@ -5,14 +5,15 @@ from threading import Lock
 
 from transport.broadcaster import Broadcaster
 from transport.presence import Presence
+from transport.session import ClientSession
 from transport.sockets.protocol import recv_request, send_response
 
 logger = logging.getLogger(__name__)
 
 BroadcastPresenceFn = Callable[[str, str], None]
-RequestHandlerFn = Callable[[dict, "Connection"], dict]
+RequestHandlerFn = Callable[[dict, ClientSession], dict]
 
-class Connection:
+class Connection:  # implements ClientSession
     def __init__(
         self,
         client_socket: socket,

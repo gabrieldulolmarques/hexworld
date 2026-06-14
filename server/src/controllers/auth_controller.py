@@ -1,11 +1,12 @@
 from services.auth_service import AuthService
 from transport.messages import error_response, success_response
+from transport.session import ClientSession
 
 class AuthController:
     def __init__(self, auth_service: AuthService) -> None:
         self._auth_service = auth_service
 
-    def handle_register(self, request: dict, connection: object) -> dict:
+    def handle_register(self, request: dict, connection: ClientSession) -> dict:
         data = request.get("data", {})
         username = str(data.get("username", "")).strip()
         password = str(data.get("password", ""))
@@ -16,7 +17,7 @@ class AuthController:
             return error_response(request, error_code)
         return success_response(request)
 
-    def handle_login(self, request: dict, connection: object) -> dict:
+    def handle_login(self, request: dict, connection: ClientSession) -> dict:
         data = request.get("data", {})
         username = str(data.get("username", "")).strip()
         password = str(data.get("password", ""))
@@ -30,14 +31,14 @@ class AuthController:
             return error_response(request, error_code)
         return success_response(request, response_data)
 
-    def handle_logout(self, request: dict, connection: object, auth: dict) -> dict:
+    def handle_logout(self, request: dict, connection: ClientSession, auth: dict) -> dict:
         error_code = self._auth_service.logout(auth["token"])
         if error_code is not None:
             return error_response(request, error_code)
         return success_response(request)
 
     def handle_validate_session(
-        self, request: dict, connection: object, auth: dict
+        self, request: dict, connection: ClientSession, auth: dict
     ) -> dict:
         return success_response(
             request,

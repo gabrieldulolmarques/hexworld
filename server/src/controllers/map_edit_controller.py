@@ -3,6 +3,7 @@ from services.edge_service import EdgeService
 from services.path_service import PathService
 from services.tile_service import TileService
 from transport.messages import error_response, success_response
+from transport.session import ClientSession
 
 class MapEditController:
     def __init__(
@@ -22,7 +23,7 @@ class MapEditController:
             map_id, event_type, self._tile_service.serialize_tile(map_id, q, r)
         )
 
-    def handle_set_terrain(self, request: dict, connection: object, auth: dict) -> dict:
+    def handle_set_terrain(self, request: dict, connection: ClientSession, auth: dict) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
         q = data.get("q")
@@ -38,7 +39,7 @@ class MapEditController:
         self._broadcast_tile(map_id, "terrain_set", result["q"], result["r"])
         return success_response(request, result)
 
-    def handle_add_path(self, request: dict, connection: object, auth: dict) -> dict:
+    def handle_add_path(self, request: dict, connection: ClientSession, auth: dict) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
         waypoints = data.get("waypoints")
@@ -51,7 +52,7 @@ class MapEditController:
         self._publisher.path_added(map_id, result)
         return success_response(request, result)
 
-    def handle_set_edge(self, request: dict, connection: object, auth: dict) -> dict:
+    def handle_set_edge(self, request: dict, connection: ClientSession, auth: dict) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
         q = data.get("q")
@@ -68,7 +69,7 @@ class MapEditController:
         self._publisher.edge_changed(map_id, result)
         return success_response(request, result)
 
-    def handle_remove_edge(self, request: dict, connection: object, auth: dict) -> dict:
+    def handle_remove_edge(self, request: dict, connection: ClientSession, auth: dict) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
         q = data.get("q")
@@ -85,7 +86,7 @@ class MapEditController:
         return success_response(request, result)
 
     def handle_set_description(
-        self, request: dict, connection: object, auth: dict
+        self, request: dict, connection: ClientSession, auth: dict
     ) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
@@ -103,7 +104,7 @@ class MapEditController:
         return success_response(request, result)
 
     def handle_remove_terrain(
-        self, request: dict, connection: object, auth: dict
+        self, request: dict, connection: ClientSession, auth: dict
     ) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
@@ -116,7 +117,7 @@ class MapEditController:
         self._broadcast_tile(map_id, "terrain_removed", result["q"], result["r"])
         return success_response(request, result)
 
-    def handle_remove_path(self, request: dict, connection: object, auth: dict) -> dict:
+    def handle_remove_path(self, request: dict, connection: ClientSession, auth: dict) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
         path_id = data.get("path_id", "")
@@ -129,7 +130,7 @@ class MapEditController:
         return success_response(request, result)
 
     def handle_remove_description(
-        self, request: dict, connection: object, auth: dict
+        self, request: dict, connection: ClientSession, auth: dict
     ) -> dict:
         data = request.get("data") or {}
         map_id = data.get("map_id", "")
