@@ -4,6 +4,7 @@ import time
 
 import Pyro5.api
 
+from services.auth_service import AuthService as DomainAuthService
 from transport.broadcaster import Broadcaster
 from transport.presence import Presence
 from transport.rmi.client_session import BroadcastPresenceFn
@@ -21,15 +22,23 @@ def start_rmi_server(
     *,
     broadcaster: Broadcaster,
     presence: Presence,
+    domain_auth: DomainAuthService,
 ) -> None:
     ns_host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
     ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
-    bind_host = os.getenv("PYRO_HOST", "0.0.0.0")
+    bind_host = os.getenv("PYRO_HOST", "127.0.0.1")
+    nat_host = os.getenv("PYRO_NAT_HOST") or None
+    nat_port = os.getenv("PYRO_NAT_PORT")
 
     registry = RmiSessionRegistry(broadcaster, presence, broadcast_presence)
-    objects = create_remote_objects(handle_request, registry)
+    objects = create_remote_objects(handle_request, registry, domain_auth)
 
-    daemon = Pyro5.api.Daemon(host=bind_host)
+    daemon_kwargs: dict = {"host": bind_host}
+    if nat_host:
+        daemon_kwargs["nathost"] = nat_host
+        if nat_port:
+            daemon_kwargs["natport"] = int(nat_port)
+    daemon = Pyro5.api.Daemon(**daemon_kwargs)
     nameserver = _locate_nameserver(ns_host, ns_port)
     for name, remote_object in objects.items():
         uri = daemon.register(remote_object)

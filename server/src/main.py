@@ -30,6 +30,7 @@ def start_server() -> None:
             _app.publisher.presence_changed,
             broadcaster=_app.broadcaster,
             presence=_app.presence,
+            domain_auth=_app.auth_service,
         )
         return
 
