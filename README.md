@@ -16,25 +16,16 @@
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
+Dois backends de transporte disponíveis no mesmo repositório, escolhidos pela variável `HEXWORLD_TRANSPORT`:
+
+| Backend | Tecnologia | Como executar |
+|---|---|---|
+| `sockets` (padrão) | TCP + JSON framing | `docker compose up` / `make up` |
+| `rmi` | Pyro5 + Name Server | `make up-rmi` |
+
 ---
 
-## Server (Docker)
-
-```bash
-docker compose up --build # cria o contêiner e inicia o servidor
-```
-
----
-
-## Client (Local)
-
-```bash
-make build # cria o ambiente virtual e instala as dependências
-make check # verifica sintaxe do client
-make up # abre o cliente e conecta ao servidor local
-```
-
-**Contas disponíveis:**
+## Contas disponíveis
 
 | Usuário | Senha       |
 |---------|-------------|
@@ -43,46 +34,89 @@ make up # abre o cliente e conecta ao servidor local
 | `user3` | `password3` |
 | `user4` | `password4` |
 
-**Múltiplos clientes simultâneos:**
+---
+
+## Modo Sockets (Parte 3)
+
+### Servidor
 
 ```bash
-make up clients=4 # abre 4 instâncias do cliente com sessões separadas
-make clean # remove sessões locais
+docker compose up --build   # sobe o servidor na porta 5000
+docker compose down         # derruba
+```
+
+### Cliente
+
+```bash
+make build          # cria .venv e instala dependências
+make up             # abre 1 cliente conectado a 127.0.0.1:5000
+make up clients=4   # abre 4 instâncias com sessões separadas
+make clean          # remove sessões locais
+make demo           # conecta ao servidor público (hexworld.playit.plus:1048)
 ```
 
 ---
 
-### Servidor Público (Playit.gg)
+## Modo RMI — Pyro5 + Name Server (Parte 4)
 
-Para conectar ao servidor público já configurado:
+Tudo roda localmente com um único comando:
 
 ```bash
-make demo # abre o cliente e conecta ao servidor público (hexworld.playit.plus:1048)
+make up-rmi             # NS + servidor + 1 cliente
+make up-rmi clients=2   # NS + servidor + 2 clientes
+```
+
+Ou em terminais separados para inspecionar cada componente:
+
+```bash
+# Terminal 1 — Name Server
+make ns
+
+# Terminal 2 — Servidor RMI
+make server-rmi
+
+# Terminal 3 — Cliente(s)
+HEXWORLD_TRANSPORT=rmi make up clients=2
+```
+
+### Via Docker (apenas servidor-lado)
+
+```bash
+docker compose --profile rmi up --build
+```
+
+Sobe `name-server` (porta 9090) e `server-rmi`. Os clientes continuam rodando localmente com `HEXWORLD_TRANSPORT=rmi make up`.
+
+### Variáveis de ambiente relevantes
+
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `HEXWORLD_TRANSPORT` | `sockets` | Backend de transporte (`sockets` ou `rmi`) |
+| `PYRO_NS_HOST` | `127.0.0.1` | Host do Name Server Pyro5 |
+| `PYRO_NS_PORT` | `9090` | Porta do Name Server Pyro5 |
+| `SERVER_ADDRESS` | `127.0.0.1:5000` | Endereço do servidor (modo sockets) |
+
+---
+
+## Verificação de sintaxe
+
+```bash
+make check   # compileall em client/src + server/src
 ```
 
 ---
 
-## Desenvolvimento
+## Reiniciar banco de dados
 
 ```bash
-make check # verificação rápida de sintaxe do client (client + server)
+docker compose down
+sudo rm -f server/data/hexworld.db
+docker compose up --build
 ```
 
 ---
 
-## Reiniciar Banco de Dados
-
-```bash
-docker compose down # desliga o contêiner do servidor
-sudo rm -f server/data/hexworld.db  # remove o banco de dados
-docker compose up --build # recria o contêiner e inicia o servidor
-```
-
----
-
-## Hospedar Publicamente (opcional)
-
-Para expor o servidor via túnel TCP:
+## Hospedar publicamente via Playit.gg (opcional)
 
 1. Obtenha a `SECRET_KEY` em [Playit.gg → Docker](https://playit.gg/account/setup/wizard/new-account/docker/docker-name).
 2. Copie `.env.example` para `.env` e preencha a chave.
