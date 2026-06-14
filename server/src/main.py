@@ -1,4 +1,5 @@
 import logging
+import os
 
 import app as _app
 from database.connection import get_connection, get_database_path
@@ -20,6 +21,18 @@ def initialize_database() -> None:
     logger.info("Database ready at %s", get_database_path())
 
 def start_server() -> None:
+    transport = os.getenv("HEXWORLD_TRANSPORT", "sockets").strip().lower()
+    if transport == "rmi":
+        from transport.rmi.daemon import start_rmi_server
+
+        start_rmi_server(
+            _app.request_controller.handle_request,
+            _app.publisher.presence_changed,
+            broadcaster=_app.broadcaster,
+            presence=_app.presence,
+        )
+        return
+
     server = Server(
         _app.request_controller.handle_request,
         _app.publisher.presence_changed,
