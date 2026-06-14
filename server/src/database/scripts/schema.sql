@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS tile (
     UNIQUE (map_id, q, r)
 );
 
-CREATE TABLE IF NOT EXISTS structure (
+CREATE TABLE IF NOT EXISTS terrain (
     tile_id TEXT PRIMARY KEY REFERENCES tile (id) ON DELETE CASCADE,
     type TEXT NOT NULL,
     author_id TEXT REFERENCES user (id) ON DELETE SET NULL,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS structure (
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS road (
+CREATE TABLE IF NOT EXISTS path (
     id TEXT PRIMARY KEY NOT NULL,
     map_id TEXT NOT NULL REFERENCES map (id) ON DELETE CASCADE,
     waypoints TEXT NOT NULL,  -- JSON segment [[q1,r1],[q2,r2]]
@@ -69,10 +69,10 @@ CREATE TABLE IF NOT EXISTS road (
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS road_map_color_idx
-    ON road (map_id, color);
+CREATE INDEX IF NOT EXISTS path_map_color_idx
+    ON path (map_id, color);
 
-CREATE TABLE IF NOT EXISTS hex_inner_edge (
+CREATE TABLE IF NOT EXISTS edge (
     map_id TEXT NOT NULL REFERENCES map (id) ON DELETE CASCADE,
     q INTEGER NOT NULL,
     r INTEGER NOT NULL,

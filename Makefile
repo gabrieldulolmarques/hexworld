@@ -20,13 +20,13 @@ clients ?= 1
 
 $(VENV)/bin/python:
 	@test -d $(VENV) || $(PYTHON3) -m venv $(VENV)
-	$(VENV)/bin/python -m pip install --upgrade pip
-	$(VENV)/bin/python -m pip install -r client/requirements.txt
+	@$(VENV)/bin/python -m pip install --upgrade pip
+	@$(VENV)/bin/python -m pip install -r client/requirements.txt
 
 build: $(VENV)/bin/python
 
 check: $(VENV)/bin/python
-	. "$(VENV_DIR)/bin/activate" && python -m compileall -q client/src
+	. "$(VENV_DIR)/bin/activate" && PYTHONPYCACHEPREFIX=$(VENV_DIR)/pycache python -m compileall -q client/src server/src
 
 up: $(VENV)/bin/python
 	set -e; \

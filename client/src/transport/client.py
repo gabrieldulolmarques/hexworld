@@ -5,9 +5,6 @@ from socket import (
     SO_KEEPALIVE,
     SOCK_STREAM,
     SOL_SOCKET,
-    TCP_KEEPCNT,
-    TCP_KEEPIDLE,
-    TCP_KEEPINTVL,
     socket,
 )
 from threading import Lock
@@ -93,10 +90,15 @@ class Client:
             raise Exception(SERVER_UNREACHABLE_MESSAGE) from exception
 
 def _configure_keepalive(sock: socket) -> None:
+    import socket as _socket
+
     sock.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)
-    sock.setsockopt(IPPROTO_TCP, TCP_KEEPIDLE, 30)
-    sock.setsockopt(IPPROTO_TCP, TCP_KEEPINTVL, 10)
-    sock.setsockopt(IPPROTO_TCP, TCP_KEEPCNT, 3)
+    if hasattr(_socket, "TCP_KEEPIDLE"):
+        sock.setsockopt(IPPROTO_TCP, _socket.TCP_KEEPIDLE, 30)
+    if hasattr(_socket, "TCP_KEEPINTVL"):
+        sock.setsockopt(IPPROTO_TCP, _socket.TCP_KEEPINTVL, 10)
+    if hasattr(_socket, "TCP_KEEPCNT"):
+        sock.setsockopt(IPPROTO_TCP, _socket.TCP_KEEPCNT, 3)
 
 def _resolve_server_address() -> tuple[str, int]:
     raw = getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS)

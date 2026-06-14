@@ -10,7 +10,6 @@ KIND_REQUEST = "request"
 KIND_RESPONSE = "response"
 KIND_EVENT = "event"
 
-STATUS_SUCCESS = "success"
 STATUS_ERROR = "error"
 
 def request(request_type: str, data: dict | None = None) -> dict:

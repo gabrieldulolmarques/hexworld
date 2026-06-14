@@ -1,3 +1,4 @@
+import logging
 from os import getenv
 from socket import (
     AF_INET,
@@ -12,17 +13,31 @@ from socket import (
     socket,
 )
 from threading import Thread
-from traceback import format_exc
 
 from database.connection import close_pool
-from transport.connection import Connection
+from transport.broadcaster import Broadcaster
+from transport.connection import BroadcastPresenceFn, Connection, RequestHandlerFn
+from transport.presence_registry import PresenceRegistry
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SERVER_ADDRESS = "0.0.0.0:5000"
 
 class Server:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        handle_request: RequestHandlerFn,
+        broadcast_presence: BroadcastPresenceFn,
+        *,
+        broadcaster: Broadcaster,
+        presence_registry: PresenceRegistry,
+    ) -> None:
         self._server_socket = None
         self._server_address = _resolve_server_address()
+        self._handle_request = handle_request
+        self._broadcast_presence = broadcast_presence
+        self._broadcaster = broadcaster
+        self._presence_registry = presence_registry
 
     def start(self) -> None:
         try:
@@ -30,20 +45,26 @@ class Server:
             self._server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
             self._server_socket.bind(self._server_address)
             self._server_socket.listen()
-            print(f"Server started on {self._server_address[0]}:{self._server_address[1]}")
-        except Exception as exception:
-            print(f"Error starting server: {exception}")
-            print(format_exc())
+            logger.info("Server started on %s:%s", *self._server_address)
+        except Exception:
+            logger.exception("Error starting server")
             self.stop()
             raise
         try:
             while True:
                 client_socket, client_address = self._server_socket.accept()
                 _configure_keepalive(client_socket)
-                client_connection = Connection(client_socket, client_address)
+                client_connection = Connection(
+                    client_socket,
+                    client_address,
+                    handle_request=self._handle_request,
+                    broadcast_presence=self._broadcast_presence,
+                    broadcaster=self._broadcaster,
+                    presence_registry=self._presence_registry,
+                )
                 Thread(target=client_connection.start, daemon=True).start()
         except KeyboardInterrupt:
-            print("Server stopped by keyboard interrupt")
+            logger.info("Server stopped by keyboard interrupt")
         finally:
             self.stop()
 
@@ -52,7 +73,7 @@ class Server:
             self._server_socket.close()
             self._server_socket = None
         close_pool()
-        print("Server stopped")
+        logger.info("Server stopped")
 
 def _configure_keepalive(sock: socket) -> None:
     sock.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1)

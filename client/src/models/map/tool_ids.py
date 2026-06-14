@@ -1,0 +1,6 @@
+TOOL_SELECT = "select"
+TOOL_TERRAIN = "terrain"
+TOOL_PATH = "path"
+TOOL_DESCRIPTION = "description"
+TOOL_ERASE = "erase"
+TOOL_PAN = "pan"

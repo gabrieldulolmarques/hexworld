@@ -4,6 +4,7 @@ from struct import pack, unpack
 HEADER_SIZE = 4
 HEADER_FORMAT = "!I"
 ENCODING = "utf-8"
+MAX_PAYLOAD_SIZE = 32 * 1024 * 1024
 
 KIND_REQUEST = "request"
 KIND_RESPONSE = "response"
@@ -48,6 +49,8 @@ def recv_request(sock) -> dict | None:
     if not header:
         return None
     size = unpack(HEADER_FORMAT, header)[0]
+    if size > MAX_PAYLOAD_SIZE:
+        raise ValueError(f"Payload size {size} exceeds limit {MAX_PAYLOAD_SIZE}")
     payload = _recv_exact(sock, size)
     if not payload:
         return None

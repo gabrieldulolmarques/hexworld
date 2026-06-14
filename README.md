@@ -1,10 +1,15 @@
 # HexWorld
 
 **Universidade Federal de Viçosa — Campus Florestal**
+
 **Instituto de Ciências Exatas e Tecnológicas**
+
 **Bacharelado em Ciência da Computação**
+
 **CCF 355 — Sistemas Distribuídos e Paralelos**
-**Professora:** Thais Regina de M. B. Silva
+
+**Professora:** Thais Regina de Moura Braga Silva
+
 **Grupo:** Alan Araújo dos Reis (5096) · Gabriel Rodrigues Marques (5097)
 
 ---
@@ -25,7 +30,8 @@ docker compose up --build # cria o contêiner e inicia o servidor
 
 ```bash
 make build # cria o ambiente virtual e instala as dependências
-make up    # conecta em 127.0.0.1:5000 e abre o cliente
+make check # verifica sintaxe do client
+make up # abre o cliente e conecta ao servidor local
 ```
 
 **Contas disponíveis:**
@@ -40,8 +46,8 @@ make up    # conecta em 127.0.0.1:5000 e abre o cliente
 **Múltiplos clientes simultâneos:**
 
 ```bash
-make up clients=4 # abre 4 instâncias com sessões separadas
-make clean        # remove sessões locais
+make up clients=4 # abre 4 instâncias do cliente com sessões separadas
+make clean # remove sessões locais
 ```
 
 ---
@@ -51,7 +57,25 @@ make clean        # remove sessões locais
 Para conectar ao servidor público já configurado:
 
 ```bash
-make demo # usa hexworld.playit.plus:1048
+make demo # abre o cliente e conecta ao servidor público (hexworld.playit.plus:1048)
+```
+
+---
+
+## Desenvolvimento
+
+```bash
+make check # verificação rápida de sintaxe do client (client + server)
+```
+
+---
+
+## Reiniciar Banco de Dados
+
+```bash
+docker compose down # desliga o contêiner do servidor
+sudo rm -f server/data/hexworld.db  # remove o banco de dados
+docker compose up --build # recria o contêiner e inicia o servidor
 ```
 
 ---
@@ -67,10 +91,14 @@ Para expor o servidor via túnel TCP:
 
 ---
 
-## Reiniciar Banco de Dados
+## Licenças
 
-```bash
-docker compose down
-sudo rm -f server/data/hexworld.db
-docker compose up --build
-```
+| Componente | Licença |
+|---|---|
+| Código-fonte | [GNU GPL v3](LICENSE) |
+| Tiles do mapa (`client/assets/map/`) | [CC BY-SA 4.0](client/assets/map/LICENSE) |
+| Ícones SVG (`client/assets/icons/`) | [Lucide Icons — ISC](https://lucide.dev/license) |
+
+### Créditos
+
+Os tiles do mapa foram criados por **cmartins** e estão disponíveis em [cmartins.itch.io](https://cmartins.itch.io/).

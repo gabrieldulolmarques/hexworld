@@ -1,7 +1,9 @@
+import logging
 from sqlite3 import Connection
-from traceback import format_exc
 
-from services.auth_service import hash_password
+from utils.passwords import hash_password
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_USERS = [
     ("00000000-0000-0000-0000-000000000001", "user1", "password1"),
@@ -24,8 +26,7 @@ def seed_users(connection: Connection) -> None:
             users,
         )
         connection.commit()
-    except Exception as exception:
+    except Exception:
         connection.rollback()
-        print(f"Error seeding users: {exception}")
-        print(format_exc())
+        logger.exception("Error seeding users")
         raise
