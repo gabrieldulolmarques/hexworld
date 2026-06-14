@@ -16,6 +16,7 @@ SERVER_ADDRESS ?= 127.0.0.1:5000
 DEMO_SERVER_ADDRESS ?= hexworld.playit.plus:1048
 PYRO_NS_HOST ?= 127.0.0.1
 PYRO_NS_PORT ?= 9090
+RMI_DB ?= /tmp/hexworld_rmi.db
 clients ?= 1
 
 .PHONY: build check up clean demo ns server-rmi up-rmi
@@ -48,11 +49,13 @@ demo: $(VENV)/bin/python
 	$(MAKE) up SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS)
 
 ns: $(VENV)/bin/python
+	pkill -f "Pyro5.nameserver" 2>/dev/null; true
 	. "$(VENV_DIR)/bin/activate" && python -m Pyro5.nameserver --host $(PYRO_NS_HOST) --port $(PYRO_NS_PORT)
 
 server-rmi: $(VENV)/bin/python
 	. "$(VENV_DIR)/bin/activate" && \
 	cd server && \
+	DATABASE_PATH=$(RMI_DB) \
 	HEXWORLD_TRANSPORT=rmi \
 	PYRO_NS_HOST=$(PYRO_NS_HOST) \
 	PYRO_NS_PORT=$(PYRO_NS_PORT) \
@@ -61,9 +64,12 @@ server-rmi: $(VENV)/bin/python
 up-rmi: $(VENV)/bin/python
 	set -e; \
 	. "$(VENV_DIR)/bin/activate"; \
+	pkill -f "Pyro5.nameserver" 2>/dev/null; true; \
+	sleep 0.3; \
 	python -m Pyro5.nameserver --host $(PYRO_NS_HOST) --port $(PYRO_NS_PORT) & \
 	sleep 1; \
 	(cd server && \
+		DATABASE_PATH=$(RMI_DB) \
 		HEXWORLD_TRANSPORT=rmi \
 		PYRO_NS_HOST=$(PYRO_NS_HOST) \
 		PYRO_NS_PORT=$(PYRO_NS_PORT) \
