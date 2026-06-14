@@ -47,7 +47,6 @@ class ClientApp:
         else:
             self.client = Client()
             self.worker = Worker(self.client)
-        self.worker.start()
         main_view.show_connection_status(_CONNECT_MESSAGE)
 
         self.session = Session()
@@ -71,6 +70,11 @@ class ClientApp:
             self.local_map_state,
         )
         self._connect_signals()
+        # Start the transport only after every signal (connected/disconnected/
+        # response/event) is wired. Otherwise a fast (localhost/Docker) connect can
+        # emit `connected` before the slot exists, the emission is lost, and the
+        # "Connecting…" banner stays up even though the link is live.
+        self.worker.start()
 
     def _connect_signals(self) -> None:
         self.auth_view.login_requested.connect(self.auth.login)
