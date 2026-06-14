@@ -45,18 +45,13 @@ class RmiClientSession:
     def send(self, payload: dict) -> None:
         with self._send_lock:
             if self._event_callback_uri is None:
-                # Subscribed but no callback yet (or already torn down): drop this
-                # event silently. Raising here would make the Broadcaster evict a
-                # still-valid subscriber on a transient gap.
+
                 logger.debug(
                     "RMI session has no event callback; dropping event %s",
                     payload.get("type"),
                 )
                 return
-            # A fresh Proxy is created per send so it is owned by the broadcasting
-            # thread (Pyro proxies are not shareable across threads). A real
-            # delivery failure propagates so the Broadcaster can evict a dead
-            # subscriber.
+
             callback = Pyro5.api.Proxy(self._event_callback_uri)
             try:
                 callback.on_event(payload)

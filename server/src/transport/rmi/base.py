@@ -7,7 +7,6 @@ from transport.session import ClientSession
 
 RequestHandlerFn = Callable[[dict, ClientSession], dict]
 
-
 class _RemoteBase:
     def __init__(
         self, handle_request: RequestHandlerFn, registry: RmiSessionRegistry

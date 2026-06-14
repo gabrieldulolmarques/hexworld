@@ -111,8 +111,6 @@ class Renderer:
             return [*c._current_path, c._hover]
         return list(c._current_path)
 
-    # --------------------------------------------------------------- export
-
     def export_full_map_image(self) -> QImage:
         from views.map.canvas.map_canvas import _BG, _EXPORT_HEX_SIZE
 

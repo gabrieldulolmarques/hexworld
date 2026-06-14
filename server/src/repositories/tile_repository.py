@@ -4,8 +4,7 @@ from database.connection import get_connection
 
 class TileRepository:
     def get_or_create_tile(self, map_id: str, q: int, r: int) -> str:
-        # INSERT OR IGNORE avoids SELECT-then-INSERT race when two threads
-        # target the same coordinate simultaneously.
+
         tile_id = str(uuid4())
         with get_connection() as connection:
             connection.execute(

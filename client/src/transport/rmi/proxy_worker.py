@@ -15,14 +15,7 @@ logger = logging.getLogger(__name__)
 _STOP = object()
 RECONNECT_DELAY_S = 2.0
 
-
 class ProxyWorker(QThread):
-    """Drop-in replacement for transport.sockets.Worker using Pyro5 RMI.
-
-    Same four signals and submit/stop/reset API as the socket Worker so no
-    controller needs to change when HEXWORLD_TRANSPORT=rmi is set.
-    """
-
     connected = pyqtSignal()
     disconnected = pyqtSignal()
     response = pyqtSignal(dict)
@@ -67,9 +60,7 @@ class ProxyWorker(QThread):
         self.wait(3000)
 
     def _send_disconnect_best_effort(self) -> None:
-        # Graceful close has no TCP teardown to signal the server (unlike sockets),
-        # so tell it to drop our session. Best-effort: a fresh Proxy owned by this
-        # (calling) thread, fire-and-forget.
+
         token = self._registered_token
         if not token:
             return
@@ -196,10 +187,7 @@ class ProxyWorker(QThread):
             callback_ok = self._maybe_register_callback(item, response)
             self.response.emit(response)
             if not callback_ok:
-                # Event channel not established: force a reconnect so the UI shows
-                # "reconnecting" instead of a login that looks fine but gets no
-                # events. run() emits `disconnected`; the reconnect re-runs
-                # validate_session and retries the callback registration.
+
                 return False
         return True
 
@@ -281,8 +269,6 @@ class ProxyWorker(QThread):
             raise ValueError(f"missing request field: {exception}") from exception
 
     def _maybe_register_callback(self, request: dict, response: dict) -> bool:
-        """Register the event callback after login/validate. Returns False only
-        when registration was attempted and failed (so the caller can reconnect)."""
         if response.get("status") != "success" or not self._callback_uri:
             return True
         response_type = response.get("type")

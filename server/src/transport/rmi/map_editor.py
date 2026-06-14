@@ -2,7 +2,6 @@ import Pyro5.api
 
 from transport.rmi.base import _RemoteBase
 
-
 @Pyro5.api.expose
 class MapEditor(_RemoteBase):
     def set_terrain(

@@ -2,7 +2,6 @@ import Pyro5.api
 
 from transport.rmi.base import _RemoteBase
 
-
 @Pyro5.api.expose
 class MapCatalog(_RemoteBase):
     def create_map(self, token: str, name: str) -> dict:

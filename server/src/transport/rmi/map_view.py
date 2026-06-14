@@ -2,7 +2,6 @@ import Pyro5.api
 
 from transport.rmi.base import _RemoteBase
 
-
 @Pyro5.api.expose
 class MapView(_RemoteBase):
     def get_map_state(self, token: str, map_id: str) -> dict:

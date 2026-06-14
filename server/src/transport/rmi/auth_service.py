@@ -8,7 +8,6 @@ from transport.rmi.session_registry import RmiSessionRegistry
 
 logger = logging.getLogger(__name__)
 
-
 @Pyro5.api.expose
 class AuthService(_RemoteBase):
     def __init__(
@@ -41,9 +40,7 @@ class AuthService(_RemoteBase):
 
     @Pyro5.api.oneway
     def disconnect(self, token: str) -> None:
-        # Graceful teardown when the client window closes: drop the in-memory
-        # session (unsubscribe, leave presence, broadcast offline) without
-        # invalidating the persisted auth token, so "remember me" still works.
+
         self._registry.remove(str(token or "").strip())
 
     def register_event_callback(self, token: str, callback_uri: str) -> None:

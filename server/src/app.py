@@ -23,7 +23,6 @@ from services.tile_service import TileService
 from transport.broadcaster import Broadcaster
 from transport.presence import Presence
 
-# Repositories
 map_repository = MapRepository()
 user_map_repository = UserMapRepository()
 tile_repository = TileRepository()
@@ -34,11 +33,9 @@ edge_repository = EdgeRepository()
 user_repository = UserRepository()
 session_repository = SessionRepository()
 
-# Transport
 broadcaster = Broadcaster()
 presence = Presence()
 
-# Services
 map_service = MapService(
     map_repository, user_map_repository, tile_repository,
     path_repository, edge_repository,
@@ -52,7 +49,6 @@ edge_service = EdgeService(edge_repository, user_map_repository)
 auth_service = AuthService(user_repository, session_repository, user_map_repository)
 presence_service = PresenceService(presence, user_map_repository)
 
-# Controllers
 publisher = MapEventPublisher(broadcaster, presence_service)
 map_lifecycle_controller = MapLifecycleController(map_service, publisher)
 map_state_controller = MapStateController(map_service, tile_service, publisher)

@@ -30,7 +30,6 @@ build: $(VENV)/bin/python
 check: $(VENV)/bin/python
 	. "$(VENV_DIR)/bin/activate" && PYTHONPYCACHEPREFIX=$(VENV_DIR)/pycache python -m compileall -q client/src server/src
 
-# Clientes em modo sockets (servidor via `docker compose up`).
 up-sockets: $(VENV)/bin/python
 	set -e; \
 	. "$(VENV_DIR)/bin/activate"; \
@@ -48,8 +47,6 @@ clean:
 demo: $(VENV)/bin/python
 	$(MAKE) up-sockets SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS)
 
-# Clientes RMI. O backend (Name Server + servidor) sobe via Docker:
-#   docker compose --profile rmi up --build
 up-rmi: $(VENV)/bin/python
 	set -e; \
 	. "$(VENV_DIR)/bin/activate"; \

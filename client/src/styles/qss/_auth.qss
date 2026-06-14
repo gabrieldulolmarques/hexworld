@@ -1,4 +1,4 @@
-/* Login / register: bold UI copy; normal weight only for typed input (QLineEdit). */
+
 QWidget#authScreen QLabel#subtitle {
     font-weight: 600;
 }
@@ -65,7 +65,6 @@ QWidget#authScreen QCheckBox#showPasswordCheckbox:disabled {
     color: #71717b;
 }
 
-/* PasswordEdit (pyqt-login-page style): extra trailing padding for QAction icon */
 PasswordEdit {
     padding: 10px 40px 10px 14px;
 }

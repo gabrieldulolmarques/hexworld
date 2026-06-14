@@ -54,8 +54,6 @@ class MapSessionController(QObject):
     def handle_editor_error(self, message: str) -> None:
         self._path_actions.handle_editor_error(message)
 
-    # --------------------------------------------------------- delegations
-
     def handle_hex_paint(self, q: int, r: int) -> None:
         self._paint_actions.handle_hex_paint(q, r)
 
@@ -84,8 +82,6 @@ class MapSessionController(QObject):
 
     def redo(self) -> None:
         self._undo_replay.redo()
-
-    # --------------------------------------------------------- shared helpers
 
     def _record_history(self, action: dict) -> None:
         self._history.record(action)

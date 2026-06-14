@@ -73,7 +73,6 @@ class MapCanvas(QWidget):
 
         self._hover_edge: tuple[Coord, int] | None = None
 
-        # path_hint_next cache — recomputed only when _current_path changes
         self._path_hint_cache: set[Coord] = set()
         self._path_hint_dirty: bool = True
 
@@ -85,8 +84,6 @@ class MapCanvas(QWidget):
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMinimumSize(400, 300)
-
-    # ----------------------------------------------------------------- notify
 
     def notify_state_changed(self) -> None:
         self.update()
@@ -126,8 +123,6 @@ class MapCanvas(QWidget):
             return
         self._selected = None
         self.update()
-
-    # ------------------------------------------------------------------ modes
 
     def set_erase_mode(self, enabled: bool) -> None:
         self._erase_mode = enabled
@@ -192,8 +187,6 @@ class MapCanvas(QWidget):
     def set_path_color(self, color: str) -> None:
         self._path_color = color
 
-    # --------------------------------------------------------------- path ops
-
     def undo_current_path_point(self) -> None:
         if not self._current_path:
             return
@@ -222,8 +215,6 @@ class MapCanvas(QWidget):
             self.current_path_points_changed.emit(0)
         self.update()
 
-    # --------------------------------------------------------------- accessors
-
     def hovered_erase_component(self) -> str | None:
         return self._hover_component
 
@@ -235,8 +226,6 @@ class MapCanvas(QWidget):
 
     def hovered_edge(self) -> tuple[Coord, int] | None:
         return self._hover_edge
-
-    # --------------------------------------------------------------- zoom/pan
 
     def zoom_in(self) -> None:
         self._viewport.zoom_in()
@@ -254,8 +243,6 @@ class MapCanvas(QWidget):
         height: float | None = None,
     ) -> tuple[float, float]:
         return self._viewport.origin(width=width, height=height)
-
-    # ---------------------------------------------------------------- events
 
     def wheelEvent(self, event) -> None:
         self._input.wheel(event)
@@ -283,13 +270,9 @@ class MapCanvas(QWidget):
         super().resizeEvent(event)
         self._emit_viewport_changed()
 
-    # --------------------------------------------------------------- painting
-
     def paintEvent(self, _event) -> None:
         painter = QPainter(self)
         self._renderer.paint(painter)
-
-    # --------------------------------------------------------------- export / minimap (delegated)
 
     def export_full_map_image(self) -> QImage:
         return self._renderer.export_full_map_image()

@@ -172,8 +172,7 @@ class MapGrid(StatusMixin, QWidget):
         card.delete_clicked.connect(self.delete_clicked)
 
     def _rebuild_cards(self) -> None:
-        # Detach cached cards from their row widgets before clearing rows,
-        # so deleteLater() on the row does not cascade to the cards.
+
         for card in self._cards.values():
             card.setParent(None)
 

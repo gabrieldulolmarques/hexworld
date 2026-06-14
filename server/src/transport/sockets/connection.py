@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 BroadcastPresenceFn = Callable[[str, str], None]
 RequestHandlerFn = Callable[[dict, ClientSession], dict]
 
-class Connection:  # implements ClientSession
+class Connection:
     def __init__(
         self,
         client_socket: socket,

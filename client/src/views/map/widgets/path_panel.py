@@ -93,8 +93,6 @@ class PathColorPanel(MapPanel):
         self._saved_wrap.setLayout(self._saved_rows_layout)
         self._saved_wrap.hide()
 
-        # All widgets go into a content widget; the scroll area clips the overflow
-        # when apply_height_budget constrains the panel height.
         content = QWidget()
         layout = QVBoxLayout(content)
         layout.setContentsMargins(24, 20, 24, 20)

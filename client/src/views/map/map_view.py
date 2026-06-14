@@ -310,7 +310,6 @@ class MapView(QWidget):
         return self.canvas.export_full_map_image()
 
     def show_error(self, message: str, *, duration_ms: int = 4000) -> None:
-        """Show a transient error banner at the top of the map view."""
         self._error_banner.setWordWrap(True)
         self._error_banner.setText(message)
         self._error_banner.show()

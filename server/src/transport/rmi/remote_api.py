@@ -6,7 +6,6 @@ from transport.rmi.map_editor import MapEditor
 from transport.rmi.map_view import MapView
 from transport.rmi.session_registry import RmiSessionRegistry
 
-
 def create_remote_objects(
     handle_request: RequestHandlerFn,
     registry: RmiSessionRegistry,

@@ -79,7 +79,6 @@ class Worker(QThread):
             self._sleep_reconnect()
 
     def _serve_until_disconnect(self) -> bool:
-        """Return True when the worker should exit cleanly."""
         while self._running:
             if not self._flush_outgoing():
                 return False

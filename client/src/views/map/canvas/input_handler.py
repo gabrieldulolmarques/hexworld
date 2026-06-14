@@ -10,8 +10,6 @@ class InputHandler:
         self._pick = pick
         self._path_handler = PathHandler(canvas)
 
-    # ------------------------------------------------------------------ events
-
     def wheel(self, event) -> None:
         from views.map.canvas.map_canvas import (
             _HEX_SIZE_MAX,
@@ -263,8 +261,6 @@ class InputHandler:
 
     def can_continue_path_at(self, coord: Coord) -> bool:
         return self._path_handler.can_continue_at(coord)
-
-    # --------------------------------------------------------- brush / erase
 
     def _apply_brush_at(self, cx: float, cy: float) -> None:
         if self._canvas._erase_mode:

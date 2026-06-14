@@ -5,13 +5,6 @@ from transport.presence import Presence
 from transport.rmi.client_session import BroadcastPresenceFn, RmiClientSession
 
 class RmiSessionRegistry:
-    """Per-client RMI sessions keyed by auth token.
-
-    The remote objects are stateless facades shared by every client, so the
-    per-client state (subscriptions, presence, event callback) lives here and
-    is resolved by the token carried on each authenticated call.
-    """
-
     def __init__(
         self,
         broadcaster: Broadcaster,
@@ -33,7 +26,6 @@ class RmiSessionRegistry:
             return session
 
     def transient(self) -> RmiClientSession:
-        """Untracked session for unauthenticated calls (register/login)."""
         return self._new_session()
 
     def remove(self, token: str) -> None:
