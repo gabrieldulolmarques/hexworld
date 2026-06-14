@@ -1,3 +1,4 @@
+import logging
 from os import getenv
 from socket import (
     AF_INET,
@@ -11,6 +12,8 @@ from threading import Lock
 
 from transport.sockets.protocol import recv_response as read_response
 from transport.sockets.protocol import send_request
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_SERVER_ADDRESS = "127.0.0.1:5000"
 CONNECT_TIMEOUT_SECONDS = 5.0
@@ -68,9 +71,9 @@ class Client:
         if self._client_socket:
             self._client_socket.close()
             self._client_socket = None
-            print(
-                f"Client {self._client_id} disconnected from "
-                f"{self._server_address[0]}:{self._server_address[1]}"
+            logger.info(
+                "Client %s disconnected from %s:%s (sockets)",
+                self._client_id, self._server_address[0], self._server_address[1],
             )
 
     def _connect(self) -> None:
@@ -81,9 +84,9 @@ class Client:
             sock.settimeout(None)
             _configure_keepalive(sock)
             self._client_socket = sock
-            print(
-                f"Client {self._client_id} connected to "
-                f"{self._server_address[0]}:{self._server_address[1]}"
+            logger.info(
+                "Client %s connected to %s:%s (sockets)",
+                self._client_id, self._server_address[0], self._server_address[1],
             )
         except Exception as exception:
             self._client_socket = None
