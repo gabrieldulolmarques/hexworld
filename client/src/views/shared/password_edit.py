@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QLineEdit, QWidget
 
-_ICONS_DIR = Path(__file__).resolve().parents[2] / "assets" / "icons"
+_ICONS_DIR = Path(__file__).resolve().parents[3] / "assets" / "icons"
 
 class PasswordEdit(QLineEdit):
     def __init__(
