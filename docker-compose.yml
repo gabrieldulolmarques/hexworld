@@ -1,4 +1,5 @@
 services:
+  # --- Sockets mode (default) ---
   server:
     init: true
     build: ./server
@@ -24,6 +25,38 @@ services:
     networks:
       hexworld:
         ipv4_address: 10.1.0.3
+
+  # --- RMI mode (docker compose --profile rmi up --build) ---
+  name-server:
+    profiles: [rmi]
+    build: ./server
+    command: python -m Pyro5.nameserver --host 0.0.0.0 --port 9090
+    ports:
+      - "9090:9090"
+    environment:
+      PYTHONUNBUFFERED: 1
+    networks:
+      hexworld:
+        ipv4_address: 10.1.0.4
+
+  server-rmi:
+    profiles: [rmi]
+    init: true
+    build: ./server
+    environment:
+      DATABASE_PATH: /app/data/hexworld.db
+      HEXWORLD_TRANSPORT: rmi
+      PYRO_NS_HOST: 10.1.0.4
+      PYRO_NS_PORT: "9090"
+      PYRO_HOST: 10.1.0.5
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - ./server:/app
+    depends_on:
+      - name-server
+    networks:
+      hexworld:
+        ipv4_address: 10.1.0.5
 
 networks:
   hexworld:

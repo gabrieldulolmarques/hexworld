@@ -14,9 +14,11 @@ endif
 
 SERVER_ADDRESS ?= 127.0.0.1:5000
 DEMO_SERVER_ADDRESS ?= hexworld.playit.plus:1048
+PYRO_NS_HOST ?= 127.0.0.1
+PYRO_NS_PORT ?= 9090
 clients ?= 1
 
-.PHONY: build check up clean demo
+.PHONY: build check up clean demo ns server-rmi up-rmi
 
 $(VENV)/bin/python:
 	@test -d $(VENV) || $(PYTHON3) -m venv $(VENV)
@@ -44,3 +46,36 @@ clean:
 
 demo: $(VENV)/bin/python
 	$(MAKE) up SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS)
+
+ns: $(VENV)/bin/python
+	. "$(VENV_DIR)/bin/activate" && python -m Pyro5.nameserver --host $(PYRO_NS_HOST) --port $(PYRO_NS_PORT)
+
+server-rmi: $(VENV)/bin/python
+	. "$(VENV_DIR)/bin/activate" && \
+	cd server && \
+	HEXWORLD_TRANSPORT=rmi \
+	PYRO_NS_HOST=$(PYRO_NS_HOST) \
+	PYRO_NS_PORT=$(PYRO_NS_PORT) \
+	python src/main.py
+
+up-rmi: $(VENV)/bin/python
+	set -e; \
+	. "$(VENV_DIR)/bin/activate"; \
+	python -m Pyro5.nameserver --host $(PYRO_NS_HOST) --port $(PYRO_NS_PORT) & \
+	sleep 1; \
+	(cd server && \
+		HEXWORLD_TRANSPORT=rmi \
+		PYRO_NS_HOST=$(PYRO_NS_HOST) \
+		PYRO_NS_PORT=$(PYRO_NS_PORT) \
+		python src/main.py) & \
+	sleep 2; \
+	for id in $$(seq 1 $(strip $(clients))); do \
+		(cd client && \
+			HEXWORLD_TRANSPORT=rmi \
+			PYRO_NS_HOST=$(PYRO_NS_HOST) \
+			PYRO_NS_PORT=$(PYRO_NS_PORT) \
+			CLIENT_ID=$$id \
+			SESSION_PATH=data/session_$$id.json \
+			python src/main.py) & \
+	done; \
+	wait
