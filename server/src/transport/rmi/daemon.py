@@ -7,11 +7,11 @@ import Pyro5.api
 from transport.broadcaster import Broadcaster
 from transport.presence import Presence
 from transport.rmi.client_session import BroadcastPresenceFn
-from transport.rmi.remote_api import RequestHandlerFn, create_hexworld_api
+from transport.rmi.remote_api import RequestHandlerFn, create_remote_objects
+from transport.rmi.session_registry import RmiSessionRegistry
 
 logger = logging.getLogger(__name__)
 
-HEXWORLD_API_NAME = "hexworld.api"
 NS_LOOKUP_RETRIES = 10
 NS_LOOKUP_DELAY_S = 0.5
 
@@ -26,21 +26,16 @@ def start_rmi_server(
     ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
     bind_host = os.getenv("PYRO_HOST", "0.0.0.0")
 
-    api_class = create_hexworld_api(
-        handle_request,
-        broadcast_presence,
-        broadcaster,
-        presence,
-    )
+    registry = RmiSessionRegistry(broadcaster, presence, broadcast_presence)
+    objects = create_remote_objects(handle_request, registry)
 
     daemon = Pyro5.api.Daemon(host=bind_host)
-    uri = daemon.register(api_class)
-
     nameserver = _locate_nameserver(ns_host, ns_port)
-    nameserver.register(HEXWORLD_API_NAME, uri)
+    for name, remote_object in objects.items():
+        uri = daemon.register(remote_object)
+        nameserver.register(name, uri)
+        logger.info("Registered PYRONAME:%s -> %s", name, uri)
 
-    logger.info("RMI server registered as PYRONAME:%s", HEXWORLD_API_NAME)
-    logger.info("Daemon URI: %s", uri)
     try:
         daemon.requestLoop()
     except KeyboardInterrupt:
