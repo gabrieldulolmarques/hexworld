@@ -16,12 +16,12 @@
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
-Dois backends de transporte disponíveis no mesmo repositório, escolhidos pela variável `HEXWORLD_TRANSPORT`:
+Dois backends de transporte disponíveis no mesmo repositório, escolhidos pela variável `HEXWORLD_TRANSPORT`. Ambos usam o mesmo banco SQLite (`server/data/hexworld.db`).
 
 | Backend | Tecnologia | Como executar |
 |---|---|---|
-| `sockets` (padrão) | TCP + JSON framing | `docker compose up` / `make up` |
-| `rmi` | Pyro5 + Name Server | `make up-rmi` |
+| `sockets` | TCP + JSON framing | `docker compose --profile sockets up` + `make up-sockets` |
+| `rmi` | Pyro5 + Name Server | `docker compose --profile rmi up` + `make up-rmi` |
 
 ---
 
@@ -41,51 +41,37 @@ Dois backends de transporte disponíveis no mesmo repositório, escolhidos pela 
 ### Servidor
 
 ```bash
-docker compose up --build   # sobe o servidor na porta 5000
-docker compose down         # derruba
+docker compose --profile sockets up --build   # sobe o servidor na porta 5000
+docker compose down                           # derruba
 ```
 
 ### Cliente
 
 ```bash
-make build          # cria .venv e instala dependências
-make up             # abre 1 cliente conectado a 127.0.0.1:5000
-make up clients=4   # abre 4 instâncias com sessões separadas
-make clean          # remove sessões locais
-make demo           # conecta ao servidor público (hexworld.playit.plus:1048)
+make build               # cria .venv e instala dependências
+make up-sockets          # abre 1 cliente conectado a 127.0.0.1:5000
+make up-sockets clients=4   # abre 4 instâncias com sessões separadas
+make clean               # remove sessões locais
+make demo                # conecta ao servidor público (hexworld.playit.plus:1048)
 ```
 
 ---
 
 ## Modo RMI — Pyro5 + Name Server (Parte 4)
 
-Tudo roda localmente com um único comando:
+O backend (Name Server + servidor RMI) sobe via Docker; os clientes (GUI) rodam
+no host pelo Make:
 
 ```bash
-make up-rmi             # NS + servidor + 1 cliente
-make up-rmi clients=2   # NS + servidor + 2 clientes
+docker compose --profile rmi up --build   # Name Server + servidor RMI
+make up-rmi clients=2                       # cliente(s) no host
 ```
 
-Ou em terminais separados para inspecionar cada componente:
+Parar o backend: `docker compose --profile rmi down`.
 
-```bash
-# Terminal 1 — Name Server
-make ns
-
-# Terminal 2 — Servidor RMI
-make server-rmi
-
-# Terminal 3 — Cliente(s)
-HEXWORLD_TRANSPORT=rmi make up clients=2
-```
-
-### Via Docker (apenas servidor-lado)
-
-```bash
-docker compose --profile rmi up --build
-```
-
-Sobe `name-server` (porta 9090) e `server-rmi`. Os clientes continuam rodando localmente com `HEXWORLD_TRANSPORT=rmi make up`.
+Os contêineres RMI usam `network_mode: host` (Linux/WSL2): o contêiner compartilha
+a rede do host, então os callbacks Pyro5 servidor→cliente funcionam em `127.0.0.1`
+sem NAT — sem portas fixas nem configuração extra.
 
 ### Variáveis de ambiente relevantes
 
@@ -94,6 +80,7 @@ Sobe `name-server` (porta 9090) e `server-rmi`. Os clientes continuam rodando lo
 | `HEXWORLD_TRANSPORT` | `sockets` | Backend de transporte (`sockets` ou `rmi`) |
 | `PYRO_NS_HOST` | `127.0.0.1` | Host do Name Server Pyro5 |
 | `PYRO_NS_PORT` | `9090` | Porta do Name Server Pyro5 |
+| `DATABASE_PATH` | `server/data/hexworld.db` | SQLite compartilhado por sockets e RMI |
 | `SERVER_ADDRESS` | `127.0.0.1:5000` | Endereço do servidor (modo sockets) |
 
 ---
@@ -110,9 +97,11 @@ make check   # compileall em client/src + server/src
 
 ```bash
 docker compose down
-sudo rm -f server/data/hexworld.db
-docker compose up --build
+sudo rm -f server/data/hexworld.db server/data/hexworld.db-*
+docker compose --profile sockets up --build   # ou --profile rmi
 ```
+
+Os contêineres do servidor rodam com `user: ${UID}:${GID}` (lidos do `.env`, padrão `1000:1000`), então o SQLite criado em `server/data/` no volume montado fica com o dono do host — sem arquivos `root:root` travando o `rm`.
 
 ---
 
