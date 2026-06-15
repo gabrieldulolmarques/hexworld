@@ -23,7 +23,7 @@ Dois backends de transporte disponíveis no mesmo repositório:
 
 ---
 
-## Contas disponíveis
+### Usuários
 
 | Usuário | Senha       |
 |---------|-------------|
@@ -56,7 +56,7 @@ make demo # to-do
 
 ---
 
-## Verificação de Compilação
+### Verificação de Compilação
 
 ```bash
 make check
@@ -64,7 +64,7 @@ make check
 
 ---
 
-## Reiniciar Banco de Dados
+### Reiniciar Banco de Dados
 
 ```bash
 docker compose down
@@ -74,7 +74,7 @@ docker compose --profile [sockets|rmi] up --build
 
 ---
 
-## Hospedar publicamente via Playit.gg (opcional)
+### Hospedar publicamente via Playit.gg (opcional)
 
 1. Obtenha a `SECRET_KEY` em [Playit.gg → Docker](https://playit.gg/account/setup/wizard/new-account/docker/docker-name).
 2. Copie `.env.example` para `.env` e preencha a chave.
@@ -83,7 +83,7 @@ docker compose --profile [sockets|rmi] up --build
 
 ---
 
-## Licenças
+### Licenças
 
 | Componente | Licença |
 |---|---|
