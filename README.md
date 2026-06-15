@@ -1,34 +1,29 @@
 # HexWorld
 
 **Universidade Federal de Viçosa — Campus Florestal**
+
 **Instituto de Ciências Exatas e Tecnológicas**
+
 **Bacharelado em Ciência da Computação**
+
 **CCF 355 — Sistemas Distribuídos e Paralelos**
-**Professora:** Thais Regina de M. B. Silva
+
+**Professora:** Thais Regina de Moura Braga Silva
+
 **Grupo:** Alan Araújo dos Reis (5096) · Gabriel Rodrigues Marques (5097)
 
 ---
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
----
+Dois backends de transporte disponíveis no mesmo repositório:
 
-## Server (Docker)
-
-```bash
-docker compose up --build # cria o contêiner e inicia o servidor
-```
+- **`Sockets`** — TCP + JSON
+- **`Remote Method Invocation (RMI)`** — Pyro5 + Name Server
 
 ---
 
-## Client (Local)
-
-```bash
-make build # cria o ambiente virtual e instala as dependências
-make up    # conecta em 127.0.0.1:5000 e abre o cliente
-```
-
-**Contas disponíveis:**
+## Contas disponíveis
 
 | Usuário | Senha       |
 |---------|-------------|
@@ -37,28 +32,49 @@ make up    # conecta em 127.0.0.1:5000 e abre o cliente
 | `user3` | `password3` |
 | `user4` | `password4` |
 
-**Múltiplos clientes simultâneos:**
+---
+
+
+### Servidor
 
 ```bash
-make up clients=4 # abre 4 instâncias com sessões separadas
-make clean        # remove sessões locais
+docker compose --profile [sockets|rmi] up --build
+docker compose down  
 ```
 
 ---
 
-### Servidor Público (Playit.gg)
-
-Para conectar ao servidor público já configurado:
+### Cliente
 
 ```bash
-make demo # usa hexworld.playit.plus:1048
+make build
+make up-[sockets|rmi]
+make up-[sockets|rmi] clients=N
+make clean
+make demo # to-do
 ```
 
 ---
 
-## Hospedar Publicamente (opcional)
+## Verificação de Compilação
 
-Para expor o servidor via túnel TCP:
+```bash
+make check
+```
+
+---
+
+## Reiniciar Banco de Dados
+
+```bash
+docker compose down
+sudo rm -f server/data/hexworld.db server/data/hexworld.db-*
+docker compose --profile [sockets|rmi] up --build
+```
+
+---
+
+## Hospedar publicamente via Playit.gg (opcional)
 
 1. Obtenha a `SECRET_KEY` em [Playit.gg → Docker](https://playit.gg/account/setup/wizard/new-account/docker/docker-name).
 2. Copie `.env.example` para `.env` e preencha a chave.
@@ -67,10 +83,14 @@ Para expor o servidor via túnel TCP:
 
 ---
 
-## Reiniciar Banco de Dados
+## Licenças
 
-```bash
-docker compose down
-sudo rm -f server/data/hexworld.db
-docker compose up --build
-```
+| Componente | Licença |
+|---|---|
+| Código-fonte | [GNU GPL v3](LICENSE) |
+| Tiles do mapa (`client/assets/map/`) | [CC BY-SA 4.0](client/assets/map/LICENSE) |
+| Ícones SVG (`client/assets/icons/`) | [Lucide Icons — ISC](https://lucide.dev/license) |
+
+### Créditos
+
+Os tiles do mapa foram criados por **cmartins** e estão disponíveis em [cmartins.itch.io](https://cmartins.itch.io/).

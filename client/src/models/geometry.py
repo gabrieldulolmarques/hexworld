@@ -8,24 +8,25 @@ Coord = tuple[int, int]
 PixelPoint = tuple[float, float]
 
 _AXIAL_DIRECTIONS: list[Coord] = [
-    (1, 0), (0, 1), (-1, 1),
-    (-1, 0), (0, -1), (1, -1),
+    (1, 0),
+    (0, 1),
+    (-1, 1),
+    (-1, 0),
+    (0, -1),
+    (1, -1),
 ]
 
 def hex_to_pixel(q: float, r: float, size: float) -> tuple[float, float]:
-
     x = size * 1.5 * q
     y = size * _SQRT3 * (r + q / 2)
     return (x, y)
 
 def pixel_to_hex(x: float, y: float, size: float) -> Coord:
-
     q = x * 2 / 3 / size
     r = (-x / 3 + _SQRT3 / 3 * y) / size
     return _round_hex(q, r)
 
 def hex_vertices(cx: float, cy: float, size: float) -> list[tuple[float, float]]:
-
     pts: list[tuple[float, float]] = []
     for i in range(6):
         a = (math.pi / 3) * i
@@ -57,8 +58,8 @@ def _segment_key(start: Coord, end: Coord) -> tuple[Coord, Coord]:
 
 def _normalize_waypoints(waypoints: list) -> list[Coord]:
     out: list[Coord] = []
-    for wp in waypoints:
-        out.append((int(wp[0]), int(wp[1])))
+    for waypoint in waypoints:
+        out.append((int(waypoint[0]), int(waypoint[1])))
     return out
 
 def distance_point_to_segment(
@@ -79,7 +80,9 @@ def distance_point_to_segment(
     cy = ay + t * dy
     return math.hypot(px - cx, py - cy)
 
-def distance_to_polyline(px: float, py: float, points: list[PixelPoint]) -> float | None:
+def distance_to_polyline(
+    px: float, py: float, points: list[PixelPoint]
+) -> float | None:
     if len(points) < 2:
         return None
     return min(
@@ -93,12 +96,15 @@ def is_valid_polyline(waypoints: list) -> bool:
         return False
     seen_segments: set[tuple[Coord, Coord]] = set()
     for i in range(1, len(wps)):
-        if axial_step_direction(
-            wps[i - 1][0],
-            wps[i - 1][1],
-            wps[i][0],
-            wps[i][1],
-        ) is None:
+        if (
+            axial_step_direction(
+                wps[i - 1][0],
+                wps[i - 1][1],
+                wps[i][0],
+                wps[i][1],
+            )
+            is None
+        ):
             return False
         key = _segment_key(wps[i - 1], wps[i])
         if key in seen_segments:

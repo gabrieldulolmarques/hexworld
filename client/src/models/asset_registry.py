@@ -23,16 +23,16 @@ _BIOME_ORDER = (
 class TileInfo:
     biome: str
     index: int
-    key:   str
+    key: str
     label: str
-    stem:  str
-    path:  Path
+    stem: str
+    path: Path
 
 class AssetRegistry:
     def __init__(self) -> None:
-        self._by_stem:  dict[str, TileInfo] = {}
+        self._by_stem: dict[str, TileInfo] = {}
         self._by_biome: dict[str, list[TileInfo]] = {}
-        self._cache:    dict[tuple[str, int], QPixmap] = {}
+        self._cache: dict[tuple[str, int], QPixmap] = {}
         self._scan()
 
     def biomes(self) -> list[str]:
@@ -43,15 +43,15 @@ class AssetRegistry:
     def tiles(self, biome: str) -> list[TileInfo]:
         return self._by_biome.get(biome, [])
 
-    def tile(self, structure_type: str) -> TileInfo | None:
-        return self._by_stem.get(structure_type)
+    def tile(self, terrain_type: str) -> TileInfo | None:
+        return self._by_stem.get(terrain_type)
 
-    def pixmap(self, structure_type: str, hex_size: float) -> QPixmap | None:
-        info = self._by_stem.get(structure_type)
+    def pixmap(self, terrain_type: str, hex_size: float) -> QPixmap | None:
+        info = self._by_stem.get(terrain_type)
         if info is None:
             return None
         size = round(hex_size)
-        cache_key = (structure_type, size)
+        cache_key = (terrain_type, size)
         if cache_key not in self._cache:
             self._cache[cache_key] = _hex_fitted_pixmap(QPixmap(str(info.path)), size)
         return self._cache[cache_key]
@@ -77,7 +77,7 @@ def _parse_tile(biome: str, path: Path) -> TileInfo | None:
     prefix = f"{biome}_"
     if not stem.startswith(prefix):
         return None
-    rest = stem[len(prefix):]
+    rest = stem[len(prefix) :]
     idx_str, _, key = rest.partition("_")
     if not idx_str.isdigit():
         return None
@@ -108,14 +108,17 @@ def _hex_fitted_pixmap(source: QPixmap, hex_size: int) -> QPixmap:
     )
 
     scaled = source.scaled(
-        target_w, target_h,
+        target_w,
+        target_h,
         ratio_mode,
         Qt.TransformationMode.SmoothTransformation,
     )
     if scaled.width() != target_w or scaled.height() != target_h:
         ox = max(0, (scaled.width() - target_w) // 2)
         oy = max(0, (scaled.height() - target_h) // 2)
-        scaled = scaled.copy(ox, oy, min(target_w, scaled.width()), min(target_h, scaled.height()))
+        scaled = scaled.copy(
+            ox, oy, min(target_w, scaled.width()), min(target_h, scaled.height())
+        )
 
     path = QPainterPath()
     verts = hex_vertices(diam / 2, diam / 2, hex_size)

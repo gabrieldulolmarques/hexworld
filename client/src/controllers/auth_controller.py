@@ -1,14 +1,16 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from controllers.transport_worker import TransportWorker
+from models.limits import (
+    MAX_PASSWORD_LENGTH,
+    MAX_USERNAME_LENGTH,
+    MIN_PASSWORD_LENGTH,
+    MIN_USERNAME_LENGTH,
+)
 from models.preferences import Preferences
 from models.session import Session
-from transport.protocol import request
-
-MIN_USERNAME_LENGTH = 3
-MAX_USERNAME_LENGTH = 16
-MIN_PASSWORD_LENGTH = 8
-MAX_PASSWORD_LENGTH = 256
+from transport.sockets.worker import Worker
+from transport.messages import STATUS_ERROR
+from transport.sockets.protocol import request
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",
@@ -20,10 +22,10 @@ _ERROR_MESSAGES = {
     "password_too_long": "Password is too long.",
     "unknown_type": "Unknown request type.",
     "unexpected_error": "Unexpected server error.",
+    "connection_lost": "Connection lost. Please try again.",
 }
 
 class AuthController(QObject):
-
     loading = pyqtSignal(bool)
     error = pyqtSignal(str)
     login_success = pyqtSignal(str)
@@ -34,20 +36,19 @@ class AuthController(QObject):
 
     def __init__(
         self,
-        transport_worker: TransportWorker,
+        worker: Worker,
         session: Session,
         preferences: Preferences,
     ) -> None:
         super().__init__()
-        self._transport_worker = transport_worker
+        self._worker = worker
         self.session = session
         self.preferences = preferences
         self._pending: set[str] = set()
         self._pending_login_username = ""
         self._pending_remember = False
 
-        transport_worker.response.connect(self._on_response)
-        transport_worker.error.connect(self._on_error)
+        worker.response.connect(self._on_response)
 
     def login(self, username: str, password: str, remember_me: bool = False) -> None:
         username = username.strip()
@@ -59,11 +60,16 @@ class AuthController(QObject):
             return
         self._pending_login_username = username
         self._pending_remember = remember_me
-        self._send(request("login", {
-            "username": username,
-            "password": password,
-            "remember_me": remember_me,
-        }))
+        self._send(
+            request(
+                "login",
+                {
+                    "username": username,
+                    "password": password,
+                    "remember_me": remember_me,
+                },
+            )
+        )
 
     def register(self, username: str, password: str, confirm_password: str) -> None:
         username = username.strip()
@@ -85,10 +91,15 @@ class AuthController(QObject):
         if password != confirm_password:
             self.error.emit("Passwords do not match.")
             return
-        self._send(request("register", {
-            "username": username,
-            "password": password,
-        }))
+        self._send(
+            request(
+                "register",
+                {
+                    "username": username,
+                    "password": password,
+                },
+            )
+        )
 
     def logout(self) -> None:
         self._send(request("logout", {"token": self.session.token}))
@@ -96,11 +107,18 @@ class AuthController(QObject):
     def validate_session(self) -> None:
         self._send(request("validate_session", {"token": self.session.token}))
 
+    def handle_transport_dropped(self) -> None:
+        if not self._pending:
+            return
+        self._pending.clear()
+        self.loading.emit(False)
+        self.error.emit(_ERROR_MESSAGES["connection_lost"])
+
     def _send(self, request: dict) -> None:
         self._pending.add(request["request_id"])
         if len(self._pending) == 1:
             self.loading.emit(True)
-        if not self._transport_worker.submit(request):
+        if not self._worker.submit(request):
             self._pending.discard(request["request_id"])
             if not self._pending:
                 self.loading.emit(False)
@@ -114,13 +132,15 @@ class AuthController(QObject):
         if not self._pending:
             self.loading.emit(False)
 
-        if response.get("status") == "error":
+        if response.get("status") == STATUS_ERROR:
             code = response.get("code", "")
             if code == "invalid_token":
                 self.session.clear()
                 self.session_error.emit()
                 return
-            self.error.emit(_ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"]))
+            self.error.emit(
+                _ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"])
+            )
             return
 
         data = response.get("data", {})
@@ -141,13 +161,3 @@ class AuthController(QObject):
             case "logout":
                 self.session.clear()
                 self.logged_out.emit()
-
-    def _on_error(self, message: str) -> None:
-        had_pending = bool(self._pending)
-        self._pending.clear()
-        if had_pending:
-            self.loading.emit(False)
-        if self.session.is_authenticated():
-            self.session.clear()
-            self.session_error.emit()
-        self.error.emit(message)

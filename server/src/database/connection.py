@@ -1,10 +1,12 @@
+import logging
 from contextlib import contextmanager
 from os import getenv
 from pathlib import Path
 from queue import Empty, Queue
 from sqlite3 import Connection, Row, connect
 from threading import Lock
-from traceback import format_exc
+
+logger = logging.getLogger(__name__)
 
 POOL_SIZE = 8
 
@@ -18,10 +20,15 @@ def get_database_path() -> Path:
         return Path(configured)
     return Path(__file__).resolve().parents[2] / "data" / "hexworld.db"
 
+POOL_TIMEOUT_SECONDS = 5
+
 @contextmanager
 def get_connection():
     _ensure_pool()
-    connection = _pool.get()
+    try:
+        connection = _pool.get(timeout=POOL_TIMEOUT_SECONDS)
+    except Exception:
+        raise RuntimeError("Database pool exhausted. Server is overloaded.")
     try:
         yield connection
     except Exception:
@@ -42,9 +49,8 @@ def close_pool() -> None:
                 break
             try:
                 connection.close()
-            except Exception as exception:
-                print(f"Error closing pooled connection: {exception}")
-                print(format_exc())
+            except Exception:
+                logger.exception("Error closing pooled connection")
         _pool_ready = False
 
 def _ensure_pool() -> None:

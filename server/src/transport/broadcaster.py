@@ -1,9 +1,10 @@
+import logging
 from collections import defaultdict
 from threading import Lock
-from traceback import format_exc
+
+logger = logging.getLogger(__name__)
 
 class Broadcaster:
-
     def __init__(self) -> None:
         self._subscribers: dict[str, set] = defaultdict(set)
         self._sequences: dict[str, int] = defaultdict(int)
@@ -25,6 +26,7 @@ class Broadcaster:
             subscribers.discard(connection)
             if not subscribers:
                 del self._subscribers[map_id]
+                self._sequences.pop(map_id, None)
 
     def broadcast(self, map_id: str, event: dict) -> None:
         with self._lock:
@@ -36,9 +38,8 @@ class Broadcaster:
         for connection in recipients:
             try:
                 connection.send(stamped)
-            except Exception as exception:
-                print(f"Error broadcasting event for map {map_id}: {exception}")
-                print(format_exc())
+            except Exception:
+                logger.exception("Error broadcasting event for map %s", map_id)
                 failed.append(connection)
         if failed:
             with self._lock:
@@ -46,5 +47,3 @@ class Broadcaster:
                     self._subscribers[map_id].discard(connection)
                 if not self._subscribers.get(map_id):
                     self._subscribers.pop(map_id, None)
-
-broadcaster = Broadcaster()

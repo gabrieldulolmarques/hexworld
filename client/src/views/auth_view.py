@@ -1,16 +1,24 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QCheckBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
-from controllers.auth_controller import MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH
+from models.limits import MAX_PASSWORD_LENGTH, MAX_USERNAME_LENGTH
 from styles.ui_constants import CARD_MARGINS, CARD_SPACING
-from views.home.helpers import make_card
-from views.password_edit import PasswordEdit
-from views.ui_buttons import make_form_primary_button
-from views.widgets import HexLogo, StatusMixin, horizontal_divider
+from views.lobby.helpers import make_card
+from views.shared.password_edit import PasswordEdit
+from views.shared.ui_buttons import make_form_primary_button
+from views.shared.widgets import HexLogo, StatusMixin, horizontal_divider
 
 class AuthView(StatusMixin, QWidget):
-    request_login = pyqtSignal(str, str, bool)
-    request_register = pyqtSignal(str, str, str)
+    login_requested = pyqtSignal(str, str, bool)
+    register_requested = pyqtSignal(str, str, str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -178,17 +186,13 @@ class AuthView(StatusMixin, QWidget):
         username = self.username_input.text().strip()
         password = self.password_input.text()
         remember_me = self.remember_checkbox.isChecked()
-        self.request_login.emit(username, password, remember_me)
+        self.login_requested.emit(username, password, remember_me)
 
     def _on_show_password_changed(self, _state: int) -> None:
         if self._mode != "register":
             return
         checked = self.show_password_checkbox.isChecked()
-        mode = (
-            QLineEdit.EchoMode.Normal
-            if checked
-            else QLineEdit.EchoMode.Password
-        )
+        mode = QLineEdit.EchoMode.Normal if checked else QLineEdit.EchoMode.Password
         self.password_input.setEchoMode(mode)
         self.confirm_password_input.setEchoMode(mode)
 
@@ -196,7 +200,7 @@ class AuthView(StatusMixin, QWidget):
         username = self.username_input.text().strip()
         password = self.password_input.text()
         confirm = self.confirm_password_input.text()
-        self.request_register.emit(username, password, confirm)
+        self.register_requested.emit(username, password, confirm)
 
     def set_loading(self, loading: bool) -> None:
         self.primary_button.setEnabled(not loading)
@@ -207,8 +211,8 @@ class AuthView(StatusMixin, QWidget):
         self.show_password_checkbox.setEnabled(not loading)
         self.remember_checkbox.setEnabled(not loading)
         if loading:
-            msg = "Signing in…" if self._mode == "login" else "Signing up…"
-            self.show_message(msg, level="info")
+            message = "Signing in…" if self._mode == "login" else "Signing up…"
+            self.show_message(message, level="info")
         else:
             self.show_message("", level="info")
 

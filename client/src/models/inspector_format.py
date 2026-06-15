@@ -6,7 +6,7 @@ from models.asset_registry import REGISTRY
 
 _EDGE_LABELS = ("E", "SE", "SW", "W", "NW", "NE")
 
-def structure_display(stem: str) -> tuple[str, str]:
+def terrain_display(stem: str) -> tuple[str, str]:
     info = REGISTRY.tile(stem)
     if info:
         biome = info.biome.replace("_", " ").title()
@@ -14,7 +14,7 @@ def structure_display(stem: str) -> tuple[str, str]:
     title = stem.replace("_", " ").title()
     return title, ""
 
-def inner_edge_summary(edges_mask: int) -> tuple[int, str]:
+def edge_summary(edges_mask: int) -> tuple[int, str]:
     dirs = [label for i, label in enumerate(_EDGE_LABELS) if edges_mask & (1 << i)]
     return len(dirs), ", ".join(dirs) if dirs else "—"
 

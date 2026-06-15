@@ -1,0 +1,2 @@
+
+DEFAULT_PATH_COLOR = "#5ea500"

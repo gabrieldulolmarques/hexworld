@@ -5,15 +5,16 @@ from dataclasses import dataclass
 from PyQt6.QtCore import QPointF, Qt
 from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen
 
+from models.path_constants import DEFAULT_PATH_COLOR
+
 _OUTLINE_FALLBACK = QColor("#18181b")
 
 @dataclass
 class PathStyle:
-    kind: str = "road"
-    color: str = "#5ea500"
+    color: str = DEFAULT_PATH_COLOR
 
-def road_style(color: str) -> PathStyle:
-    return PathStyle(kind="road", color=color)
+def path_style(color: str) -> PathStyle:
+    return PathStyle(color=color)
 
 def _stroke_widths(hex_size: float) -> tuple[int, int]:
     outline_w = max(2, round(hex_size * 0.14))
@@ -26,7 +27,7 @@ def _outline_color(fill: QColor) -> QColor:
         return _OUTLINE_FALLBACK
     return QColor.fromHsv(h, min(255, s + 40), max(0, v - 50), a)
 
-def _road_pen(color: QColor, width: int, *, preview: bool = False) -> QPen:
+def _path_pen(color: QColor, width: int, *, preview: bool = False) -> QPen:
     pen = QPen(
         color,
         width,
@@ -38,7 +39,7 @@ def _road_pen(color: QColor, width: int, *, preview: bool = False) -> QPen:
         pen.setStyle(Qt.PenStyle.DashLine)
     return pen
 
-def _draw_road_path(
+def _draw_path_stroke(
     painter: QPainter,
     path: QPainterPath,
     hex_size: float,
@@ -58,9 +59,9 @@ def _draw_road_path(
     outline_color = _outline_color(fill_color) if not highlight else fill_color
 
     painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.setPen(_road_pen(outline_color, outline_w, preview=preview))
+    painter.setPen(_path_pen(outline_color, outline_w, preview=preview))
     painter.drawPath(path)
-    painter.setPen(_road_pen(fill_color, fill_w, preview=preview))
+    painter.setPen(_path_pen(fill_color, fill_w, preview=preview))
     painter.drawPath(path)
 
 def paint_pixel_segments(
@@ -82,7 +83,11 @@ def paint_pixel_segments(
         path.moveTo(QPointF(ox + start_x, oy + start_y))
         path.lineTo(QPointF(ox + end_x, oy + end_y))
 
-    _draw_road_path(
-        painter, path, hex_size, style,
-        preview=preview, highlight=highlight,
+    _draw_path_stroke(
+        painter,
+        path,
+        hex_size,
+        style,
+        preview=preview,
+        highlight=highlight,
     )

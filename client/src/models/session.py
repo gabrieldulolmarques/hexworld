@@ -12,13 +12,13 @@ class Session:
 
     def save(self, token: str) -> None:
         self.token = token
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.path, "w") as f:
-            dump({"token": token}, f)
+        self._persist()
 
     def set_user(self, user_id: str, username: str) -> None:
         self.user_id = user_id
         self.username = username
+        if self.token is not None:
+            self._persist()
 
     def clear(self) -> None:
         self.token = None
@@ -35,9 +35,24 @@ class Session:
             return
         try:
             with open(self.path) as f:
-                self.token = load(f).get("token")
+                data = load(f)
+            self.token = data.get("token")
+            self.user_id = data.get("user_id")
+            self.username = data.get("username")
         except Exception:
             self.clear()
+
+    def _persist(self) -> None:
+        if self.token is None:
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        payload: dict[str, str] = {"token": self.token}
+        if self.user_id is not None:
+            payload["user_id"] = self.user_id
+        if self.username is not None:
+            payload["username"] = self.username
+        with open(self.path, "w") as f:
+            dump(payload, f)
 
 def _get_session_path() -> Path:
     configured = getenv("SESSION_PATH")
