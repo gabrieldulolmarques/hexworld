@@ -2,8 +2,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.limits import MAX_MAP_MEMBERS, MAX_MAP_NAME_LENGTH
 from models.session import Session
-from transport.messages import STATUS_ERROR, request
-from transport.rmi.proxy_worker import ProxyWorker
+from transport.rmi.worker import RemoteWorker
 
 _ERROR_MESSAGES = {
     "missing_fields": "Missing fields.",
@@ -31,16 +30,16 @@ class LobbyController(QObject):
     map_role_changed = pyqtSignal(str, str)
     session_error = pyqtSignal()
 
-    def __init__(self, worker: ProxyWorker, session: Session) -> None:
+    def __init__(self, worker: RemoteWorker, session: Session) -> None:
         super().__init__()
         self._worker = worker
         self._session = session
-        self._pending: set[str] = set()
-        worker.response.connect(self._on_response)
-        worker.event.connect(self._on_event)
+        self._inflight = 0
+        worker.evt_member_changed.connect(self._on_member_changed)
+        worker.evt_ownership_transferred.connect(self._on_ownership_transferred)
 
     def get_maps(self) -> None:
-        self._send(request("get_maps", {"token": self._session.token}))
+        self._track(self._worker.get_maps())(self._on_maps_loaded, self._on_error)
 
     def create_map(self, name: str) -> None:
         name = name.strip()
@@ -50,73 +49,59 @@ class LobbyController(QObject):
         if len(name) > MAX_MAP_NAME_LENGTH:
             self.create_error.emit(_ERROR_MESSAGES["map_name_too_long"])
             return
-        self._send(request("create_map", {"token": self._session.token, "name": name}))
+        self._track(self._worker.create_map(name))(
+            lambda data: self.map_created.emit(data),
+            lambda code: self.create_error.emit(_message(code)),
+        )
 
     def join_map(self, code: str) -> None:
-        self._send(request("join_map", {"token": self._session.token, "code": code}))
+        self._track(self._worker.join_map(code))(
+            lambda data: self.map_joined.emit(data),
+            lambda error_code: self.join_error.emit(_message(error_code)),
+        )
 
     def dissociate_map(self, map_id: str) -> None:
-        self._send(
-            request("dissociate_map", {"token": self._session.token, "map_id": map_id})
+        self._track(self._worker.dissociate_map(map_id))(
+            lambda _data: self.map_removed.emit(map_id), self._on_error
         )
 
     def delete_map(self, map_id: str) -> None:
-        self._send(
-            request("delete_map", {"token": self._session.token, "map_id": map_id})
+        self._track(self._worker.delete_map(map_id))(
+            lambda _data: self.map_removed.emit(map_id), self._on_error
         )
 
-    def _send(self, request: dict) -> None:
-        self._pending.add(request["request_id"])
-        if len(self._pending) == 1:
+    def _track(self, call):
+        self._inflight += 1
+        if self._inflight == 1:
             self.loading.emit(True)
-        if not self._worker.submit(request):
-            self._pending.discard(request["request_id"])
-            if not self._pending:
-                self.loading.emit(False)
-            self.error.emit(_ERROR_MESSAGES["unexpected_error"])
 
-    def _on_response(self, response: dict) -> None:
-        request_id = response.get("request_id", "")
-        if request_id not in self._pending:
-            return
-        self._pending.discard(request_id)
-        if not self._pending:
+        def bind(on_success, on_failure):
+            call.succeeded.connect(lambda result: self._finish(on_success, result))
+            call.failed.connect(lambda code: self._finish(on_failure, code))
+
+        return bind
+
+    def _finish(self, handler, value) -> None:
+        self._inflight = max(0, self._inflight - 1)
+        if self._inflight == 0:
             self.loading.emit(False)
+        handler(value)
 
-        req_type = response.get("type", "")
+    def _on_maps_loaded(self, maps: list) -> None:
+        self.maps_loaded.emit(maps)
 
-        if response.get("status") == STATUS_ERROR:
-            code = response.get("code", "")
-            if code == "invalid_token":
-                self.session_error.emit()
-                return
-            message = _ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"])
-            if req_type == "create_map":
-                self.create_error.emit(message)
-            elif req_type == "join_map":
-                self.join_error.emit(message)
-            else:
-                self.error.emit(message)
+    def _on_error(self, code: str) -> None:
+        if code == "invalid_token":
+            self.session_error.emit()
             return
+        self.error.emit(_message(code))
 
-        data = response.get("data", {})
-        match req_type:
-            case "get_maps":
-                self.maps_loaded.emit(data.get("maps", []))
-            case "create_map":
-                self.map_created.emit(data["map"])
-            case "join_map":
-                self.map_joined.emit(data["map"])
-            case "dissociate_map" | "delete_map":
-                self.map_removed.emit(data["map_id"])
+    def _on_member_changed(self, map_id: str, member_count: int) -> None:
+        self.map_member_count_changed.emit(map_id, member_count)
 
-    def _on_event(self, evt: dict) -> None:
-        evt_type = evt.get("type", "")
-        map_id = evt.get("map_id", "")
-        data = evt.get("data", {})
+    def _on_ownership_transferred(self, map_id: str, new_owner_id: str) -> None:
+        if new_owner_id == self._session.user_id:
+            self.map_role_changed.emit(map_id, "owner")
 
-        if evt_type in ("map_member_joined", "map_member_left"):
-            self.map_member_count_changed.emit(map_id, data.get("member_count", 0))
-        elif evt_type == "map_ownership_transferred":
-            if data.get("new_owner_id") == self._session.user_id:
-                self.map_role_changed.emit(map_id, "owner")
+def _message(code: str) -> str:
+    return _ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"])

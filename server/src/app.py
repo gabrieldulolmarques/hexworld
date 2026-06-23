@@ -1,10 +1,4 @@
-from controllers.auth_controller import AuthController
-from controllers.auth_middleware import AuthMiddleware
-from controllers.map_edit_controller import MapEditController
 from controllers.map_event_publisher import MapEventPublisher
-from controllers.map_lifecycle_controller import MapLifecycleController
-from controllers.map_state_controller import MapStateController
-from controllers.request_controller import RequestController
 from repositories.description_repository import DescriptionRepository
 from repositories.edge_repository import EdgeRepository
 from repositories.map_repository import MapRepository
@@ -50,15 +44,3 @@ auth_service = AuthService(user_repository, session_repository, user_map_reposit
 presence_service = PresenceService(presence, user_map_repository)
 
 publisher = MapEventPublisher(broadcaster, presence_service)
-map_lifecycle_controller = MapLifecycleController(map_service, publisher)
-map_state_controller = MapStateController(map_service, tile_service, publisher)
-map_edit_controller = MapEditController(tile_service, path_service, edge_service, publisher)
-auth_controller = AuthController(auth_service)
-auth_middleware = AuthMiddleware(auth_service)
-request_controller = RequestController(
-    map_lifecycle_controller,
-    map_state_controller,
-    map_edit_controller,
-    auth_controller,
-    auth_middleware,
-)

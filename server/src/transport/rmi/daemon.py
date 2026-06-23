@@ -4,11 +4,17 @@ import time
 
 import Pyro5.api
 
+from controllers.map_event_publisher import MapEventPublisher
 from services.auth_service import AuthService as DomainAuthService
+from services.edge_service import EdgeService
+from services.map_service import MapService
+from services.path_service import PathService
+from services.tile_service import TileService
 from transport.broadcaster import Broadcaster
 from transport.presence import Presence
-from transport.rmi.client_session import BroadcastPresenceFn
-from transport.rmi.remote_api import RequestHandlerFn, create_remote_objects
+from transport.rmi.auth_service import AuthService
+from transport.rmi.context import RmiContext
+from transport.rmi.errors import register_error_serialization
 from transport.rmi.session_registry import RmiSessionRegistry
 
 logger = logging.getLogger(__name__)
@@ -16,22 +22,26 @@ logger = logging.getLogger(__name__)
 NS_LOOKUP_RETRIES = 10
 NS_LOOKUP_DELAY_S = 0.5
 
+NAME_SERVER_OBJECT = "hexworld.auth"
+
 def start_rmi_server(
-    handle_request: RequestHandlerFn,
-    broadcast_presence: BroadcastPresenceFn,
     *,
-    broadcaster: Broadcaster,
+    auth_service: DomainAuthService,
+    map_service: MapService,
+    tile_service: TileService,
+    path_service: PathService,
+    edge_service: EdgeService,
+    publisher: MapEventPublisher,
     presence: Presence,
-    domain_auth: DomainAuthService,
+    broadcaster: Broadcaster,
 ) -> None:
+    register_error_serialization()
+
     ns_host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
     ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
     bind_host = os.getenv("PYRO_HOST", "127.0.0.1")
     nat_host = os.getenv("PYRO_NAT_HOST") or None
     nat_port = os.getenv("PYRO_NAT_PORT")
-
-    registry = RmiSessionRegistry(broadcaster, presence, broadcast_presence)
-    objects = create_remote_objects(handle_request, registry, domain_auth)
 
     daemon_kwargs: dict = {"host": bind_host}
     if nat_host:
@@ -39,11 +49,25 @@ def start_rmi_server(
         if nat_port:
             daemon_kwargs["natport"] = int(nat_port)
     daemon = Pyro5.api.Daemon(**daemon_kwargs)
+
+    context = RmiContext(
+        daemon=daemon,
+        auth_service=auth_service,
+        map_service=map_service,
+        tile_service=tile_service,
+        path_service=path_service,
+        edge_service=edge_service,
+        publisher=publisher,
+        presence=presence,
+        broadcaster=broadcaster,
+        registry=RmiSessionRegistry(),
+    )
+
+    gateway = AuthService(context)
+    uri = daemon.register(gateway)
     nameserver = _locate_nameserver(ns_host, ns_port)
-    for name, remote_object in objects.items():
-        uri = daemon.register(remote_object)
-        nameserver.register(name, uri)
-        logger.info("Registered PYRONAME:%s -> %s", name, uri)
+    nameserver.register(NAME_SERVER_OBJECT, uri)
+    logger.info("Registered PYRONAME:%s -> %s", NAME_SERVER_OBJECT, uri)
 
     try:
         daemon.requestLoop()

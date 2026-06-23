@@ -8,8 +8,7 @@ from models.limits import (
 )
 from models.preferences import Preferences
 from models.session import Session
-from transport.messages import STATUS_ERROR, request
-from transport.rmi.proxy_worker import ProxyWorker
+from transport.rmi.worker import RemoteWorker
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",
@@ -19,7 +18,6 @@ _ERROR_MESSAGES = {
     "missing_fields": "Missing fields.",
     "password_too_short": "Password is too short.",
     "password_too_long": "Password is too long.",
-    "unknown_type": "Unknown request type.",
     "unexpected_error": "Unexpected server error.",
     "connection_lost": "Connection lost. Please try again.",
 }
@@ -35,7 +33,7 @@ class AuthController(QObject):
 
     def __init__(
         self,
-        worker: ProxyWorker,
+        worker: RemoteWorker,
         session: Session,
         preferences: Preferences,
     ) -> None:
@@ -43,11 +41,9 @@ class AuthController(QObject):
         self._worker = worker
         self.session = session
         self.preferences = preferences
-        self._pending: set[str] = set()
+        self._inflight = 0
         self._pending_login_username = ""
         self._pending_remember = False
-
-        worker.response.connect(self._on_response)
 
     def login(self, username: str, password: str, remember_me: bool = False) -> None:
         username = username.strip()
@@ -59,15 +55,8 @@ class AuthController(QObject):
             return
         self._pending_login_username = username
         self._pending_remember = remember_me
-        self._send(
-            request(
-                "login",
-                {
-                    "username": username,
-                    "password": password,
-                    "remember_me": remember_me,
-                },
-            )
+        self._track(self._worker.login(username, password, remember_me))(
+            self._on_login_ok, self._on_failed
         )
 
     def register(self, username: str, password: str, confirm_password: str) -> None:
@@ -90,73 +79,65 @@ class AuthController(QObject):
         if password != confirm_password:
             self.error.emit("Passwords do not match.")
             return
-        self._send(
-            request(
-                "register",
-                {
-                    "username": username,
-                    "password": password,
-                },
-            )
+        self._track(self._worker.register(username, password))(
+            self._on_register_ok, self._on_failed
         )
 
     def logout(self) -> None:
-        self._send(request("logout", {"token": self.session.token}))
+        self._worker.logout()
+        self.session.clear()
+        self.logged_out.emit()
 
     def validate_session(self) -> None:
-        self._send(request("validate_session", {"token": self.session.token}))
+        call = self._worker.resume(self.session.token)
+        call.succeeded.connect(self._on_resume_ok)
+        call.failed.connect(self._on_resume_failed)
 
     def handle_transport_dropped(self) -> None:
-        if not self._pending:
+        if self._inflight == 0:
             return
-        self._pending.clear()
+        self._inflight = 0
         self.loading.emit(False)
         self.error.emit(_ERROR_MESSAGES["connection_lost"])
 
-    def _send(self, request: dict) -> None:
-        self._pending.add(request["request_id"])
-        if len(self._pending) == 1:
+    def _track(self, call):
+        self._inflight += 1
+        if self._inflight == 1:
             self.loading.emit(True)
-        if not self._worker.submit(request):
-            self._pending.discard(request["request_id"])
-            if not self._pending:
-                self.loading.emit(False)
-            self.error.emit(_ERROR_MESSAGES["unexpected_error"])
 
-    def _on_response(self, response: dict) -> None:
-        request_id = response.get("request_id", "")
-        if request_id not in self._pending:
-            return
-        self._pending.discard(request_id)
-        if not self._pending:
+        def bind(on_success, on_failure):
+            call.succeeded.connect(lambda result: self._finish(on_success, result))
+            call.failed.connect(lambda code: self._finish(on_failure, code))
+
+        return bind
+
+    def _finish(self, handler, value) -> None:
+        self._inflight = max(0, self._inflight - 1)
+        if self._inflight == 0:
             self.loading.emit(False)
+        handler(value)
 
-        if response.get("status") == STATUS_ERROR:
-            code = response.get("code", "")
-            if code == "invalid_token":
-                self.session.clear()
-                self.session_error.emit()
-                return
-            self.error.emit(
-                _ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"])
-            )
+    def _on_login_ok(self, data: dict) -> None:
+        self.session.save(data["token"])
+        self.session.set_user(data["user_id"], data["username"])
+        self.preferences.save(self._pending_login_username, self._pending_remember)
+        self.login_success.emit(data["username"])
+
+    def _on_register_ok(self, _data: dict) -> None:
+        self.register_success.emit()
+
+    def _on_failed(self, code: str) -> None:
+        if code == "invalid_token":
+            self.session.clear()
+            self.session_error.emit()
             return
+        self.error.emit(_ERROR_MESSAGES.get(code, _ERROR_MESSAGES["unexpected_error"]))
 
-        data = response.get("data", {})
-        match response.get("type"):
-            case "login":
-                self.session.save(data["token"])
-                self.session.set_user(data["user_id"], data["username"])
-                self.preferences.save(
-                    self._pending_login_username,
-                    self._pending_remember,
-                )
-                self.login_success.emit(data["username"])
-            case "validate_session":
-                self.session.set_user(data["user_id"], data["username"])
-                self.session_restored.emit(data["username"])
-            case "register":
-                self.register_success.emit()
-            case "logout":
-                self.session.clear()
-                self.logged_out.emit()
+    def _on_resume_ok(self, data: dict) -> None:
+        self.session.set_user(data["user_id"], data["username"])
+        self.session_restored.emit(data["username"])
+
+    def _on_resume_failed(self, code: str) -> None:
+        if code == "invalid_token":
+            self.session.clear()
+            self.session_error.emit()

@@ -1,40 +1,26 @@
 from threading import Lock
 
-from transport.broadcaster import Broadcaster
-from transport.presence import Presence
-from transport.rmi.client_session import BroadcastPresenceFn, RmiClientSession
-
 class RmiSessionRegistry:
-    def __init__(
-        self,
-        broadcaster: Broadcaster,
-        presence: Presence,
-        broadcast_presence: BroadcastPresenceFn,
-    ) -> None:
-        self._broadcaster = broadcaster
-        self._presence = presence
-        self._broadcast_presence = broadcast_presence
-        self._sessions: dict[str, RmiClientSession] = {}
+    """Maps auth tokens to live Session objects (for resume and cleanup)."""
+
+    def __init__(self) -> None:
+        self._by_token: dict[str, object] = {}
         self._lock = Lock()
 
-    def get_or_create(self, token: str) -> RmiClientSession:
+    def add(self, token: str, session: object) -> None:
         with self._lock:
-            session = self._sessions.get(token)
-            if session is None:
-                session = self._new_session()
-                self._sessions[token] = session
-            return session
+            self._by_token[token] = session
 
-    def transient(self) -> RmiClientSession:
-        return self._new_session()
+    def get(self, token: str) -> object | None:
+        with self._lock:
+            return self._by_token.get(token)
 
     def remove(self, token: str) -> None:
         with self._lock:
-            session = self._sessions.pop(token, None)
-        if session is not None:
-            session.cleanup()
+            self._by_token.pop(token, None)
 
-    def _new_session(self) -> RmiClientSession:
-        return RmiClientSession(
-            self._broadcaster, self._presence, self._broadcast_presence
-        )
+    def remove_session(self, session: object) -> None:
+        with self._lock:
+            tokens = [t for t, s in self._by_token.items() if s is session]
+            for token in tokens:
+                self._by_token.pop(token, None)

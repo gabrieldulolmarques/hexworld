@@ -15,7 +15,7 @@ from models.map.tile_format import (
     tiles_from_server,
 )
 from services.export import default_filename, normalize_path, save_image
-from transport.rmi.proxy_worker import ProxyWorker
+from transport.rmi.worker import RemoteWorker
 from views.auth_view import AuthView
 from views.lobby.lobby_view import LobbyView
 from views.shell.main_view import MainView
@@ -37,7 +37,7 @@ class ClientApp:
         main_view.stack.addWidget(self.lobby_view)
         main_view.stack.addWidget(self.map_view)
 
-        self.worker = ProxyWorker()
+        self.worker = RemoteWorker()
         main_view.show_connection_status(_CONNECT_MESSAGE)
 
         self.session = Session()

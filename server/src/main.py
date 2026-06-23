@@ -21,11 +21,14 @@ def initialize_database() -> None:
 
 def start_server() -> None:
     start_rmi_server(
-        _app.request_controller.handle_request,
-        _app.publisher.presence_changed,
-        broadcaster=_app.broadcaster,
+        auth_service=_app.auth_service,
+        map_service=_app.map_service,
+        tile_service=_app.tile_service,
+        path_service=_app.path_service,
+        edge_service=_app.edge_service,
+        publisher=_app.publisher,
         presence=_app.presence,
-        domain_auth=_app.auth_service,
+        broadcaster=_app.broadcaster,
     )
 
 def main() -> None:

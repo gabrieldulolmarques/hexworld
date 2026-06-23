@@ -2,58 +2,59 @@ import logging
 
 import Pyro5.api
 
-from services.auth_service import AuthService as DomainAuthService
-from transport.rmi.base import _RemoteBase
-from transport.rmi.session_registry import RmiSessionRegistry
+from transport.rmi.context import RmiContext
+from transport.rmi.errors import HexworldError
+from transport.rmi.session import Session
 
 logger = logging.getLogger(__name__)
 
 @Pyro5.api.expose
-class AuthService(_RemoteBase):
-    def __init__(
-        self,
-        handle_request,
-        registry: RmiSessionRegistry,
-        domain_auth: DomainAuthService,
-    ) -> None:
-        super().__init__(handle_request, registry)
-        self._domain_auth = domain_auth
+class AuthService:
+    """Bootstrap object registered in the Name Server. Factory for Session objects."""
 
-    def register(self, username: str, password: str) -> dict:
-        return self._anon_call(
-            "register", {"username": username, "password": password}
-        )
+    def __init__(self, context: RmiContext) -> None:
+        self._ctx = context
 
-    def login(self, username: str, password: str, remember_me: bool = False) -> dict:
-        return self._anon_call(
-            "login",
-            {"username": username, "password": password, "remember_me": remember_me},
-        )
+    def register(self, username: str, password: str) -> None:
+        username = str(username or "").strip()
+        password = str(password or "")
+        if not username or not password:
+            raise HexworldError("missing_fields")
+        error = self._ctx.auth_service.register(username, password)
+        if error:
+            raise HexworldError(error)
 
-    def validate_session(self, token: str) -> dict:
-        return self._auth_call("validate_session", token, {})
+    def login(self, username: str, password: str, remember_me: bool = False) -> Session:
+        username = str(username or "").strip()
+        password = str(password or "")
+        if not username or not password:
+            raise HexworldError("missing_fields")
+        data, error = self._ctx.auth_service.login(username, password, bool(remember_me))
+        if error:
+            raise HexworldError(error)
+        logger.info("Login for user %r (RMI)", data["username"])
+        return self._make_session(data["token"], data["user_id"], data["username"])
 
-    def logout(self, token: str) -> dict:
-        response = self._auth_call("logout", token, {})
-        self._registry.remove(str(token or "").strip())
-        return response
+    def resume(self, token: str) -> Session:
+        token = str(token or "").strip()
+        if not token:
+            raise HexworldError("missing_fields")
+        data, error = self._ctx.auth_service.validate_session(token)
+        if error:
+            raise HexworldError(error)
+        existing = self._ctx.registry.get(token)
+        if existing is not None:
+            return existing
+        return self._make_session(token, data["user_id"], data["username"])
 
     @Pyro5.api.oneway
     def disconnect(self, token: str) -> None:
+        session = self._ctx.registry.get(str(token or "").strip())
+        if session is not None:
+            session.cleanup()
 
-        self._registry.remove(str(token or "").strip())
-
-    def register_event_callback(self, token: str, callback_uri: str) -> None:
-        token = str(token or "").strip()
-        callback_uri = str(callback_uri or "").strip()
-        if not token or not callback_uri:
-            raise ValueError("token and callback_uri are required")
-
-        user_data, error_code = self._domain_auth.validate_session(token)
-        if error_code:
-            raise ValueError(error_code)
-
-        session = self._registry.get_or_create(token)
-        session.bind_user(user_data["user_id"], user_data["username"])
-        session.set_event_callback(callback_uri)
-        logger.debug("Registered event callback for user %r", user_data["username"])
+    def _make_session(self, token: str, user_id: str, username: str) -> Session:
+        session = Session(self._ctx, token, user_id, username)
+        self._ctx.daemon.register(session)
+        self._ctx.registry.add(token, session)
+        return session
