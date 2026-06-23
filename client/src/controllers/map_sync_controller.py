@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.session import Session
-from transport.rmi.worker import RemoteWorker
+from rmi.worker import RemoteWorker
 
 _ERROR_MESSAGES = {
     "unexpected_error": "Unexpected server error.",

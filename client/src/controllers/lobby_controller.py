@@ -2,7 +2,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.limits import MAX_MAP_MEMBERS, MAX_MAP_NAME_LENGTH
 from models.session import Session
-from transport.rmi.worker import RemoteWorker
+from rmi.worker import RemoteWorker
 
 _ERROR_MESSAGES = {
     "missing_fields": "Missing fields.",

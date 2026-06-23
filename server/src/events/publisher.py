@@ -1,6 +1,8 @@
+from events.broadcaster import Broadcaster
 from services.presence_service import PresenceService
-from transport.broadcaster import Broadcaster
-from transport.messages import event
+
+def event(event_type: str, data: dict | None = None) -> dict:
+    return {"kind": "event", "type": event_type, "data": data or {}}
 
 class MapEventPublisher:
     def __init__(self, broadcaster: Broadcaster, presence_service: PresenceService) -> None:

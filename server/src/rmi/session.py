@@ -3,9 +3,9 @@ from threading import Lock
 
 import Pyro5.api
 
-from transport.rmi.context import RmiContext
-from transport.rmi.errors import HexworldError
-from transport.rmi.map_session import MapSession
+from rmi.context import RmiContext
+from rmi.errors import HexworldError
+from rmi.map_session import MapSession
 
 logger = logging.getLogger(__name__)
 

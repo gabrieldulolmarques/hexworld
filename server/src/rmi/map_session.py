@@ -2,12 +2,12 @@ import logging
 
 import Pyro5.api
 
-from controllers.map_event_publisher import MapEventPublisher
+from events.publisher import MapEventPublisher
 from services.edge_service import EdgeService
 from services.map_service import MapService
 from services.path_service import PathService
 from services.tile_service import TileService
-from transport.rmi.errors import HexworldError
+from rmi.errors import HexworldError
 
 logger = logging.getLogger(__name__)
 

@@ -2,15 +2,15 @@ from dataclasses import dataclass
 
 import Pyro5.api
 
-from controllers.map_event_publisher import MapEventPublisher
+from events.publisher import MapEventPublisher
 from services.auth_service import AuthService
 from services.edge_service import EdgeService
 from services.map_service import MapService
 from services.path_service import PathService
 from services.tile_service import TileService
-from transport.broadcaster import Broadcaster
-from transport.presence import Presence
-from transport.rmi.session_registry import RmiSessionRegistry
+from events.broadcaster import Broadcaster
+from events.presence import Presence
+from rmi.registry import RmiSessionRegistry
 
 @dataclass
 class RmiContext:

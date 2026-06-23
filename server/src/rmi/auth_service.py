@@ -2,9 +2,9 @@ import logging
 
 import Pyro5.api
 
-from transport.rmi.context import RmiContext
-from transport.rmi.errors import HexworldError
-from transport.rmi.session import Session
+from rmi.context import RmiContext
+from rmi.errors import HexworldError
+from rmi.session import Session
 
 logger = logging.getLogger(__name__)
 

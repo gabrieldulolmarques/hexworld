@@ -4,7 +4,7 @@ import app as _app
 from database.connection import get_connection, get_database_path
 from database.schema import create_schema
 from database.seed import seed_users
-from transport.rmi.daemon import start_rmi_server
+from rmi.daemon import start_rmi_server
 
 logging.basicConfig(
     level=logging.INFO,

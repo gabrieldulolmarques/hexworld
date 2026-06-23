@@ -8,8 +8,8 @@ import Pyro5.api
 import Pyro5.errors
 from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
-from transport.rmi.errors import HexworldError, register_error_serialization
-from transport.rmi.listener import MapListener
+from rmi.errors import HexworldError, register_error_serialization
+from rmi.listener import MapListener
 
 logger = logging.getLogger(__name__)
 

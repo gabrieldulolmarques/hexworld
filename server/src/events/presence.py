@@ -1,13 +1,13 @@
 from threading import Lock
 
-from transport.session import ClientSession
+from events.subscriber import Subscriber
 
 class Presence:
     def __init__(self) -> None:
-        self._map_connections: dict[str, set[ClientSession]] = {}
+        self._map_connections: dict[str, set[Subscriber]] = {}
         self._lock = Lock()
 
-    def enter(self, map_id: str, session: ClientSession) -> bool:
+    def enter(self, map_id: str, session: Subscriber) -> bool:
         with self._lock:
             connections = self._map_connections.setdefault(map_id, set())
             if session in connections:
@@ -15,7 +15,7 @@ class Presence:
             connections.add(session)
             return True
 
-    def leave(self, map_id: str, session: ClientSession) -> bool:
+    def leave(self, map_id: str, session: Subscriber) -> bool:
         with self._lock:
             connections = self._map_connections.get(map_id)
             if connections is None or session not in connections:
@@ -25,7 +25,7 @@ class Presence:
                 del self._map_connections[map_id]
             return True
 
-    def leave_all(self, session: ClientSession) -> list[str]:
+    def leave_all(self, session: Subscriber) -> list[str]:
         with self._lock:
             maps_left = [
                 map_id
@@ -38,10 +38,10 @@ class Presence:
                     del self._map_connections[map_id]
             return maps_left
 
-    def is_present(self, map_id: str, session: ClientSession) -> bool:
+    def is_present(self, map_id: str, session: Subscriber) -> bool:
         with self._lock:
             return session in self._map_connections.get(map_id, set())
 
-    def connections_for(self, map_id: str) -> list[ClientSession]:
+    def connections_for(self, map_id: str) -> list[Subscriber]:
         with self._lock:
             return list(self._map_connections.get(map_id, ()))

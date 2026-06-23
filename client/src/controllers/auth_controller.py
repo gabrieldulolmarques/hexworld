@@ -8,7 +8,7 @@ from models.limits import (
 )
 from models.preferences import Preferences
 from models.session import Session
-from transport.rmi.worker import RemoteWorker
+from rmi.worker import RemoteWorker
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",

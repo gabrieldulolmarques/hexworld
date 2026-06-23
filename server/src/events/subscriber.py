@@ -1,6 +1,6 @@
 from typing import Protocol
 
-class ClientSession(Protocol):
+class Subscriber(Protocol):
     @property
     def user_id(self) -> str | None: ...
     @property

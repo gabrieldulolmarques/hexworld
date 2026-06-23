@@ -4,18 +4,18 @@ import time
 
 import Pyro5.api
 
-from controllers.map_event_publisher import MapEventPublisher
+from events.publisher import MapEventPublisher
 from services.auth_service import AuthService as DomainAuthService
 from services.edge_service import EdgeService
 from services.map_service import MapService
 from services.path_service import PathService
 from services.tile_service import TileService
-from transport.broadcaster import Broadcaster
-from transport.presence import Presence
-from transport.rmi.auth_service import AuthService
-from transport.rmi.context import RmiContext
-from transport.rmi.errors import register_error_serialization
-from transport.rmi.session_registry import RmiSessionRegistry
+from events.broadcaster import Broadcaster
+from events.presence import Presence
+from rmi.auth_service import AuthService
+from rmi.context import RmiContext
+from rmi.errors import register_error_serialization
+from rmi.registry import RmiSessionRegistry
 
 logger = logging.getLogger(__name__)
 
