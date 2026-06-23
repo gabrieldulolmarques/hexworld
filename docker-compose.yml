@@ -1,6 +1,5 @@
 services:
   server-sockets:
-    profiles: [sockets]
     init: true
     build: ./server
     user: "${UID:-1000}:${GID:-1000}"
@@ -17,7 +16,7 @@ services:
         ipv4_address: 10.1.0.2
 
   playit:
-    profiles: [sockets]
+    profiles: [public]
     image: ghcr.io/playit-cloud/playit-agent:latest
     restart: unless-stopped
     environment:
@@ -27,31 +26,6 @@ services:
     networks:
       hexworld:
         ipv4_address: 10.1.0.3
-
-  name-server:
-    profiles: [rmi]
-    build: ./server
-    network_mode: host
-    command: python -m Pyro5.nameserver --host 127.0.0.1 --port 9090
-    environment:
-      PYTHONUNBUFFERED: 1
-
-  server-rmi:
-    profiles: [rmi]
-    init: true
-    build: ./server
-    network_mode: host
-    user: "${UID:-1000}:${GID:-1000}"
-    environment:
-      DATABASE_PATH: /app/data/hexworld.db
-      HEXWORLD_TRANSPORT: rmi
-      PYRO_NS_HOST: 127.0.0.1
-      PYRO_HOST: 127.0.0.1
-      PYTHONUNBUFFERED: 1
-    volumes:
-      - ./server:/app
-    depends_on:
-      - name-server
 
 networks:
   hexworld:

@@ -16,10 +16,7 @@
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
-Dois backends de transporte disponíveis no mesmo repositório:
-
-- **`Sockets`** — TCP + JSON
-- **`Remote Method Invocation (RMI)`** — Pyro5 + Name Server
+Transporte desta branch: **`Sockets`** — TCP + JSON. (A implementação por **RMI** com Pyro5 vive na branch `rmi`.)
 
 ---
 
@@ -38,8 +35,9 @@ Dois backends de transporte disponíveis no mesmo repositório:
 ### Servidor
 
 ```bash
-docker compose --profile [sockets|rmi] up --build
-docker compose down  
+docker compose up --build              # apenas o servidor de sockets
+docker compose --profile public up --build  # + túnel público Playit.gg
+docker compose down
 ```
 
 ---
@@ -48,8 +46,8 @@ docker compose down
 
 ```bash
 make build
-make up-[sockets|rmi]
-make up-[sockets|rmi] clients=N
+make up
+make up clients=N
 make clean
 make demo # to-do
 ```
@@ -69,7 +67,7 @@ make check
 ```bash
 docker compose down
 sudo rm -f server/data/hexworld.db server/data/hexworld.db-*
-docker compose --profile [sockets|rmi] up --build
+docker compose up --build
 ```
 
 ---

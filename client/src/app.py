@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from controllers.auth_controller import AuthController
@@ -39,14 +38,8 @@ class ClientApp:
         main_view.stack.addWidget(self.lobby_view)
         main_view.stack.addWidget(self.map_view)
 
-        transport = os.getenv("HEXWORLD_TRANSPORT", "sockets").strip().lower()
-        if transport == "rmi":
-            from transport.rmi.proxy_worker import ProxyWorker
-            self.client = None
-            self.worker = ProxyWorker()
-        else:
-            self.client = Client()
-            self.worker = Worker(self.client)
+        self.client = Client()
+        self.worker = Worker(self.client)
         main_view.show_connection_status(_CONNECT_MESSAGE)
 
         self.session = Session()
@@ -308,5 +301,4 @@ class ClientApp:
     def stop(self) -> None:
         self._stopping = True
         self.worker.stop()
-        if self.client is not None:
-            self.client.stop()
+        self.client.stop()
