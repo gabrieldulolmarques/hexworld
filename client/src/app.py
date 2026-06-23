@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from controllers.auth_controller import AuthController
@@ -16,8 +15,7 @@ from models.map.tile_format import (
     tiles_from_server,
 )
 from services.export import default_filename, normalize_path, save_image
-from transport.sockets.client import Client
-from transport.sockets.worker import Worker
+from transport.rmi.proxy_worker import ProxyWorker
 from views.auth_view import AuthView
 from views.lobby.lobby_view import LobbyView
 from views.shell.main_view import MainView
@@ -39,14 +37,7 @@ class ClientApp:
         main_view.stack.addWidget(self.lobby_view)
         main_view.stack.addWidget(self.map_view)
 
-        transport = os.getenv("HEXWORLD_TRANSPORT", "sockets").strip().lower()
-        if transport == "rmi":
-            from transport.rmi.proxy_worker import ProxyWorker
-            self.client = None
-            self.worker = ProxyWorker()
-        else:
-            self.client = Client()
-            self.worker = Worker(self.client)
+        self.worker = ProxyWorker()
         main_view.show_connection_status(_CONNECT_MESSAGE)
 
         self.session = Session()
@@ -308,5 +299,3 @@ class ClientApp:
     def stop(self) -> None:
         self._stopping = True
         self.worker.stop()
-        if self.client is not None:
-            self.client.stop()

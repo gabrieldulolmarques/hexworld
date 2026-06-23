@@ -16,10 +16,7 @@
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
-Dois backends de transporte disponíveis no mesmo repositório:
-
-- **`Sockets`** — TCP + JSON
-- **`Remote Method Invocation (RMI)`** — Pyro5 + Name Server
+Transporte desta branch: **`Remote Method Invocation (RMI)`** — Pyro5 + Name Server. (A implementação por **Sockets** TCP+JSON vive na branch `sockets`.)
 
 ---
 
@@ -38,8 +35,8 @@ Dois backends de transporte disponíveis no mesmo repositório:
 ### Servidor
 
 ```bash
-docker compose --profile [sockets|rmi] up --build
-docker compose down  
+docker compose up --build     # Name Server (Pyro5) + servidor RMI
+docker compose down
 ```
 
 ---
@@ -48,10 +45,9 @@ docker compose down
 
 ```bash
 make build
-make up-[sockets|rmi]
-make up-[sockets|rmi] clients=N
+make up
+make up clients=N
 make clean
-make demo # to-do
 ```
 
 ---
@@ -69,17 +65,8 @@ make check
 ```bash
 docker compose down
 sudo rm -f server/data/hexworld.db server/data/hexworld.db-*
-docker compose --profile [sockets|rmi] up --build
+docker compose up --build
 ```
-
----
-
-### Hospedar publicamente via Playit.gg (opcional)
-
-1. Obtenha a `SECRET_KEY` em [Playit.gg → Docker](https://playit.gg/account/setup/wizard/new-account/docker/docker-name).
-2. Copie `.env.example` para `.env` e preencha a chave.
-3. No [painel de túneis](https://playit.gg/account/tunnels), crie um túnel **TCP** com endereço local `10.1.0.2:5000`.
-4. Defina `DEMO_SERVER_ADDRESS` no `.env` com o endereço público gerado.
 
 ---
 

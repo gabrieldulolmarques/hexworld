@@ -1,9 +1,8 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.session import Session
-from transport.sockets.worker import Worker
-from transport.messages import STATUS_ERROR
-from transport.sockets.protocol import request
+from transport.messages import STATUS_ERROR, request
+from transport.rmi.proxy_worker import ProxyWorker
 
 _ERROR_MESSAGES = {
     "unexpected_error": "Unexpected server error.",
@@ -25,7 +24,7 @@ class MapSyncController(QObject):
     tile_details_error = pyqtSignal(int, int, str)
     session_error = pyqtSignal()
 
-    def __init__(self, worker: Worker, session: Session) -> None:
+    def __init__(self, worker: ProxyWorker, session: Session) -> None:
         super().__init__()
         self._worker = worker
         self._session = session

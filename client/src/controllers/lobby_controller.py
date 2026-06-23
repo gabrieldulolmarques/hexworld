@@ -2,9 +2,8 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.limits import MAX_MAP_MEMBERS, MAX_MAP_NAME_LENGTH
 from models.session import Session
-from transport.messages import STATUS_ERROR
-from transport.sockets.protocol import request
-from transport.sockets.worker import Worker
+from transport.messages import STATUS_ERROR, request
+from transport.rmi.proxy_worker import ProxyWorker
 
 _ERROR_MESSAGES = {
     "missing_fields": "Missing fields.",
@@ -32,7 +31,7 @@ class LobbyController(QObject):
     map_role_changed = pyqtSignal(str, str)
     session_error = pyqtSignal()
 
-    def __init__(self, worker: Worker, session: Session) -> None:
+    def __init__(self, worker: ProxyWorker, session: Session) -> None:
         super().__init__()
         self._worker = worker
         self._session = session

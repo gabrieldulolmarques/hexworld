@@ -8,9 +8,8 @@ from models.limits import (
 )
 from models.preferences import Preferences
 from models.session import Session
-from transport.sockets.worker import Worker
-from transport.messages import STATUS_ERROR
-from transport.sockets.protocol import request
+from transport.messages import STATUS_ERROR, request
+from transport.rmi.proxy_worker import ProxyWorker
 
 _ERROR_MESSAGES = {
     "invalid_credentials": "Invalid username or password.",
@@ -36,7 +35,7 @@ class AuthController(QObject):
 
     def __init__(
         self,
-        worker: Worker,
+        worker: ProxyWorker,
         session: Session,
         preferences: Preferences,
     ) -> None:
