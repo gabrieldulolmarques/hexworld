@@ -16,6 +16,7 @@ from rmi.auth_service import AuthService
 from rmi.context import RmiContext
 from rmi.errors import register_error_serialization
 from rmi.registry import RmiSessionRegistry
+from utils.address import parse_address
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,8 @@ NS_LOOKUP_RETRIES = 10
 NS_LOOKUP_DELAY_S = 0.5
 
 NAME_SERVER_OBJECT = "hexworld.auth"
+DEFAULT_NAME_SERVER_ADDRESS = "127.0.0.1:9090"
+DEFAULT_SERVER_ADDRESS = "127.0.0.1:0"
 
 def start_rmi_server(
     *,
@@ -37,12 +40,14 @@ def start_rmi_server(
 ) -> None:
     register_error_serialization()
 
-    ns_host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
-    ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
-    bind_host = os.getenv("PYRO_HOST", "127.0.0.1")
-    bind_port = int(os.getenv("RMI_PORT", "0"))
-    nat_host = os.getenv("RMI_NAT_HOST") or None
-    nat_port = os.getenv("RMI_NAT_PORT")
+    ns_host, ns_port = parse_address(
+        os.getenv("NAME_SERVER_ADDRESS", DEFAULT_NAME_SERVER_ADDRESS)
+    )
+    bind_host, bind_port = parse_address(
+        os.getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS)
+    )
+    public_raw = os.getenv("PUBLIC_ADDRESS", "").strip()
+    nat_host, nat_port = parse_address(public_raw) if public_raw else (None, None)
 
     daemon_kwargs: dict = {"host": bind_host, "port": bind_port}
     if nat_host:

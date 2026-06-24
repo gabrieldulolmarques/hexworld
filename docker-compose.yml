@@ -16,12 +16,9 @@ services:
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       DATABASE_PATH: /app/data/hexworld.db
-      PYRO_NS_HOST: name-server
-      PYRO_NS_PORT: 9090
-      PYRO_HOST: 0.0.0.0
-      RMI_PORT: 9091
-      RMI_NAT_HOST: 127.0.0.1
-      RMI_NAT_PORT: 9091
+      NAME_SERVER_ADDRESS: name-server:9090
+      SERVER_ADDRESS: 0.0.0.0:9091
+      PUBLIC_ADDRESS: 127.0.0.1:9091
       PYTHONUNBUFFERED: 1
     ports:
       - "9091:9091"

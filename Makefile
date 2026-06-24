@@ -12,12 +12,13 @@ export VIRTUAL_ENV := $(VENV_DIR)
 export PATH := $(VENV_DIR)/bin:$(PATH)
 endif
 
-PYRO_NS_HOST ?= 127.0.0.1
-PYRO_NS_PORT ?= 9090
-RMI_CALLBACK_BASE_PORT ?= 9092
-RMI_CALLBACK_NAT_HOST ?= host.docker.internal
 clients ?= 1
 APP_NAME ?= HexWorld
+
+# Cliente — RMI (make up)
+SERVER_ADDRESS ?= 127.0.0.1:9090
+CALLBACK_BASE_PORT ?= 9092
+CALLBACK_PUBLIC_HOST ?= host.docker.internal
 
 .PHONY: build check up clean package
 
@@ -36,11 +37,9 @@ up: $(VENV)/bin/python
 	. "$(VENV_DIR)/bin/activate"; \
 	for id in $$(seq 1 $(strip $(clients))); do \
 		(cd client && \
-			PYRO_NS_HOST=$(PYRO_NS_HOST) \
-			PYRO_NS_PORT=$(PYRO_NS_PORT) \
-			RMI_CALLBACK_PORT=$$(( $(RMI_CALLBACK_BASE_PORT) + id - 1 )) \
-			RMI_CALLBACK_NAT_HOST=$(RMI_CALLBACK_NAT_HOST) \
-			RMI_CALLBACK_NAT_PORT=$$(( $(RMI_CALLBACK_BASE_PORT) + id - 1 )) \
+			SERVER_ADDRESS=$(SERVER_ADDRESS) \
+			CALLBACK_ADDRESS=0.0.0.0:$$(( $(CALLBACK_BASE_PORT) + id - 1 )) \
+			CALLBACK_PUBLIC_ADDRESS=$(CALLBACK_PUBLIC_HOST):$$(( $(CALLBACK_BASE_PORT) + id - 1 )) \
 			CLIENT_ID=$$id \
 			SESSION_PATH=data/session_$$id.json \
 			python src/main.py) & \

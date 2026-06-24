@@ -10,8 +10,12 @@ from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 from rmi.errors import HexworldError, register_error_serialization
 from rmi.listener import MapListener
+from utils.address import parse_address
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_SERVER_ADDRESS = "127.0.0.1:9090"
+DEFAULT_CALLBACK_ADDRESS = "0.0.0.0:0"
 
 _STOP = object()
 RECONNECT_DELAY_S = 2.0
@@ -52,8 +56,9 @@ class RemoteWorker(QThread):
         super().__init__()
         register_error_serialization()
         self._client_id = os.getenv("CLIENT_ID")
-        self._ns_host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
-        self._ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
+        self._ns_host, self._ns_port = parse_address(
+            os.getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS)
+        )
         self._queue: Queue = Queue()
         self._running = True
         self._listener_uri: str | None = None
@@ -267,15 +272,14 @@ class RemoteWorker(QThread):
 
     def _start_callback_daemon(self) -> str:
         listener = MapListener(self)
-        host = os.getenv("RMI_CALLBACK_HOST", "0.0.0.0")
-        port = int(os.getenv("RMI_CALLBACK_PORT", "0"))
-        nat_host = os.getenv("RMI_CALLBACK_NAT_HOST") or None
-        nat_port = os.getenv("RMI_CALLBACK_NAT_PORT")
+        host, port = parse_address(os.getenv("CALLBACK_ADDRESS", DEFAULT_CALLBACK_ADDRESS))
+        public_raw = os.getenv("CALLBACK_PUBLIC_ADDRESS", "").strip()
+        nat_host, nat_port = parse_address(public_raw) if public_raw else (None, None)
         daemon_kwargs: dict = {"host": host, "port": port}
         if nat_host:
             daemon_kwargs["nathost"] = nat_host
             if nat_port:
-                daemon_kwargs["natport"] = int(nat_port)
+                daemon_kwargs["natport"] = nat_port
         daemon = Pyro5.api.Daemon(**daemon_kwargs)
         uri = daemon.register(listener)
         thread = threading.Thread(target=daemon.requestLoop, daemon=True)
@@ -283,7 +287,7 @@ class RemoteWorker(QThread):
         logger.debug("RMI callback daemon started at %s", uri)
         if nat_host is None:
             logger.warning(
-                "RMI_CALLBACK_NAT_HOST is unset; a server in Docker may not reach "
+                "CALLBACK_PUBLIC_ADDRESS is unset; a server in Docker may not reach "
                 "this callback URI for broadcasts",
             )
         return str(uri)
