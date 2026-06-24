@@ -1,22 +1,43 @@
 services:
   name-server:
     build: ./server
-    network_mode: host
-    command: python -m Pyro5.nameserver --host 127.0.0.1 --port 9090
+    command: python -m Pyro5.nameserver --host 0.0.0.0 --port 9090
     environment:
       PYTHONUNBUFFERED: 1
+    ports:
+      - "9090:9090"
+    networks:
+      hexworld:
+        ipv4_address: 10.1.0.2
 
   server-rmi:
     init: true
     build: ./server
-    network_mode: host
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       DATABASE_PATH: /app/data/hexworld.db
-      PYRO_NS_HOST: 127.0.0.1
-      PYRO_HOST: 127.0.0.1
+      PYRO_NS_HOST: name-server
+      PYRO_NS_PORT: 9090
+      PYRO_HOST: 0.0.0.0
+      RMI_PORT: 9091
+      RMI_NAT_HOST: 127.0.0.1
+      RMI_NAT_PORT: 9091
       PYTHONUNBUFFERED: 1
+    ports:
+      - "9091:9091"
     volumes:
       - ./server:/app
     depends_on:
       - name-server
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      hexworld:
+        ipv4_address: 10.1.0.3
+
+networks:
+  hexworld:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.1.0.0/24

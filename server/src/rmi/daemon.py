@@ -40,10 +40,11 @@ def start_rmi_server(
     ns_host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
     ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
     bind_host = os.getenv("PYRO_HOST", "127.0.0.1")
-    nat_host = os.getenv("PYRO_NAT_HOST") or None
-    nat_port = os.getenv("PYRO_NAT_PORT")
+    bind_port = int(os.getenv("RMI_PORT", "0"))
+    nat_host = os.getenv("RMI_NAT_HOST") or None
+    nat_port = os.getenv("RMI_NAT_PORT")
 
-    daemon_kwargs: dict = {"host": bind_host}
+    daemon_kwargs: dict = {"host": bind_host, "port": bind_port}
     if nat_host:
         daemon_kwargs["nathost"] = nat_host
         if nat_port:
