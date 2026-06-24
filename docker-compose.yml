@@ -16,7 +16,6 @@ services:
         ipv4_address: 10.1.0.2
 
   playit:
-    profiles: [public]
     image: ghcr.io/playit-cloud/playit-agent:latest
     restart: unless-stopped
     environment:

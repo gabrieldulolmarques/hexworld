@@ -35,8 +35,7 @@ Transporte desta branch: **`Sockets`** — TCP + JSON. (A implementação por **
 ### Servidor
 
 ```bash
-docker compose up --build              # apenas o servidor de sockets
-docker compose --profile public up --build  # + túnel público Playit.gg
+docker compose up --build   # servidor de sockets + túnel Playit.gg
 docker compose down
 ```
 
@@ -72,12 +71,16 @@ docker compose up --build
 
 ---
 
-### Hospedar publicamente via Playit.gg (opcional)
+### Hospedar publicamente via Playit.gg
+
+O `docker compose up` já sobe o agente Playit junto com o servidor. Para expor na internet:
 
 1. Obtenha a `SECRET_KEY` em [Playit.gg → Docker](https://playit.gg/account/setup/wizard/new-account/docker/docker-name).
 2. Copie `.env.example` para `.env` e preencha a chave.
 3. No [painel de túneis](https://playit.gg/account/tunnels), crie um túnel **TCP** com endereço local `10.1.0.2:5000`.
 4. Defina `DEMO_SERVER_ADDRESS` no `.env` com o endereço público gerado.
+
+Acesso local: `127.0.0.1:5000` (`make up`). Acesso externo: `DEMO_SERVER_ADDRESS` (`make demo`).
 
 ---
 
