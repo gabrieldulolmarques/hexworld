@@ -14,6 +14,8 @@ endif
 
 PYRO_NS_HOST ?= 127.0.0.1
 PYRO_NS_PORT ?= 9090
+RMI_CALLBACK_BASE_PORT ?= 9092
+RMI_CALLBACK_NAT_HOST ?= host.docker.internal
 clients ?= 1
 APP_NAME ?= HexWorld
 
@@ -36,6 +38,9 @@ up: $(VENV)/bin/python
 		(cd client && \
 			PYRO_NS_HOST=$(PYRO_NS_HOST) \
 			PYRO_NS_PORT=$(PYRO_NS_PORT) \
+			RMI_CALLBACK_PORT=$$(( $(RMI_CALLBACK_BASE_PORT) + id - 1 )) \
+			RMI_CALLBACK_NAT_HOST=$(RMI_CALLBACK_NAT_HOST) \
+			RMI_CALLBACK_NAT_PORT=$$(( $(RMI_CALLBACK_BASE_PORT) + id - 1 )) \
 			CLIENT_ID=$$id \
 			SESSION_PATH=data/session_$$id.json \
 			python src/main.py) & \

@@ -283,10 +283,11 @@ class RemoteWorker(QThread):
 
     def _start_callback_daemon(self) -> str:
         listener = MapListener(self)
-        host = os.getenv("PYRO_CALLBACK_HOST", "0.0.0.0")
-        nat_host = os.getenv("PYRO_CALLBACK_NAT_HOST") or None
-        nat_port = os.getenv("PYRO_CALLBACK_NAT_PORT")
-        daemon_kwargs: dict = {"host": host}
+        host = os.getenv("RMI_CALLBACK_HOST", "0.0.0.0")
+        port = int(os.getenv("RMI_CALLBACK_PORT", "0"))
+        nat_host = os.getenv("RMI_CALLBACK_NAT_HOST") or None
+        nat_port = os.getenv("RMI_CALLBACK_NAT_PORT")
+        daemon_kwargs: dict = {"host": host, "port": port}
         if nat_host:
             daemon_kwargs["nathost"] = nat_host
             if nat_port:
@@ -296,11 +297,10 @@ class RemoteWorker(QThread):
         thread = threading.Thread(target=daemon.requestLoop, daemon=True)
         thread.start()
         logger.debug("RMI callback daemon started at %s", uri)
-        if nat_host is None and self._ns_host not in ("127.0.0.1", "localhost"):
+        if nat_host is None:
             logger.warning(
-                "PYRO_CALLBACK_NAT_HOST is unset; server at %s may not reach "
+                "RMI_CALLBACK_NAT_HOST is unset; a server in Docker may not reach "
                 "this callback URI for broadcasts",
-                self._ns_host,
             )
         return str(uri)
 

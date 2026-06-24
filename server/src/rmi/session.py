@@ -1,5 +1,5 @@
 import logging
-from threading import Lock
+from threading import Lock, Thread
 
 import Pyro5.api
 
@@ -68,7 +68,7 @@ class Session:
             logger.warning(
                 "Listener push failed; cleaning up session for user %r", self._username
             )
-            self.cleanup()
+            Thread(target=self.cleanup, daemon=True).start()
 
     # ---- remote methods (exposed to the client) ----
 
