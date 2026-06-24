@@ -12,10 +12,11 @@ export VIRTUAL_ENV := $(VENV_DIR)
 export PATH := $(VENV_DIR)/bin:$(PATH)
 endif
 
-SERVER_ADDRESS ?= 127.0.0.1:5000
-DEMO_SERVER_ADDRESS ?= hexworld.playit.plus:1048
 clients ?= 1
 APP_NAME ?= HexWorld
+
+SERVER_ADDRESS ?= 127.0.0.1:5000
+DEMO_SERVER_ADDRESS ?= hexworld.playit.plus:1048
 
 .PHONY: build check up clean demo package
 
@@ -38,13 +39,25 @@ up: $(VENV)/bin/python
 			CLIENT_ID=$$id \
 			SESSION_PATH=data/session_$$id.json \
 			python src/main.py) & \
-	done; wait
+	done; \
+	wait
+
+demo: $(VENV)/bin/python
+	set -e; \
+	. "$(VENV_DIR)/bin/activate"; \
+	for id in $$(seq 1 $(strip $(clients))); do \
+		(cd client && \
+			SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS) \
+			CLIENT_ID=$$id \
+			SESSION_PATH=data/session_$$id.json \
+			python src/main.py) & \
+	done; \
+	wait
 
 clean:
 	rm -f client/data/session*.json
 
-package: $(VENV)/bin/python
-	$(VENV)/bin/python -m pip install -r client/requirements.txt
+package: build
 	cd client && "$(VENV_DIR)/bin/pyinstaller" --noconfirm --clean --onefile --windowed \
 		--name $(APP_NAME) \
 		--paths src \

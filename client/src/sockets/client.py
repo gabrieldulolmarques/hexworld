@@ -12,6 +12,7 @@ from threading import Lock
 
 from sockets.protocol import recv_response as read_response
 from sockets.protocol import send_request
+from utils.address import parse_address
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +25,14 @@ class Client:
         self._client_id = getenv("CLIENT_ID")
         self._client_socket = None
         self._server_address = (
-            _parse_address(server_address)
+            parse_address(server_address)
             if server_address
             else _resolve_server_address()
         )
         self._io_lock = Lock()
 
     def set_server_address(self, raw: str) -> None:
-        new_address = _parse_address(raw)
+        new_address = parse_address(raw)
         with self._io_lock:
             if new_address == self._server_address:
                 return
@@ -116,10 +117,4 @@ def _configure_keepalive(sock: socket) -> None:
         sock.setsockopt(IPPROTO_TCP, _socket.TCP_KEEPCNT, 3)
 
 def _resolve_server_address() -> tuple[str, int]:
-    return _parse_address(getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS))
-
-def _parse_address(raw: str) -> tuple[str, int]:
-    host, _, port = raw.rpartition(":")
-    if not host or not port:
-        raise Exception(f"Invalid server address '{raw}', expected 'host:port'")
-    return host, int(port)
+    return parse_address(getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS))

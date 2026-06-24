@@ -18,6 +18,7 @@ from database.connection import close_pool
 from events.broadcaster import Broadcaster
 from events.presence import Presence
 from sockets.connection import BroadcastPresenceFn, Connection, RequestHandlerFn
+from utils.address import parse_address
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +83,4 @@ def _configure_keepalive(sock: socket) -> None:
     sock.setsockopt(IPPROTO_TCP, TCP_KEEPCNT, 3)
 
 def _resolve_server_address() -> tuple[str, int]:
-    raw = getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS)
-    host, _, port = raw.rpartition(":")
-    if not host or not port:
-        raise Exception(f"Invalid SERVER_ADDRESS '{raw}', expected 'host:port'")
-    return host, int(port)
+    return parse_address(getenv("SERVER_ADDRESS", DEFAULT_SERVER_ADDRESS))
