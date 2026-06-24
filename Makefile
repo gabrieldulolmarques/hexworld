@@ -47,7 +47,7 @@ demo: $(VENV)/bin/python
 	$(MAKE) up SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS)
 
 package: $(VENV)/bin/python
-	$(VENV)/bin/python -m pip install -r client/requirements-dev.txt
+	$(VENV)/bin/python -m pip install -r client/requirements.txt
 	cd client && "$(VENV_DIR)/bin/pyinstaller" --noconfirm --clean --onefile --windowed \
 		--name $(APP_NAME) \
 		--paths src \
