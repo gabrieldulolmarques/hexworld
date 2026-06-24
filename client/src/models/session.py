@@ -2,6 +2,8 @@ from json import dump, load
 from os import getenv
 from pathlib import Path
 
+from PyQt6.QtCore import QStandardPaths
+
 class Session:
     def __init__(self) -> None:
         self.path: Path = _get_session_path()
@@ -58,5 +60,10 @@ def _get_session_path() -> Path:
     configured = getenv("SESSION_PATH")
     if configured:
         return Path(configured)
-    client_id = getenv("CLIENT_ID", "1")
-    return Path(__file__).resolve().parents[2] / "data" / f"session_{client_id}.json"
+    client_id = getenv("CLIENT_ID")
+    if client_id:
+        return Path(__file__).resolve().parents[2] / "data" / f"session_{client_id}.json"
+    base = QStandardPaths.writableLocation(
+        QStandardPaths.StandardLocation.AppDataLocation
+    )
+    return Path(base or ".") / "session.json"

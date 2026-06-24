@@ -15,8 +15,9 @@ endif
 SERVER_ADDRESS ?= 127.0.0.1:5000
 DEMO_SERVER_ADDRESS ?= hexworld.playit.plus:1048
 clients ?= 1
+APP_NAME ?= HexWorld
 
-.PHONY: build check up clean demo
+.PHONY: build check up clean demo package
 
 $(VENV)/bin/python:
 	@test -d $(VENV) || $(PYTHON3) -m venv $(VENV)
@@ -44,3 +45,13 @@ clean:
 
 demo: $(VENV)/bin/python
 	$(MAKE) up SERVER_ADDRESS=$(DEMO_SERVER_ADDRESS)
+
+package: $(VENV)/bin/python
+	$(VENV)/bin/python -m pip install -r client/requirements-dev.txt
+	cd client && "$(VENV_DIR)/bin/pyinstaller" --noconfirm --clean --onefile --windowed \
+		--name $(APP_NAME) \
+		--paths src \
+		--add-data "assets:assets" \
+		--add-data "src/styles/qss:qss" \
+		src/main.py
+	@echo "Built client/dist/$(APP_NAME)"

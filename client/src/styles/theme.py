@@ -1,13 +1,10 @@
-from pathlib import Path
-
+from resources import assets_path, qss_dir
 from styles.colors import QSS_REPLACE
 
-_STYLES_DIR = Path(__file__).resolve().parent / "qss"
+_STYLES_DIR = qss_dir()
 _QSS_FILES = ("_base.qss", "_window.qss", "_auth.qss", "_lobby.qss", "_map.qss")
 
-_CHECK_ICON_PATH = (
-    Path(__file__).resolve().parents[2] / "assets" / "icons" / "check.svg"
-)
+_CHECK_ICON_PATH = assets_path("icons", "check.svg")
 _CHECK_ICON_URL = _CHECK_ICON_PATH.resolve().as_posix().replace("\\", "/")
 
 def _load_stylesheet() -> str:

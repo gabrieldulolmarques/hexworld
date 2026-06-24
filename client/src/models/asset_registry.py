@@ -6,8 +6,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QPainterPath, QPixmap
 
 from models.geometry import hex_vertices
+from resources import assets_path
 
-_ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets" / "map"
+_ASSETS_DIR = assets_path("map")
 
 _BIOME_ORDER = (
     "deadlands",

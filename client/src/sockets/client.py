@@ -10,12 +10,14 @@ from socket import (
 )
 from threading import Lock
 
+from resources import is_frozen
 from sockets.protocol import recv_response as read_response
 from sockets.protocol import send_request
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SERVER_ADDRESS = "127.0.0.1:5000"
+DEMO_SERVER_ADDRESS = "hexworld.playit.plus:1048"
+DEFAULT_SERVER_ADDRESS = DEMO_SERVER_ADDRESS if is_frozen() else "127.0.0.1:5000"
 CONNECT_TIMEOUT_SECONDS = 5.0
 SERVER_UNREACHABLE_MESSAGE = "Could not reach the server."
 
