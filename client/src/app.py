@@ -7,6 +7,7 @@ from controllers.map_session_controller import MapSessionController
 from controllers.map_sync_controller import MapSyncController
 from models.preferences import Preferences
 from models.map.local_map_state import LocalMapState
+from models.server_config import ServerConfig
 from models.session import Session
 from models.map.tile_format import (
     edges_from_server,
@@ -37,11 +38,14 @@ class ClientApp:
         main_view.stack.addWidget(self.lobby_view)
         main_view.stack.addWidget(self.map_view)
 
-        self.worker = RemoteWorker()
+        self.server_config = ServerConfig()
+        self.auth_view.set_server_address(self.server_config.load())
+        self.worker = RemoteWorker(self.server_config.load())
         main_view.show_connection_status(_CONNECT_MESSAGE)
 
         self.session = Session()
         self._stopping = False
+        self._switching_server = False
         self.history = EditHistory()
         self._current_map_name = ""
         self._inspector_coord: tuple[int, int] | None = None
@@ -65,8 +69,8 @@ class ClientApp:
         self.worker.start()
 
     def _connect_signals(self) -> None:
-        self.auth_view.login_requested.connect(self.auth.login)
-        self.auth_view.register_requested.connect(self.auth.register)
+        self.auth_view.login_requested.connect(self._on_login_requested)
+        self.auth_view.register_requested.connect(self._on_register_requested)
         self.lobby_view.logout_requested.connect(self.auth.logout)
         self.auth.login_success.connect(self._show_lobby)
         self.auth.session_restored.connect(self._on_session_restored)
@@ -141,6 +145,24 @@ class ClientApp:
 
     def _on_register_success(self) -> None:
         self.auth_view.show_register_success()
+
+    def _on_login_requested(self, username: str, password: str, remember: bool) -> None:
+        self._apply_server_address()
+        self.auth.login(username, password, remember)
+
+    def _on_register_requested(
+        self, username: str, password: str, confirm: str
+    ) -> None:
+        self._apply_server_address()
+        self.auth.register(username, password, confirm)
+
+    def _apply_server_address(self) -> None:
+        address = self.auth_view.server_address()
+        if not address:
+            return
+        self.server_config.save(address)
+        if self.worker.set_server_address(address):
+            self._switching_server = True
 
     def _show_lobby(self, username: str) -> None:
         self.lobby_view.set_user(username)
@@ -279,12 +301,15 @@ class ClientApp:
     def _on_transport_disconnected(self) -> None:
         if self._stopping:
             return
+        if self._switching_server:
+            return
         self.auth.handle_transport_dropped()
         self.main_view.show_connection_status(_RECONNECT_MESSAGE)
 
     def _on_transport_connected(self) -> None:
         if self._stopping:
             return
+        self._switching_server = False
         self.main_view.show_connection_status(None)
         if self.session.is_authenticated():
             self.auth.validate_session()
