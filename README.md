@@ -16,8 +16,6 @@
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
-Transporte desta branch: **`Remote Method Invocation (RMI)`** — Pyro5 + Name Server. (A implementação por **Sockets** TCP+JSON vive na branch `sockets`.)
-
 ---
 
 ### Usuários
@@ -35,7 +33,7 @@ Transporte desta branch: **`Remote Method Invocation (RMI)`** — Pyro5 + Name S
 ### Servidor
 
 ```bash
-docker compose up --build     # Name Server (Pyro5) + servidor RMI
+docker compose up --build
 docker compose down
 ```
 
@@ -56,6 +54,12 @@ make clean
 
 ```bash
 make check
+```
+
+### Pacote do Cliente
+
+```bash
+make package
 ```
 
 ---
