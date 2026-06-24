@@ -15,8 +15,9 @@ endif
 PYRO_NS_HOST ?= 127.0.0.1
 PYRO_NS_PORT ?= 9090
 clients ?= 1
+APP_NAME ?= HexWorld
 
-.PHONY: build check up clean
+.PHONY: build check up clean package
 
 $(VENV)/bin/python:
 	@test -d $(VENV) || $(PYTHON3) -m venv $(VENV)
@@ -43,3 +44,14 @@ up: $(VENV)/bin/python
 
 clean:
 	rm -f client/data/session*.json
+
+package: build
+	cd client && "$(VENV_DIR)/bin/pyinstaller" --noconfirm --clean --onefile --windowed \
+		--name $(APP_NAME) \
+		--paths src \
+		--add-data "assets:assets" \
+		--add-data "src/styles/qss:qss" \
+		--collect-submodules Pyro5 \
+		--hidden-import serpent \
+		src/main.py
+	@echo "Built client/dist/$(APP_NAME)"

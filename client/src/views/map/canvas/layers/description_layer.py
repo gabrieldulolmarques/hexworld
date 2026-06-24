@@ -1,13 +1,12 @@
-from pathlib import Path
-
 from PyQt6.QtCore import QPointF, QSize, Qt
 from PyQt6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 
 from models.geometry import hex_to_pixel
+from resources import assets_path
 from styles.colors import RED_PRIMARY
 from views.map.canvas.layers.paint_context import PaintContext
 
-_ICONS_DIR = Path(__file__).resolve().parents[5] / "assets" / "icons"
+_ICONS_DIR = assets_path("icons")
 _DESC_ICON_CACHE: dict[tuple[int, str], QPixmap] = {}
 
 _ERASE_HOVER_BORDER = QColor(RED_PRIMARY)

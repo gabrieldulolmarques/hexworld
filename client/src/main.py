@@ -15,6 +15,8 @@ logging.basicConfig(
 
 def main() -> None:
     app = QApplication(argv)
+    app.setOrganizationName("HexWorld")
+    app.setApplicationName("HexWorld")
     app.setWindowIcon(hex_logo_icon())
     app.setStyleSheet(STYLESHEET)
 
