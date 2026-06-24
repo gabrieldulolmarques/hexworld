@@ -10,8 +10,8 @@ from socket import (
 )
 from threading import Lock
 
-from transport.sockets.protocol import recv_response as read_response
-from transport.sockets.protocol import send_request
+from sockets.protocol import recv_response as read_response
+from sockets.protocol import send_request
 
 logger = logging.getLogger(__name__)
 

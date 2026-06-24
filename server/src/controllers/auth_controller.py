@@ -1,6 +1,6 @@
 from services.auth_service import AuthService
-from transport.messages import error_response, success_response
-from transport.session import ClientSession
+from controllers.responses import error_response, success_response
+from events.session import ClientSession
 
 class AuthController:
     def __init__(self, auth_service: AuthService) -> None:

@@ -1,9 +1,9 @@
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from models.session import Session
-from transport.sockets.worker import Worker
-from transport.messages import STATUS_ERROR
-from transport.sockets.protocol import request
+from sockets.worker import Worker
+from sockets.messages import STATUS_ERROR
+from sockets.protocol import request
 
 _ERROR_MESSAGES = {
     "unexpected_error": "Unexpected server error.",

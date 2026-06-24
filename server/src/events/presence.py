@@ -1,6 +1,6 @@
 from threading import Lock
 
-from transport.session import ClientSession
+from events.session import ClientSession
 
 class Presence:
     def __init__(self) -> None:

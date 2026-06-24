@@ -1,9 +1,9 @@
-from controllers.map_event_publisher import MapEventPublisher
+from events.publisher import MapEventPublisher
 from services.edge_service import EdgeService
 from services.path_service import PathService
 from services.tile_service import TileService
-from transport.messages import error_response, success_response
-from transport.session import ClientSession
+from controllers.responses import error_response, success_response
+from events.session import ClientSession
 
 class MapEditController:
     def __init__(

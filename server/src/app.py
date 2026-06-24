@@ -1,7 +1,7 @@
 from controllers.auth_controller import AuthController
 from controllers.auth_middleware import AuthMiddleware
 from controllers.map_edit_controller import MapEditController
-from controllers.map_event_publisher import MapEventPublisher
+from events.publisher import MapEventPublisher
 from controllers.map_lifecycle_controller import MapLifecycleController
 from controllers.map_state_controller import MapStateController
 from controllers.request_controller import RequestController
@@ -20,8 +20,8 @@ from services.map_service import MapService
 from services.presence_service import PresenceService
 from services.path_service import PathService
 from services.tile_service import TileService
-from transport.broadcaster import Broadcaster
-from transport.presence import Presence
+from events.broadcaster import Broadcaster
+from events.presence import Presence
 
 map_repository = MapRepository()
 user_map_repository = UserMapRepository()

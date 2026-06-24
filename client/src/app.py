@@ -15,8 +15,8 @@ from models.map.tile_format import (
     tiles_from_server,
 )
 from services.export import default_filename, normalize_path, save_image
-from transport.sockets.client import Client
-from transport.sockets.worker import Worker
+from sockets.client import Client
+from sockets.worker import Worker
 from views.auth_view import AuthView
 from views.lobby.lobby_view import LobbyView
 from views.shell.main_view import MainView

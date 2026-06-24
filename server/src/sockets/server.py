@@ -15,9 +15,9 @@ from socket import (
 from threading import Thread
 
 from database.connection import close_pool
-from transport.broadcaster import Broadcaster
-from transport.presence import Presence
-from transport.sockets.connection import BroadcastPresenceFn, Connection, RequestHandlerFn
+from events.broadcaster import Broadcaster
+from events.presence import Presence
+from sockets.connection import BroadcastPresenceFn, Connection, RequestHandlerFn
 
 logger = logging.getLogger(__name__)
 

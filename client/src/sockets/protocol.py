@@ -2,7 +2,7 @@ from json import dumps, loads
 from struct import pack, unpack
 from uuid import uuid4
 
-from transport.messages import KIND_REQUEST
+from sockets.messages import KIND_REQUEST
 
 HEADER_SIZE = 4
 HEADER_FORMAT = "!I"

@@ -1,6 +1,5 @@
 from repositories.user_map_repository import UserMapRepository
-from transport.presence import Presence
-from transport.session import ClientSession
+from events.presence import Presence
 
 class PresenceService:
     def __init__(

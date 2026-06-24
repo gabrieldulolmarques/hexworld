@@ -4,7 +4,7 @@ import app as _app
 from database.connection import get_connection, get_database_path
 from database.schema import create_schema
 from database.seed import seed_users
-from transport.sockets.server import Server
+from sockets.server import Server
 
 logging.basicConfig(
     level=logging.INFO,

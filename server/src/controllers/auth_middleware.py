@@ -2,8 +2,8 @@ from collections.abc import Callable
 from functools import wraps
 
 from services.auth_service import AuthService
-from transport.messages import error_response
-from transport.session import ClientSession
+from controllers.responses import error_response
+from events.session import ClientSession
 from utils.roles import has_role
 
 Handler = Callable[[dict, ClientSession, dict], dict]

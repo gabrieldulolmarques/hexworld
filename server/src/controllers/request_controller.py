@@ -5,8 +5,8 @@ from controllers.auth_middleware import AuthMiddleware
 from controllers.map_edit_controller import MapEditController
 from controllers.map_lifecycle_controller import MapLifecycleController
 from controllers.map_state_controller import MapStateController
-from transport.messages import error_response
-from transport.session import ClientSession
+from controllers.responses import error_response
+from events.session import ClientSession
 
 logger = logging.getLogger(__name__)
 

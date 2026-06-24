@@ -3,10 +3,10 @@ from collections.abc import Callable
 from socket import socket
 from threading import Lock
 
-from transport.broadcaster import Broadcaster
-from transport.presence import Presence
-from transport.session import ClientSession
-from transport.sockets.protocol import recv_request, send_response
+from events.broadcaster import Broadcaster
+from events.presence import Presence
+from events.session import ClientSession
+from sockets.protocol import recv_request, send_response
 
 logger = logging.getLogger(__name__)
 
