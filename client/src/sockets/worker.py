@@ -33,6 +33,9 @@ class Worker(QThread):
         self._outgoing.put(request)
         return True
 
+    def set_server_address(self, raw: str) -> None:
+        self._client.set_server_address(raw)
+
     def reset(self) -> None:
         while not self._outgoing.empty():
             try:

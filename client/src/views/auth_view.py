@@ -52,6 +52,11 @@ class AuthView(StatusMixin, QWidget):
         header.addWidget(self.brand)
         header.addWidget(self.subtitle)
 
+        server_label = QLabel("Server")
+        server_label.setObjectName("fieldLabel")
+        self.server_input = QLineEdit()
+        self.server_input.setPlaceholderText("host:port")
+
         username_label = QLabel("Username")
         username_label.setObjectName("fieldLabel")
         self.username_input = QLineEdit()
@@ -102,6 +107,9 @@ class AuthView(StatusMixin, QWidget):
         card_layout.setSpacing(CARD_SPACING)
         card_layout.addLayout(header)
         card_layout.addSpacing(16)
+        card_layout.addWidget(server_label)
+        card_layout.addWidget(self.server_input)
+        card_layout.addSpacing(4)
         card_layout.addWidget(username_label)
         card_layout.addWidget(self.username_input)
         card_layout.addSpacing(4)
@@ -126,6 +134,7 @@ class AuthView(StatusMixin, QWidget):
         root.addStretch(1)
 
         self.primary_button.clicked.connect(self._on_primary)
+        self.server_input.returnPressed.connect(self._on_primary)
         self.username_input.returnPressed.connect(self._on_primary)
         self.password_input.returnPressed.connect(self._on_primary)
         self.confirm_password_input.returnPressed.connect(self._on_primary)
@@ -202,9 +211,16 @@ class AuthView(StatusMixin, QWidget):
         confirm = self.confirm_password_input.text()
         self.register_requested.emit(username, password, confirm)
 
+    def server_address(self) -> str:
+        return self.server_input.text().strip()
+
+    def set_server_address(self, address: str) -> None:
+        self.server_input.setText(address)
+
     def set_loading(self, loading: bool) -> None:
         self.primary_button.setEnabled(not loading)
         self.mode_link.setEnabled(not loading)
+        self.server_input.setEnabled(not loading)
         self.username_input.setEnabled(not loading)
         self.password_input.setEnabled(not loading)
         self.confirm_password_input.setEnabled(not loading)

@@ -1,6 +1,8 @@
 import logging
+import signal
 from sys import argv, exit
 
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication
 
 from app import ClientApp
@@ -19,6 +21,12 @@ def main() -> None:
     app.setApplicationName("HexWorld")
     app.setWindowIcon(hex_logo_icon())
     app.setStyleSheet(STYLESHEET)
+
+    # Let Ctrl-C (SIGINT) quit the Qt loop cleanly instead of core-dumping.
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    sigint_timer = QTimer()
+    sigint_timer.timeout.connect(lambda: None)
+    sigint_timer.start(200)
 
     window = MainView()
     controller = ClientApp(window)
