@@ -10,12 +10,10 @@ from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 from rmi.errors import HexworldError, register_error_serialization
 from rmi.listener import MapListener
-from models.server_config import parse_ns_address
 
 logger = logging.getLogger(__name__)
 
 _STOP = object()
-_RECONNECT = object()
 RECONNECT_DELAY_S = 2.0
 
 _COMM_ERRORS = (
@@ -50,11 +48,12 @@ class RemoteWorker(QThread):
     evt_member_changed = pyqtSignal(str, int)
     evt_ownership_transferred = pyqtSignal(str, str)
 
-    def __init__(self, ns_address: str | None = None) -> None:
+    def __init__(self) -> None:
         super().__init__()
         register_error_serialization()
         self._client_id = os.getenv("CLIENT_ID")
-        self._ns_host, self._ns_port = _resolve_ns_address(ns_address)
+        self._ns_host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
+        self._ns_port = int(os.getenv("PYRO_NS_PORT", "9090"))
         self._queue: Queue = Queue()
         self._running = True
         self._listener_uri: str | None = None
@@ -130,19 +129,6 @@ class RemoteWorker(QThread):
         self._disconnect_best_effort()
         self._queue.put(_STOP)
         self.wait(3000)
-
-    def set_server_address(self, raw: str) -> bool:
-        try:
-            host, port = parse_ns_address(raw)
-        except ValueError:
-            return False
-        if host == self._ns_host and port == self._ns_port:
-            return False
-        self._ns_host = host
-        self._ns_port = port
-        self._reset_proxies()
-        self._queue.put(_RECONNECT)
-        return True
 
     # ---- thunks (run on the worker thread) ----
 
@@ -243,8 +229,6 @@ class RemoteWorker(QThread):
             if item is _STOP:
                 self._running = False
                 return True
-            if item is _RECONNECT:
-                return False
             thunk, call = item
             try:
                 result = thunk()
@@ -340,9 +324,3 @@ class RemoteWorker(QThread):
 
 def _none(_result) -> dict:
     return {}
-
-def _resolve_ns_address(override: str | None) -> tuple[str, int]:
-    if override:
-        return parse_ns_address(override)
-    host = os.getenv("PYRO_NS_HOST", "127.0.0.1")
-    return host, int(os.getenv("PYRO_NS_PORT", "9090"))
