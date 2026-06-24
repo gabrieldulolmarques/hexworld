@@ -16,8 +16,6 @@
 
 Editor colaborativo de mapas hexagonais para jogadores e mestres de RPG. Múltiplos usuários editam o mesmo mapa em tempo real; o servidor propaga cada alteração a todos os clientes conectados.
 
-Transporte desta branch: **`Sockets`** — TCP + JSON. (A implementação por **RMI** com Pyro5 vive na branch `rmi`.)
-
 ---
 
 ### Usuários
@@ -35,7 +33,7 @@ Transporte desta branch: **`Sockets`** — TCP + JSON. (A implementação por **
 ### Servidor
 
 ```bash
-docker compose up --build   # servidor de sockets + túnel Playit.gg
+docker compose up --build
 docker compose down
 ```
 
@@ -48,7 +46,6 @@ make build
 make up
 make up clients=N
 make clean
-make demo # to-do
 ```
 
 ---
@@ -57,6 +54,14 @@ make demo # to-do
 
 ```bash
 make check
+```
+
+---
+
+### Pacote do Cliente
+
+```bash
+make package
 ```
 
 ---
